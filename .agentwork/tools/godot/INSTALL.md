@@ -6,9 +6,14 @@
 
 ## Install
 ```bash
-python3 install-tool.py godot -p <path>
-python3 install-tool.py godot -p <path>
-python3 install-tool.py godot -p <path>
+python3 install-tool.py install godot -p <path>
+python3 install-tool.py -i godot -p <path>
+```
+
+## Uninstall
+```bash
+python3 install-tool.py uninstall godot -p <path>
+python3 install-tool.py -u godot -p <path>
 ```
 
 ## After install

@@ -7,10 +7,14 @@
 
 ## Install
 ```bash
-python3 install-tool.py android -p <path>
-python3 install-tool.py android -p <path>
-python3 install-tool.py android -p <path>
-python3 install-tool.py android -p <path>
+python3 install-tool.py install android -p <path>
+python3 install-tool.py -i android -p <path>
+```
+
+## Uninstall
+```bash
+python3 install-tool.py uninstall android -p <path>
+python3 install-tool.py -u android -p <path>
 ```
 
 ## After install

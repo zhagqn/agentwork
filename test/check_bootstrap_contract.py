@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
+
+SOURCE_ROOT = Path(__file__).resolve().parent.parent
+TOOLS_ROOT = SOURCE_ROOT / '.agentwork' / 'tools'
+REGISTRY = TOOLS_ROOT / 'registry.json'
 
 REQUIRED_FILES = [
     'AGENTS.md',
@@ -39,6 +44,17 @@ PROJECT_START = '<!-- AGENTWORK:PROJECT-INDEX:START -->'
 PROJECT_END = '<!-- AGENTWORK:PROJECT-INDEX:END -->'
 SESSION_START = '<!-- AGENTWORK:SESSION-README:START -->'
 SESSION_END = '<!-- AGENTWORK:SESSION-README:END -->'
+
+
+def optional_tool_targets() -> list[str]:
+    registry = json.loads(REGISTRY.read_text(encoding='utf-8'))
+    targets: set[str] = set()
+    for tool in registry.get('tools', []):
+        tool_meta_path = TOOLS_ROOT / tool['dir'] / 'tool.json'
+        tool_meta = json.loads(tool_meta_path.read_text(encoding='utf-8'))
+        for entry in tool_meta.get('entries', []):
+            targets.add(entry['to'])
+    return sorted(targets)
 
 
 def iter_text_files(root: Path):
@@ -90,6 +106,10 @@ def main() -> int:
         text = session_readme.read_text(encoding='utf-8')
         if SESSION_START not in text or SESSION_END not in text:
             failures.append('missing_session_readme_block')
+
+    for rel in optional_tool_targets():
+        if (root / rel).exists():
+            failures.append(f'optional_tool_leak:{rel}')
 
     for path in iter_text_files(root):
         try:

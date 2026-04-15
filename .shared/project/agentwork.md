@@ -13,7 +13,7 @@
 
 ## 入口脚本
 - `install-bootstrap.py`：安装核心工作流和基础 AI 适配文件
-- `install-tool.py`：安装可选工具
+- `install-tool.py`：通过裸词动作 `install` / `uninstall` / `list` 或简写 `-i` / `-u` / `-l` 管理可选工具
 - `python3 install-bootstrap.py -p .`：在 source repo 根目录原地刷新已安装的核心工作流层
 - 外部上游的更新命令直接写在 `.agentwork/upstreams/*.md` 中
 
@@ -22,3 +22,4 @@
 - 可选工具不直接长期驻留在 `.shared`
 - `.tmp/*` 默认不纳入提交，除非明确保留证据
 - source repo 自身也按目标项目结构自承载 bootstrap；相同路径的核心 `.shared` 文件应跳过复制，只刷新根目录适配层与 managed block
+- `install-bootstrap.py` 只同步核心工作流；已安装的可选工具文件不会随着 bootstrap 自动扩散到目标项目

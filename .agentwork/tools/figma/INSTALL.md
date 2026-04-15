@@ -8,10 +8,14 @@
 
 ## Install
 ```bash
-python3 install-tool.py figma -p <path>
-python3 install-tool.py figma -p <path>
-python3 install-tool.py figma -p <path>
-python3 install-tool.py figma -p <path>
+python3 install-tool.py install figma -p <path>
+python3 install-tool.py -i figma -p <path>
+```
+
+## Uninstall
+```bash
+python3 install-tool.py uninstall figma -p <path>
+python3 install-tool.py -u figma -p <path>
 ```
 
 ## After install

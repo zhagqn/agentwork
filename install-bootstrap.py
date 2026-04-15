@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import shutil
 import subprocess
@@ -12,6 +13,8 @@ ROOT = Path(__file__).resolve().parent
 BOOTSTRAP = ROOT / '.agentwork' / 'bootstrap'
 DATA = BOOTSTRAP / 'data'
 SHARED_ROOT = ROOT / '.shared'
+TOOLS_ROOT = ROOT / '.agentwork' / 'tools'
+REGISTRY = TOOLS_ROOT / 'registry.json'
 
 BLOCK_TARGETS = [
     (Path('.shared/project/index.md'), DATA / 'project-index.block.md', '# Project 索引\n\n## 本项目自定义内容\n'),
@@ -40,11 +43,31 @@ def refresh_generated_bootstrap() -> None:
         subprocess.run([sys.executable, str(renderer)], check=True)
 
 
+def load_tool_registry() -> dict:
+    return json.loads(REGISTRY.read_text(encoding='utf-8'))
+
+
+def collect_optional_shared_relpaths() -> set[Path]:
+    relpaths: set[Path] = set()
+    registry = load_tool_registry()
+    for tool in registry.get('tools', []):
+        tool_meta_path = TOOLS_ROOT / tool['dir'] / 'tool.json'
+        tool_meta = json.loads(tool_meta_path.read_text(encoding='utf-8'))
+        for entry in tool_meta.get('entries', []):
+            target = entry.get('to', '')
+            if target.startswith('.shared/'):
+                relpaths.add(Path(target.removeprefix('.shared/')))
+    return relpaths
+
+
 def collect_core_shared_writes(target: Path):
     writes = []
+    optional_shared_relpaths = collect_optional_shared_relpaths()
     for src in sorted(x for x in SHARED_ROOT.rglob('*') if x.is_file()):
         rel = src.relative_to(SHARED_ROOT)
         if rel.parts and rel.parts[0] in {'project', 'session'}:
+            continue
+        if rel in optional_shared_relpaths:
             continue
         writes.append((src, target / '.shared' / rel, 'file', 'core shared file'))
     return writes

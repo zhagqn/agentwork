@@ -10,6 +10,8 @@ ROOT = Path(__file__).resolve().parent.parent
 TMP = ROOT / '.tmp' / 'harness'
 REPOS = TMP / 'repos'
 RESULTS = TMP / 'results'
+TOOLS_ROOT = ROOT / '.agentwork' / 'tools'
+REGISTRY = TOOLS_ROOT / 'registry.json'
 SELF_SOURCE_COPY_IGNORE = shutil.ignore_patterns('.git', '.tmp', '__pycache__', '*.pyc')
 
 
@@ -41,7 +43,8 @@ def summary_report(results: list[dict]) -> dict:
     return {
         'design_basis': [
             'bootstrap 基础文件、内容 block 与 skill 结构使用脚本硬校验，不做评分。',
-            'tools 仅保留人工审查入口，不在 deterministic harness 中自动评分。',
+            'tools 的安装/卸载路径与 bootstrap 隔离使用脚本硬校验。',
+            'tools 的真实可用性仍保留人工审查入口，不在 deterministic harness 中自动评分。',
         ],
         'results': results,
         'manual_review': [
@@ -52,6 +55,21 @@ def summary_report(results: list[dict]) -> dict:
             }
         ],
     }
+
+
+def load_registry() -> dict:
+    return json.loads(REGISTRY.read_text(encoding='utf-8'))
+
+
+def tool_targets(tool_name: str) -> list[str]:
+    registry = load_registry()
+    for tool in registry.get('tools', []):
+        if tool.get('name') != tool_name:
+            continue
+        tool_meta_path = TOOLS_ROOT / tool['dir'] / 'tool.json'
+        tool_meta = json.loads(tool_meta_path.read_text(encoding='utf-8'))
+        return [entry['to'] for entry in tool_meta.get('entries', [])]
+    raise ValueError(f'unknown tool: {tool_name}')
 
 
 def main() -> int:
@@ -94,6 +112,106 @@ def main() -> int:
             [
                 ('fresh-bootstrap', fresh_install),
                 ('existing-bootstrap', existing_install),
+            ],
+            details,
+        )
+    )
+
+    figma_targets = tool_targets('figma')
+
+    tool_seeded_source = REPOS / 'tool-seeded-source'
+    shutil.copytree(ROOT, tool_seeded_source, ignore=SELF_SOURCE_COPY_IGNORE)
+    tool_seed_install = run(['python3', str(tool_seeded_source / 'install-tool.py'), 'install', 'figma', '-p', str(tool_seeded_source)])
+    write_process_logs('tool-seeded-source-install-figma', tool_seed_install)
+    tool_seeded_ok = all((tool_seeded_source / rel).exists() for rel in figma_targets)
+
+    isolated = REPOS / 'isolated-from-tool-seeded-source'
+    ensure_git_repo(isolated)
+    isolated_install = run(['python3', str(tool_seeded_source / 'install-bootstrap.py'), '-p', str(isolated)])
+    write_process_logs('isolated-bootstrap-from-tool-seeded-source', isolated_install)
+    leaked_targets = [rel for rel in figma_targets if (isolated / rel).exists()]
+    details = {
+        'ok': tool_seed_install.returncode == 0 and isolated_install.returncode == 0 and tool_seeded_ok and not leaked_targets,
+        'tool_seeded_ok': tool_seeded_ok,
+        'leaked_targets': leaked_targets,
+        'stdout': isolated_install.stdout.strip(),
+        'stderr': isolated_install.stderr.strip(),
+    }
+    results.append(
+        scenario_result(
+            'bootstrap_optional_tool_isolation',
+            [
+                ('tool-seeded-source-install-figma', tool_seed_install),
+                ('isolated-bootstrap-from-tool-seeded-source', isolated_install),
+            ],
+            details,
+        )
+    )
+
+    tool_lifecycle = REPOS / 'tool-lifecycle'
+    ensure_git_repo(tool_lifecycle)
+    tool_lifecycle_bootstrap = run(['python3', str(ROOT / 'install-bootstrap.py'), '-p', str(tool_lifecycle)])
+    write_process_logs('tool-lifecycle-bootstrap', tool_lifecycle_bootstrap)
+    legacy_tool_install = run(['python3', str(ROOT / 'install-tool.py'), 'figma', '-p', str(tool_lifecycle)])
+    write_process_logs('tool-lifecycle-legacy-install-figma', legacy_tool_install)
+    legacy_short_tool_install = run(['python3', str(ROOT / 'install-tool.py'), 'i', 'figma', '-p', str(tool_lifecycle)])
+    write_process_logs('tool-lifecycle-legacy-short-install-figma', legacy_short_tool_install)
+    legacy_long_flag_install = run(['python3', str(ROOT / 'install-tool.py'), '--install', 'figma', '-p', str(tool_lifecycle)])
+    write_process_logs('tool-lifecycle-legacy-long-flag-install-figma', legacy_long_flag_install)
+    tool_install = run(['python3', str(ROOT / 'install-tool.py'), '-i', 'figma', '-p', str(tool_lifecycle)])
+    write_process_logs('tool-lifecycle-install-figma', tool_install)
+    installed_targets = [rel for rel in figma_targets if (tool_lifecycle / rel).exists()]
+    tool_uninstall = run(['python3', str(ROOT / 'install-tool.py'), '-u', 'figma', '-p', str(tool_lifecycle)])
+    write_process_logs('tool-lifecycle-uninstall-figma', tool_uninstall)
+    tool_list = run(['python3', str(ROOT / 'install-tool.py'), '-l'])
+    write_process_logs('tool-list-short', tool_list)
+    remaining_targets = [rel for rel in figma_targets if (tool_lifecycle / rel).exists()]
+    core_files_preserved = all(
+        (tool_lifecycle / rel).exists()
+        for rel in [
+            '.shared/commands/session.md',
+            '.shared/project/index.md',
+            '.shared/session/README.md',
+        ]
+    )
+    details = {
+        'ok': (
+            tool_lifecycle_bootstrap.returncode == 0
+            and legacy_tool_install.returncode != 0
+            and legacy_short_tool_install.returncode != 0
+            and legacy_long_flag_install.returncode != 0
+            and tool_install.returncode == 0
+            and tool_uninstall.returncode == 0
+            and tool_list.returncode == 0
+            and 'figma' in tool_list.stdout
+            and len(installed_targets) == len(figma_targets)
+            and not remaining_targets
+            and core_files_preserved
+        ),
+        'legacy_install_stdout': legacy_tool_install.stdout.strip(),
+        'legacy_install_stderr': legacy_tool_install.stderr.strip(),
+        'legacy_short_install_stdout': legacy_short_tool_install.stdout.strip(),
+        'legacy_short_install_stderr': legacy_short_tool_install.stderr.strip(),
+        'legacy_long_flag_install_stdout': legacy_long_flag_install.stdout.strip(),
+        'legacy_long_flag_install_stderr': legacy_long_flag_install.stderr.strip(),
+        'installed_targets': installed_targets,
+        'remaining_targets': remaining_targets,
+        'core_files_preserved': core_files_preserved,
+        'list_stdout': tool_list.stdout.strip(),
+        'list_stderr': tool_list.stderr.strip(),
+        'install_stdout': tool_install.stdout.strip(),
+        'install_stderr': tool_install.stderr.strip(),
+        'uninstall_stdout': tool_uninstall.stdout.strip(),
+        'uninstall_stderr': tool_uninstall.stderr.strip(),
+    }
+    results.append(
+        scenario_result(
+            'tool_install_uninstall',
+            [
+                ('tool-lifecycle-bootstrap', tool_lifecycle_bootstrap),
+                ('tool-lifecycle-install-figma', tool_install),
+                ('tool-lifecycle-uninstall-figma', tool_uninstall),
+                ('tool-list-short', tool_list),
             ],
             details,
         )

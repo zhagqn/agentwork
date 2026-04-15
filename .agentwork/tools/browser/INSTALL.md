@@ -7,11 +7,14 @@
 
 ## Install
 ```bash
-python3 install-tool.py browser -p <path>
-python3 install-tool.py browser -p <path>
-python3 install-tool.py browser -p <path>
-python3 install-tool.py browser -p <path>
-python3 install-tool.py browser -p <path>
+python3 install-tool.py install browser -p <path>
+python3 install-tool.py -i browser -p <path>
+```
+
+## Uninstall
+```bash
+python3 install-tool.py uninstall browser -p <path>
+python3 install-tool.py -u browser -p <path>
 ```
 
 ## After install
