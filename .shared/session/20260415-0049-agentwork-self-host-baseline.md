@@ -66,6 +66,7 @@
 - 提交: `22a1b66 启用 agentwork 自承载工作流基线` | 范围: `.agentwork/bootstrap/`, `.agentwork/tools/`, `.agentwork/upstreams/`, `.agent/`, `.claude/`, `.cursor/`, `.github/`, `.shared/`, `.gitignore`, `install-tool.py`, `test/README.md`, `test/cases/`, `test/check_bootstrap_contract.py`, `test/run_real_cli.py`
 - 提交: `3733aa2 修复 self-install 的 source-root 引导文案` | 范围: `AGENTS.md`, `install-bootstrap.py`, `test/run_deterministic.py`
 - 提交: `510f209 收敛 session 轻量产出格式` | 范围: `.agentwork/bootstrap/data/session-readme.block.md`, `.shared/commands/commit.md`, `.shared/commands/exec.md`, `.shared/commands/review.md`, `.shared/commands/session.md`, `.shared/scripts/README.md`, `.shared/scripts/session-review.sh`, `.shared/session/README.md`, `.shared/templates/session.md`
+- 提交: `2fbaf62 补充 session load 取证规则` | 范围: `.agentwork/bootstrap/data/session-readme.block.md`, `.shared/commands/session.md`, `.shared/patterns/session-workflow.md`, `.shared/session/README.md`
 - 提交: `-` | 范围: `.shared/session/20260415-0049-agentwork-self-host-baseline.md`
 
 ## 风险 / 阻塞
@@ -111,6 +112,12 @@
 - 验证：`bash -n .shared/scripts/session-review.sh` 通过；`.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md` 能正确解析 1 个当前批次文件与 3 个已提交锚点；当前样例 session 已从逐文件锚点清单收敛为按批次归档
 - 提交锚点：session 轻量格式收敛主体已提交为 `510f209 收敛 session 轻量产出格式`；本 session 文件自身保留 `提交: -`
 - 风险/待办：若后续希望按目录范围自动展开或校验“产出批次”的覆盖面，需要额外定义范围语法；当前版本只把它当作轻量索引而非严格 manifest
+
+### 2026-04-15 16:28
+- 变更：补充 session 自身提交锚点的实践规则，并明确 `/session load` 只恢复任务快照；需要精确实现、真实 diff 或提交边界时，继续读取实际文件并按需使用 git 取证
+- 验证：`git diff --check` 通过；`python3 test/run_deterministic.py` 通过；新增规则已回填到 `.shared/commands/session.md`、`.shared/patterns/session-workflow.md`、`.shared/session/README.md` 与 bootstrap data block
+- 提交锚点：load 取证规则已提交为 `2fbaf62 补充 session load 取证规则`；本 session 文件自身保留 `提交: -`
+- 风险/待办：当前只约束“需要时主动取证”，尚未把 `git show <commit>` / `git diff <commit>^!` 之类细化成固定模板，后续若发现 agent 行为仍不稳定再补
 
 ## 建议摘录到 Project（可选）
 - 无；本轮已直接把稳定结论回填到 `.shared/project/agentwork.md`
