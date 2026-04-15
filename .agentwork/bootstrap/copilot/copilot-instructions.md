@@ -5,6 +5,8 @@ VS Code / GitHub Copilot 的仓库级说明。
 
 - 开始工作前先阅读 `.shared/INDEX.md`。
 - 需要仓库长期事实时阅读 `.shared/project/index.md`。
+- 若任务涉及具体项目或目录，先根据 `.shared/project/index.md` 读取对应的轻量 project 文档。
+- 当第一次确定将读取或修改的目标路径后，立即对照 `.shared/project/index.md` 的读取映射；若命中条目，先读取对应 `project/*.md`，若目标路径扩大则重新对照一次。
 - 遵循 `.shared/constraints/coding-style.md` 中的代码与文档风格。
 - 对破坏性或不可逆操作必须先确认。
 - 不自动加载 `.shared/session/*`；只有显式引用时才使用。

@@ -4,6 +4,7 @@
 
 ## 设计原则
 - bootstrap 基础文件、block、占位符泄漏、Codex skill frontmatter 这类结构约束：直接脚本硬校验
+- project 轻量索引与本地内容保留：直接脚本硬校验
 - tools 的安装/卸载路径与 bootstrap 隔离：直接脚本硬校验
 - 不做细粒度评分；结果只看 pass / fail / skipped
 - `test/` 只放测试脚本；测试项目与结果统一落到 `.tmp/`
@@ -13,7 +14,7 @@
 
 ## 当前脚本
 - `check_bootstrap_contract.py`：检查 bootstrap 产物结构、project/session block、本地内容保留、Codex skill frontmatter
-- `run_deterministic.py`：bootstrap、tool 安装/卸载、bootstrap-tool 隔离的硬校验
+- `run_deterministic.py`：bootstrap、轻量 project 索引、tool 安装/卸载、bootstrap-tool 隔离的硬校验
 - `run_real_cli.py`：真实调用 Codex / Claude CLI 的 harness
 - `cases/*.json`：promptfoo 风格的轻量断言用例（只保留 deterministic assertions + 人工审查清单）
 

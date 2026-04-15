@@ -43,6 +43,7 @@ def summary_report(results: list[dict]) -> dict:
     return {
         'design_basis': [
             'bootstrap 基础文件、内容 block 与 skill 结构使用脚本硬校验，不做评分。',
+            'project 轻量索引与本地 project 文档保留使用脚本硬校验，不做评分。',
             'tools 的安装/卸载路径与 bootstrap 隔离使用脚本硬校验。',
             'tools 的真实可用性仍保留人工审查入口，不在 deterministic harness 中自动评分。',
         ],
@@ -93,18 +94,22 @@ def main() -> int:
     (existing / '.shared/session').mkdir(parents=True, exist_ok=True)
     (existing / '.shared/project/local.md').write_text('LOCAL\n', encoding='utf-8')
     (existing / '.shared/project/index.md').write_text('# Project 索引\n\n## 本项目自定义内容\n- local keep\n', encoding='utf-8')
+    (existing / '.shared/project/sample.md').write_text('# Project: sample\n\n- local keep\n', encoding='utf-8')
     (existing / '.shared/session/README.md').write_text('# Session 目录说明\n\n## 本项目补充说明\n- local keep\n', encoding='utf-8')
     existing_install = run(['python3', str(ROOT / 'install-bootstrap.py'), '-p', str(existing)])
     write_process_logs('existing-bootstrap', existing_install)
     existing_contract = run(['python3', str(ROOT / 'test/check_bootstrap_contract.py'), str(existing)])
     write_process_logs('existing-bootstrap-contract', existing_contract)
+    existing_project_doc = (existing / '.shared/project/sample.md').read_text(encoding='utf-8')
+    existing_project_doc_ok = 'local keep' in existing_project_doc
 
     details = {
-        'ok': fresh_contract.returncode == 0 and existing_contract.returncode == 0,
+        'ok': fresh_contract.returncode == 0 and existing_contract.returncode == 0 and existing_project_doc_ok,
         'fresh_install_contract_stdout': fresh_contract.stdout.strip(),
         'fresh_install_contract_stderr': fresh_contract.stderr.strip(),
         'existing_reinstall_contract_stdout': existing_contract.stdout.strip(),
         'existing_reinstall_contract_stderr': existing_contract.stderr.strip(),
+        'existing_project_doc_ok': existing_project_doc_ok,
     }
     results.append(
         scenario_result(
@@ -224,6 +229,7 @@ def main() -> int:
     self_source_required = [
         'AGENTS.md',
         '.shared/INDEX.md',
+        '.shared/project/agentwork.md',
         '.claude/CLAUDE.md',
         '.claude/commands/session.md',
         '.agent/rules/bootstrap.md',

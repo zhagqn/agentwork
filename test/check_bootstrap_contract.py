@@ -64,8 +64,6 @@ def iter_text_files(root: Path):
         if any(part in SKIP_DIRS for part in path.parts):
             continue
         yield path
-
-
 def main() -> int:
     if len(sys.argv) != 2:
         print('usage: check_bootstrap_contract.py <repo>', file=sys.stderr)
