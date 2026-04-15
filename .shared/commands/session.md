@@ -7,10 +7,10 @@ Session 管理与推进命令。
 ## 当前核心子命令
 | 子命令 | 作用 | 等价流程 |
 | --- | --- | --- |
-| （无） | 同步当前 session | 更新当前 session 的结论 / 任务 / 产出物 |
+| （无） | 同步当前 session | 更新当前 session 的结论 / 任务 / 当前批次工作集 / 产出批次 |
 | `new <session-desc>` | 创建新 session | 仅建文件，不自动脑暴 |
 | `brain <brain-topic>` | 新建 session 并完成设计+计划收敛 | `/session new` → `/brain` → `/plan` |
-| `load <session-id>` | 手动加载 session | 读取任务 / 结论 / 产出物 / 最近审查记录 |
+| `load <session-id>` | 手动加载 session | 读取任务 / 结论 / 当前批次工作集 / 最近产出批次 / 最近审查记录 |
 | `exec [--ralph]` | 按任务列表推进当前批次，或进入持久执行模式 | 调用 `/exec` 或 `/exec --ralph` |
 | `review [session-id]` | 审查 session 与当前工作 | 调用 `/review` |
 
@@ -28,7 +28,7 @@ Session 管理与推进命令。
 等价于：`/session new <brain-topic>` → `/brain <brain-topic>` → `/plan`
 
 ## /session load <session-id>
-优先读取：任务列表、已确认结论、计划摘要、关联工件、最近产出物、最近审查记录。
+优先读取：任务列表、已确认结论、计划摘要、关联工件、当前批次工作集、最近产出批次、最近审查记录。
 
 ## /session exec [--ralph]
 - 默认：调用 `/exec`

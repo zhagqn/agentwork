@@ -6,7 +6,7 @@
 
 ## 当前核心脚本
 ### session-review.sh
-用途：对照 session 的“产出物（含提交锚点）”和当前工作区实际改动，辅助执行 `/review` 或 `/session review`
+用途：对照 session 的“当前批次工作集”与当前工作区实际改动，并检查“产出批次（提交锚点）”，辅助执行 `/review` 或 `/session review`
 
 ```bash
 .shared/scripts/session-review.sh                # 审查最新 session

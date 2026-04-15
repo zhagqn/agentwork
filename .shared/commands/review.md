@@ -9,7 +9,7 @@
 ## 两种工作模式
 ### Session mode
 - 来源：当前 session 或显式 session ref
-- 结果：更新 session 的任务、结论、产出物、审查记录
+- 结果：更新 session 的任务、结论、当前批次工作集、产出批次、审查记录
 
 ### Standalone mode
 - 来源优先级：

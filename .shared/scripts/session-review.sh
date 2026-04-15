@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Session 审查工具 - 对照 session 的“产出物”与工作区实际改动，辅助 /review 或 /session review
+# Session 审查工具 - 对照 session 的“当前批次工作集”与工作区改动，并检查“产出批次”锚点
 
 set -euo pipefail
 
@@ -54,11 +54,28 @@ git_root() {
     git rev-parse --show-toplevel 2>/dev/null || true
 }
 
-extract_deliverables() {
+extract_current_workset() {
     local session_file="$1"
+    local section
 
-    # 仅解析 “## 产出物（含提交锚点）” 到下一个 “## ” 之间的内容
-    # 优先解析“文件:”列，再提取反引号包裹的路径（兼容 legacy 的纯路径列表）
+    section=$(awk '
+        BEGIN { in_section=0 }
+        /^##[[:space:]]+当前批次工作集([（(].*[)）])?[[:space:]]*$/ { in_section=1; next }
+        /^##[[:space:]]+/ { if (in_section) exit }
+        { if (in_section) print }
+    ' "$session_file")
+
+    if [[ -n "$section" ]]; then
+        echo "$section" | \
+            grep -oE '`[^`]+`' | \
+            tr -d '`' | \
+            sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | \
+            sed '/^$/d' | \
+            sort -u
+        return
+    fi
+
+    # fallback：兼容 legacy 的“产出物（含提交锚点）”逐文件格式
     awk '
         BEGIN { in_deliverables=0 }
         /^##[[:space:]]+产出物([（(].*[)）])?[[:space:]]*$/ { in_deliverables=1; next }
@@ -75,15 +92,29 @@ extract_deliverables() {
 
 extract_commit_hashes() {
     local session_file="$1"
+    local section
 
-    # 仅解析“提交:”列的首个 token，过滤非 hash 值（如 "-"）
-    awk '
+    section=$(awk '
+        BEGIN { in_section=0 }
+        /^##[[:space:]]+产出批次([（(].*[)）])?[[:space:]]*$/ { in_section=1; next }
+        /^##[[:space:]]+/ { if (in_section) exit }
+        { if (in_section) print }
+    ' "$session_file")
+
+    if [[ -z "$section" ]]; then
+        # fallback：兼容 legacy 的“产出物（含提交锚点）”
+        section=$(awk '
         BEGIN { in_deliverables=0 }
         /^##[[:space:]]+产出物([（(].*[)）])?[[:space:]]*$/ { in_deliverables=1; next }
         /^##[[:space:]]+/ { if (in_deliverables) exit }
         { if (in_deliverables) print }
-    ' "$session_file" | \
-        sed -nE 's/^.*提交:[[:space:]]*([^[:space:]]+).*/\1/p' | \
+    ' "$session_file")
+    fi
+
+    # 仅解析“提交:”列的首个 token，过滤非 hash 值（如 "-"）
+    echo "$section" | \
+        sed -nE 's/^.*提交:[[:space:]]*`?([^`|]+)`?.*/\1/p' | \
+        awk '{print $1}' | \
         grep -E '^[0-9a-fA-F]{7,40}$' | \
         tr 'A-F' 'a-f' | \
         sort -u
@@ -131,20 +162,20 @@ main() {
 
     echo ""
 
-    local deliverables
-    deliverables="$(extract_deliverables "$session_file" || true)"
+    local workset
+    workset="$(extract_current_workset "$session_file" || true)"
 
-    local deliverable_count=0
-    if [[ -n "$deliverables" ]]; then
-        deliverable_count=$(echo "$deliverables" | wc -l | tr -d ' ')
+    local workset_count=0
+    if [[ -n "$workset" ]]; then
+        workset_count=$(echo "$workset" | wc -l | tr -d ' ')
     fi
 
-    echo "产出物（从“## 产出物（含提交锚点）”解析，优先“文件:”列）：$deliverable_count"
+    echo "当前批次工作集（优先从“## 当前批次工作集”解析；若不存在则回退 legacy 产出物）：$workset_count"
 
-    if [[ -n "$deliverables" ]]; then
-        echo "$deliverables" | sed 's/.*/- `&`/'
+    if [[ -n "$workset" ]]; then
+        echo "$workset" | sed 's/.*/- `&`/'
     else
-        echo "- （未解析到产出物路径；建议在“文件:”中用反引号标注路径）"
+        echo "- （无）"
     fi
 
     echo ""
@@ -157,7 +188,7 @@ main() {
         commit_hash_count=$(echo "$commit_hashes" | wc -l | tr -d ' ')
     fi
 
-    echo "提交锚点（从“提交:”解析）：$commit_hash_count"
+    echo "产出批次锚点（优先从“## 产出批次（提交锚点）”解析；若不存在则回退 legacy 产出物）：$commit_hash_count"
     if [[ -n "$commit_hashes" ]]; then
         echo "$commit_hashes" | sed 's/.*/- &/'
     else
@@ -208,9 +239,9 @@ main() {
         echo ""
     fi
 
-    # 产出物缺失检查（相对 git root）
+    # 当前批次工作集缺失检查（相对 git root）
     local missing=()
-    if [[ -n "$deliverables" ]]; then
+    if [[ -n "$workset" ]]; then
         while IFS= read -r path; do
             # 对于绝对路径或不在仓库内的路径，不做存在性检查
             if [[ "$path" == /* ]]; then
@@ -219,45 +250,45 @@ main() {
             if [[ ! -e "$root/$path" ]]; then
                 missing+=("$path")
             fi
-        done <<< "$deliverables"
+        done <<< "$workset"
     fi
 
     if [[ ${#missing[@]} -gt 0 ]]; then
-        echo "缺失/疑似过期的产出物（路径不存在）："
+        echo "缺失/疑似过期的当前批次工作集条目（路径不存在）："
         printf '%s\n' "${missing[@]}" | sort -u | sed 's/.*/- `&`/'
         echo ""
     fi
 
-    # 工作区改动但未记录到产出物（简单精确匹配）
+    # 工作区改动但未记录到当前批次工作集（简单精确匹配）
     local changed_not_listed=()
     if [[ -n "$changed" ]]; then
         while IFS= read -r f; do
             [[ -z "$f" ]] && continue
-            if [[ -z "$deliverables" ]] || ! grep -qxF "$f" <<< "$deliverables"; then
+            if [[ -z "$workset" ]] || ! grep -qxF "$f" <<< "$workset"; then
                 changed_not_listed+=("$f")
             fi
         done <<< "$changed"
     fi
 
     if [[ ${#changed_not_listed[@]} -gt 0 ]]; then
-        echo "工作区有改动但未记录到“产出物”："
+        echo "工作区有改动但未记录到“当前批次工作集”："
         printf '%s\n' "${changed_not_listed[@]}" | sort -u | sed 's/.*/- `&`/'
         echo ""
     fi
 
-    # 产出物中记录但当前工作区未体现（可能已提交/已还原/非文件）
+    # 当前批次工作集中记录但当前工作区未体现（可能已提交/已还原）
     local listed_but_not_changed=()
-    if [[ -n "$deliverables" ]]; then
+    if [[ -n "$workset" ]]; then
         while IFS= read -r f; do
             [[ -z "$f" ]] && continue
             if [[ -z "$changed" ]] || ! grep -qxF "$f" <<< "$changed"; then
                 listed_but_not_changed+=("$f")
             fi
-        done <<< "$deliverables"
+        done <<< "$workset"
     fi
 
     if [[ ${#listed_but_not_changed[@]} -gt 0 ]]; then
-        echo "“产出物”中记录但当前工作区未体现（可能已提交/已还原）："
+        echo "“当前批次工作集”中记录但当前工作区未体现（可能已提交/已还原）："
         printf '%s\n' "${listed_but_not_changed[@]}" | sort -u | sed 's/.*/- `&`/'
         echo ""
     fi

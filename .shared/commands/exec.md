@@ -7,7 +7,7 @@
 ## 两种工作模式
 ### Session mode
 - 来源：当前 session
-- 执行后：更新 session 中的任务状态、产出物、风险
+- 执行后：更新 session 中的任务状态、当前批次工作集、风险
 
 ### Standalone mode
 - 来源优先级：
