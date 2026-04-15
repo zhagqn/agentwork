@@ -186,8 +186,8 @@
 - 2026-04-15 00:49 | 文件: `.shared/templates/ralph-progress.json.example` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
 - 2026-04-15 00:49 | 文件: `.shared/templates/review.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
 - 2026-04-15 00:49 | 文件: `.shared/templates/session.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `AGENTS.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `install-bootstrap.py` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
+- 2026-04-15 00:49 | 文件: `AGENTS.md` | 提交: 3733aa2 修复 self-install 的 source-root 引导文案 | 验证: 工作区已记录当前版本
+- 2026-04-15 00:49 | 文件: `install-bootstrap.py` | 提交: 3733aa2 修复 self-install 的 source-root 引导文案 | 验证: 工作区已记录当前版本
 - 2026-04-15 00:49 | 文件: `install-tool.py` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
 - 2026-04-15 00:49 | 文件: `test/README.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
 - 2026-04-15 00:49 | 文件: `test/cases/brain_readme_intro.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
@@ -197,12 +197,12 @@
 - 2026-04-15 00:49 | 文件: `test/cases/review_readme_intro.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
 - 2026-04-15 00:49 | 文件: `test/cases/session_planning.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
 - 2026-04-15 00:49 | 文件: `test/check_bootstrap_contract.py` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `test/run_deterministic.py` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
+- 2026-04-15 00:49 | 文件: `test/run_deterministic.py` | 提交: 3733aa2 修复 self-install 的 source-root 引导文案 | 验证: 工作区已记录当前版本
 - 2026-04-15 00:49 | 文件: `test/run_real_cli.py` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
 
 ## 风险 / 阻塞
-- 当前仓库仍没有正式 commit，所有“提交锚点”暂时只能写 `-`
-- 根目录 bootstrap 产物已生成到工作区，但是否把这些产物作为 source repo 正式基线继续跟踪，仍需后续明确
+- 当前仓库已建立提交历史，但 session 文件自身仍因自引用无法预先写入“最终那一次 session 提交”的 hash
+- 根目录 bootstrap 产物已提交到仓库，但是否将这些产物长期视为 source repo 正式基线，仍需后续明确
 - optional tools 已 source-managed，但 source repo 场景下的 tool self-install 目前只有人工 smoke / 手动审查，没有纳入 deterministic 自动评分
 
 ## 审查记录
@@ -231,5 +231,12 @@
 - 验证：`python3 install-bootstrap.py -p .` 通过，`python3 test/run_deterministic.py` 通过（fresh/existing/self-source 全绿），`git diff --check` 通过，`.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md` 对照通过（产出物=工作区改动=131）
 - 提交锚点：业务基线已提交为 `22a1b66 启用 agentwork 自承载工作流基线`；本 session 文件自身因自引用无法预先写入最终提交 hash，保留 `提交: -`
 - 风险/待办：决定 root installed wrappers 是否要纳入正式基线；若未来把 tool self-install 也当成 source repo 的第一类能力，需要补自动化回归
+
+### 2026-04-15 09:22
+- 变更：修复原地 self-install 会把 source-root `AGENTS.md` 覆盖成 target-root 版本的问题；现在 self-install 会保留 source repo 引导文案，并把该约束纳入 deterministic harness
+- 验证：`python3 install-bootstrap.py -p .` 通过且 `AGENTS.md` 保留 source-root 标记；`python3 test/run_deterministic.py` 继续全绿；`git diff --check` 通过
+- 提交锚点：source-root 回归修复已提交为 `3733aa2 修复 self-install 的 source-root 引导文案`
+- 风险/待办：若后续还要让 source repo 支持更多“原地安装”变体，需要继续防止 source/target 文案或生成物互相覆盖
+
 ## 建议摘录到 Project（可选）
 - 无；本轮已直接把稳定结论回填到 `.shared/project/agentwork.md`
