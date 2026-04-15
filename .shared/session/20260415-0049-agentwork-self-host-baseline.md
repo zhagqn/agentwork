@@ -12,7 +12,7 @@
 ## 已确认结论（当前版本）
 ### 目标
 - 将 `agentwork` 收敛为可自承载的 workflow source repo：既维护 source 层（`.agentwork/*`），也能在仓库根目录直接使用 agentwork 的核心工作流继续改进自身
-- 用一份 session 反向总结当前整仓改动，方便后续在 `agentwork` 目录中直接续作，而不必重新从零梳理上下文
+- 用一份 session 快照承接 source repo 的后续续作，而不必重新从零梳理上下文
 ### 边界
 - In Scope: 当前 live workflow 文件、bootstrap source、optional tool source、upstream mapping、test harness、source repo 自承载能力与现有上下文结论
 - Out of Scope: 新业务功能、可选工具默认预装、提交/发布流程、跨仓库同步自动化
@@ -31,33 +31,25 @@
 ### 核心定义 / 流程（可选）
 - `.shared/commands/*`：核心动作定义（session / brain / plan / exec / review / commit）
 - `.shared/patterns/*`：工作流边界、跨平台适配、project/session 分层、语义导航约束
-- `.shared/templates/*`：session / brain / plan / review / Ralph 辅助工件模板
-- `.agentwork/bootstrap/*`：由 `spec.json` + `render_bootstrap.py` 生成的 root / Claude / Antigravity / Cursor / Codex / Copilot 薄封装 source
-- `.agentwork/tools/*`：figma / browser / android / godot 的 source-managed optional tool packs
-- `test/*`：fresh install、existing reinstall、source repo self-install 的 deterministic harness，以及真实 CLI harness
+- `.agentwork/bootstrap/*`、`.agentwork/tools/*`、`test/*`：source 生成层、可选工具层与 deterministic harness
 
 ## 计划摘要（可选）
 ### 关键文件 / 边界
-- source repo 自承载入口：`install-bootstrap.py`、`install-tool.py`
+- 自承载入口：`install-bootstrap.py`、`install-tool.py`
 - 核心约束入口：`AGENTS.md`、`.shared/INDEX.md`、`.shared/project/agentwork.md`
-- source 生成层：`.agentwork/bootstrap/spec.json`、`.agentwork/bootstrap/render_bootstrap.py`
-- optional tool source：`.agentwork/tools/*`
-- 验证层：`test/run_deterministic.py`、`test/check_bootstrap_contract.py`
+- source 生成与验证：`.agentwork/bootstrap/spec.json`、`.agentwork/bootstrap/render_bootstrap.py`、`test/run_deterministic.py`
 ### 执行批次 / 优先级
-- 已完成：从 OMX-first 叙事切回 runtime-agnostic 的 agentwork 核心工作流
-- 已完成：把 session 收敛为任务快照，把 Ralph 收敛为 `/exec` 的执行策略
-- 已完成：把 optional tools 迁到 `.agentwork/tools/*`，把 upstream 映射收敛到 `.agentwork/upstreams/*`
-- 已完成：补齐 source repo 原地 bootstrap 能力，并把它纳入 deterministic harness
+- 已完成：runtime-agnostic/self-host baseline、optional tool source、upstream mapping、deterministic self-source 回归
 - 下一批次：围绕具体新功能或改进点，在此基线上重新进入 `/brain` / `/plan`
 ### 执行策略（可选）
 - standard
 ### 验证策略
-- `python3 install-bootstrap.py -p .` 必须在 source repo 根目录成功执行
-- `python3 test/run_deterministic.py` 必须覆盖 fresh install、existing reinstall、source repo self-install 三类场景
-- `git diff --check` 保持通过；session 归档后再用 `.shared/scripts/session-review.sh` 对照改动清单
+- `python3 install-bootstrap.py -p .`
+- `python3 test/run_deterministic.py`
+- `git diff --check`
 ### 完成标准（可选）
 - source repo 可以原地刷新核心 workflow 层
-- 当前整仓改动可通过一份 session 快照直接恢复高价值上下文
+- 当前整仓改动可通过这份 session 快照直接恢复高价值上下文
 - 后续在 `agentwork` 根目录里可以直接接着做下一轮 `/brain`、`/plan`、`/exec` 或 `/review`
 
 ## 关联工件（可选）
@@ -67,138 +59,14 @@
 - `.tmp/oh-my-codex/`
 - `.tmp/harness/results/summary.json`
 
-## 产出物（含提交锚点）
-- 2026-04-15 00:49 | 文件: `.agent/rules/bootstrap.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agent/workflows/brain.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agent/workflows/commit.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agent/workflows/exec.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agent/workflows/plan.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agent/workflows/review.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agent/workflows/session.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/README.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/agent/rules/bootstrap.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/agent/workflows/brain.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/agent/workflows/commit.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/agent/workflows/exec.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/agent/workflows/plan.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/agent/workflows/review.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/agent/workflows/session.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/claude/CLAUDE.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/claude/commands/brain.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/claude/commands/commit.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/claude/commands/exec.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/claude/commands/plan.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/claude/commands/review.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/claude/commands/session.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/codex/skills/brain/SKILL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/codex/skills/commit/SKILL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/codex/skills/exec/SKILL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/codex/skills/plan/SKILL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/codex/skills/review/SKILL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/codex/skills/session/SKILL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/copilot/copilot-instructions.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/cursor/rules/agentwork-bootstrap.mdc` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/data/project-index.block.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/data/session-readme.block.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/render_bootstrap.py` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/root/AGENTS.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/bootstrap/spec.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/README.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/android/INSTALL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/android/README.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/android/agent/workflows/android.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/android/claude/commands/android.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/android/codex/skills/android/SKILL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/android/copilot/prompts/android.instructions.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/android/cursor/rules/android.mdc` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/android/shared/commands/android.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/android/shared/scripts/android-shell-pull-fallback.sh` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/android/tool.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/browser/INSTALL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/browser/README.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/browser/agent/skills/browser/SKILL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/browser/claude/skills/browser/SKILL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/browser/codex/skills/browser/SKILL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/browser/copilot/prompts/browser.instructions.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/browser/cursor/rules/browser.mdc` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/browser/shared/skills/browser/SKILL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/browser/shared/skills/browser/scripts/browser-run.sh` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/browser/tool.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/figma/INSTALL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/figma/README.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/figma/agent/workflows/figma.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/figma/claude/commands/figma.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/figma/codex/skills/figma/SKILL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/figma/copilot/prompts/figma.instructions.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/figma/cursor/rules/figma.mdc` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/figma/shared/commands/figma.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/figma/shared/mcp/figma.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/figma/shared/scripts/figma-mcp-health-check.sh` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/figma/tool.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/godot/INSTALL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/godot/README.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/godot/agent/workflows/godot.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/godot/codex/skills/godot/SKILL.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/godot/copilot/prompts/godot.instructions.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/godot/cursor/rules/godot.mdc` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/godot/shared/commands/godot.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/godot/tool.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/tools/registry.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/upstreams/README.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/upstreams/oh-my-codex-ralph.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.agentwork/upstreams/superpowers.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.claude/CLAUDE.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.claude/commands/brain.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.claude/commands/commit.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.claude/commands/exec.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.claude/commands/plan.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.claude/commands/review.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.claude/commands/session.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.cursor/rules/agentwork-bootstrap.mdc` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.github/copilot-instructions.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.gitignore` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/INDEX.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/commands/brain.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/commands/commit.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/commands/exec.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/commands/plan.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/commands/review.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/commands/session.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/constraints/coding-style.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/constraints/destructive-operations.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/constraints/placeholder-naming.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/patterns/platform-adapter.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/patterns/project-management.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/patterns/semantic-navigation.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/patterns/session-workflow.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/project/.gitkeep` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/project/agentwork.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/project/index.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/scripts/README.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/scripts/session-review.sh` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/session/.gitkeep` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/session/20260415-0049-agentwork-self-host-baseline.md` | 提交: - | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/session/README.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/templates/brain.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/templates/plan.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/templates/project.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/templates/ralph-context.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/templates/ralph-progress.json.example` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/templates/review.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `.shared/templates/session.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `AGENTS.md` | 提交: 3733aa2 修复 self-install 的 source-root 引导文案 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `install-bootstrap.py` | 提交: 3733aa2 修复 self-install 的 source-root 引导文案 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `install-tool.py` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `test/README.md` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `test/cases/brain_readme_intro.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `test/cases/exec_ralph_readme_intro.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `test/cases/exec_readme_intro.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `test/cases/plan_readme_intro.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `test/cases/review_readme_intro.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `test/cases/session_planning.json` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `test/check_bootstrap_contract.py` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `test/run_deterministic.py` | 提交: 3733aa2 修复 self-install 的 source-root 引导文案 | 验证: 工作区已记录当前版本
-- 2026-04-15 00:49 | 文件: `test/run_real_cli.py` | 提交: 22a1b66 启用 agentwork 自承载工作流基线 | 验证: 工作区已记录当前版本
+## 当前批次工作集（可选）
+- `.shared/session/20260415-0049-agentwork-self-host-baseline.md`
+
+## 产出批次（提交锚点）
+- 提交: `22a1b66 启用 agentwork 自承载工作流基线` | 范围: `.agentwork/bootstrap/`, `.agentwork/tools/`, `.agentwork/upstreams/`, `.agent/`, `.claude/`, `.cursor/`, `.github/`, `.shared/`, `.gitignore`, `install-tool.py`, `test/README.md`, `test/cases/`, `test/check_bootstrap_contract.py`, `test/run_real_cli.py`
+- 提交: `3733aa2 修复 self-install 的 source-root 引导文案` | 范围: `AGENTS.md`, `install-bootstrap.py`, `test/run_deterministic.py`
+- 提交: `510f209 收敛 session 轻量产出格式` | 范围: `.agentwork/bootstrap/data/session-readme.block.md`, `.shared/commands/commit.md`, `.shared/commands/exec.md`, `.shared/commands/review.md`, `.shared/commands/session.md`, `.shared/scripts/README.md`, `.shared/scripts/session-review.sh`, `.shared/session/README.md`, `.shared/templates/session.md`
+- 提交: `-` | 范围: `.shared/session/20260415-0049-agentwork-self-host-baseline.md`
 
 ## 风险 / 阻塞
 - 当前仓库已建立提交历史，但 session 文件自身仍因自引用无法预先写入“最终那一次 session 提交”的 hash
@@ -228,7 +96,7 @@
 
 ### 2026-04-15 00:49
 - 变更：补齐 source repo 原地 bootstrap 能力；`install-bootstrap.py` 现在会跳过与 source 同路径的核心 `.shared` 文件，并新增 deterministic self-source 场景；同时把当前整仓工作反向总结为本 session
-- 验证：`python3 install-bootstrap.py -p .` 通过，`python3 test/run_deterministic.py` 通过（fresh/existing/self-source 全绿），`git diff --check` 通过，`.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md` 对照通过（产出物=工作区改动=131）
+- 验证：`python3 install-bootstrap.py -p .` 通过，`python3 test/run_deterministic.py` 通过（fresh/existing/self-source 全绿），`git diff --check` 通过；对应基线改动已归档到 `22a1b66`
 - 提交锚点：业务基线已提交为 `22a1b66 启用 agentwork 自承载工作流基线`；本 session 文件自身因自引用无法预先写入最终提交 hash，保留 `提交: -`
 - 风险/待办：决定 root installed wrappers 是否要纳入正式基线；若未来把 tool self-install 也当成 source repo 的第一类能力，需要补自动化回归
 
@@ -237,6 +105,12 @@
 - 验证：`python3 install-bootstrap.py -p .` 通过且 `AGENTS.md` 保留 source-root 标记；`python3 test/run_deterministic.py` 继续全绿；`git diff --check` 通过
 - 提交锚点：source-root 回归修复已提交为 `3733aa2 修复 self-install 的 source-root 引导文案`
 - 风险/待办：若后续还要让 source repo 支持更多“原地安装”变体，需要继续防止 source/target 文案或生成物互相覆盖
+
+### 2026-04-15 16:07
+- 变更：将 session 产出格式收敛为“当前批次工作集 + 产出批次（提交锚点）”；同步更新模板、`session-review.sh`、相关命令文档，并按新规范重构本 session
+- 验证：`bash -n .shared/scripts/session-review.sh` 通过；`.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md` 能正确解析 1 个当前批次文件与 3 个已提交锚点；当前样例 session 已从逐文件锚点清单收敛为按批次归档
+- 提交锚点：session 轻量格式收敛主体已提交为 `510f209 收敛 session 轻量产出格式`；本 session 文件自身保留 `提交: -`
+- 风险/待办：若后续希望按目录范围自动展开或校验“产出批次”的覆盖面，需要额外定义范围语法；当前版本只把它当作轻量索引而非严格 manifest
 
 ## 建议摘录到 Project（可选）
 - 无；本轮已直接把稳定结论回填到 `.shared/project/agentwork.md`
