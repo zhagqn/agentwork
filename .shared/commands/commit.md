@@ -27,6 +27,8 @@
 ## Session 锚点检查
 - 若提交包含 `.shared/session/*.md`，必须检查“产出批次（提交锚点）”相关条目是否已填写真实 hash
 - 若仍是 `提交: -`，且上一批次刚提交了业务改动，必须先回填 `提交: <commit-hash> <commit-subject>`
+- 若本次提交只是在提交 session 文件自身，允许该 session 为“自身这一笔”保留 `提交: -`
+- 不要求为了回填 session 自身再做第三次提交；除“session 文件自身”外，其他批次条目都应写真实 hash
 
 ## 当前项目工件关系
 - 若上下文已经在 `.shared/session/*`、`.shared/project/*`、`research/*` 中充分记录，提交信息不需要重复冗长背景

@@ -43,7 +43,7 @@
 
 ## 产出批次（提交锚点）
 - 提交: `abc1234 简要标题` | 范围: `.shared/...`, `src/...`
-- 提交: `-` | 范围: `.shared/session/{session-id}.md`
+- 提交: `-` | 范围: `.shared/session/{session-id}.md`（仅用于 session 文件自身这一笔）
 
 ## 风险 / 阻塞
 - {当前风险或阻塞}
