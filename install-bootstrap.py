@@ -53,7 +53,8 @@ def collect_core_shared_writes(target: Path):
 def collect_writes(target: Path):
     writes = []
     writes.extend(collect_core_shared_writes(target))
-    writes.append((BOOTSTRAP / 'root' / 'AGENTS.md', target / 'AGENTS.md', 'file', 'root bootstrap file'))
+    root_bootstrap = ROOT / 'AGENTS.md' if target.resolve() == ROOT.resolve() else BOOTSTRAP / 'root' / 'AGENTS.md'
+    writes.append((root_bootstrap, target / 'AGENTS.md', 'file', 'root bootstrap file'))
     writes.append((BOOTSTRAP / 'claude' / 'CLAUDE.md', target / '.claude' / 'CLAUDE.md', 'file', 'Claude bootstrap file'))
     for src in sorted((BOOTSTRAP / 'claude' / 'commands').glob('*.md')):
         writes.append((src, target / '.claude' / 'commands' / src.name, 'file', 'Claude wrapper'))

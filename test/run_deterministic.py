@@ -116,11 +116,17 @@ def main() -> int:
     self_source_missing = [
         rel for rel in self_source_required if not (self_source / rel).exists()
     ]
+    self_source_agents = (self_source / 'AGENTS.md').read_text(encoding='utf-8')
+    self_source_root_ok = (
+        'source repo 的安装入口：`install-bootstrap.py`、`install-tool.py`' in self_source_agents
+        and '这是目标项目的启动说明版本。' not in self_source_agents
+    )
     details = {
-        'ok': self_source_install.returncode == 0 and not self_source_missing,
+        'ok': self_source_install.returncode == 0 and not self_source_missing and self_source_root_ok,
         'stdout': self_source_install.stdout.strip(),
         'stderr': self_source_install.stderr.strip(),
         'missing': self_source_missing,
+        'source_root_agents_ok': self_source_root_ok,
     }
     results.append(
         scenario_result(
