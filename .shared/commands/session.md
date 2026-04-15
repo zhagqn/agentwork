@@ -29,6 +29,8 @@ Session 管理与推进命令。
 
 ## /session load <session-id>
 优先读取：任务列表、已确认结论、计划摘要、关联工件、当前批次工作集、最近产出批次、最近审查记录。
+- `load` 只恢复任务快照，不替代实际仓库事实。
+- 当需要确认具体实现、精确文件内容、真实 diff、提交边界时，必须继续读取相关文件，并按需使用 `git diff`、`git show`、`git log -- <path>` 等方式取证。
 
 ## /session exec [--ralph]
 - 默认：调用 `/exec`

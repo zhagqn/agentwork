@@ -14,6 +14,7 @@ Session 是 agentwork 的**任务快照与工作流外壳**：
 5. 持久执行可选化：通过 `/exec --ralph` 或 `/session exec --ralph`
 6. review 双层化：通过 `/review` 同时 review 工件与工作产物
 7. standalone 可工作：没有 session 也能通过 `.tmp/agentwork/*` 跑通
+8. 快照不替代事实：load session 后，若需要精确代码/差异/提交上下文，继续以仓库当前文件与 git 记录为准
 
 ## 命令分层
 | 命令 | 角色 | standalone 落点 |

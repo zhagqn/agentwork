@@ -10,5 +10,6 @@
 - 审查前优先运行 `.shared/scripts/session-review.sh`
 - 当前未提交或正在处理的精确文件写到“当前批次工作集”
 - 已提交结果按“产出批次（提交锚点）”记录，不再逐文件展开
+- `/session load` 只恢复任务快照；需要精确实现或差异时，继续读取实际文件并按需使用 git 取证
 - 临时思考过程不要直接沉淀为 session 结论
 <!-- AGENTWORK:SESSION-README:END -->
