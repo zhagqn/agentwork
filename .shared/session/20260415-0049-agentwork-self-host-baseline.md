@@ -63,11 +63,11 @@
 - `.shared/session/20260415-0049-agentwork-self-host-baseline.md`
 
 ## 产出批次（提交锚点）
-- 提交: `22a1b66 启用 agentwork 自承载工作流基线` | 范围: `.agentwork/bootstrap/`, `.agentwork/tools/`, `.agentwork/upstreams/`, `.agent/`, `.claude/`, `.cursor/`, `.github/`, `.shared/`, `.gitignore`, `install-tool.py`, `test/README.md`, `test/cases/`, `test/check_bootstrap_contract.py`, `test/run_real_cli.py`
-- 提交: `3733aa2 修复 self-install 的 source-root 引导文案` | 范围: `AGENTS.md`, `install-bootstrap.py`, `test/run_deterministic.py`
-- 提交: `510f209 收敛 session 轻量产出格式` | 范围: `.agentwork/bootstrap/data/session-readme.block.md`, `.shared/commands/commit.md`, `.shared/commands/exec.md`, `.shared/commands/review.md`, `.shared/commands/session.md`, `.shared/scripts/README.md`, `.shared/scripts/session-review.sh`, `.shared/session/README.md`, `.shared/templates/session.md`
-- 提交: `2fbaf62 补充 session load 取证规则` | 范围: `.agentwork/bootstrap/data/session-readme.block.md`, `.shared/commands/session.md`, `.shared/patterns/session-workflow.md`, `.shared/session/README.md`
-- 提交: `d2657cc 明确 session 自身锚点规则` | 范围: `.shared/commands/commit.md`, `.shared/session/README.md`
+- 提交: `8b41c9e feat(self-host): 启用 agentwork 自承载工作流基线` | 范围: `.agentwork/bootstrap/`, `.agentwork/tools/`, `.agentwork/upstreams/`, `.agent/`, `.claude/`, `.cursor/`, `.github/`, `.shared/`, `.gitignore`, `install-tool.py`, `test/README.md`, `test/cases/`, `test/check_bootstrap_contract.py`, `test/run_real_cli.py`
+- 提交: `19f2aa7 fix(bootstrap): 修复 self-install 的 source-root 引导文案` | 范围: `AGENTS.md`, `install-bootstrap.py`, `test/run_deterministic.py`
+- 提交: `e7e2c8c refactor(session): 收敛 session 轻量产出格式` | 范围: `.agentwork/bootstrap/data/session-readme.block.md`, `.shared/commands/commit.md`, `.shared/commands/exec.md`, `.shared/commands/review.md`, `.shared/commands/session.md`, `.shared/scripts/README.md`, `.shared/scripts/session-review.sh`, `.shared/session/README.md`, `.shared/templates/session.md`
+- 提交: `791b31a docs(session): 补充 session load 取证规则` | 范围: `.agentwork/bootstrap/data/session-readme.block.md`, `.shared/commands/session.md`, `.shared/patterns/session-workflow.md`, `.shared/session/README.md`
+- 提交: `45bad97 docs(commit): 明确 session 自身锚点规则` | 范围: `.shared/commands/commit.md`, `.shared/session/README.md`
 - 提交: `-` | 范围: `.shared/session/20260415-0049-agentwork-self-host-baseline.md`
 
 ## 风险 / 阻塞
@@ -98,33 +98,39 @@
 
 ### 2026-04-15 00:49
 - 变更：补齐 source repo 原地 bootstrap 能力；`install-bootstrap.py` 现在会跳过与 source 同路径的核心 `.shared` 文件，并新增 deterministic self-source 场景；同时把当前整仓工作反向总结为本 session
-- 验证：`python3 install-bootstrap.py -p .` 通过，`python3 test/run_deterministic.py` 通过（fresh/existing/self-source 全绿），`git diff --check` 通过；对应基线改动已归档到 `22a1b66`
-- 提交锚点：业务基线已提交为 `22a1b66 启用 agentwork 自承载工作流基线`；本 session 文件自身因自引用无法预先写入最终提交 hash，保留 `提交: -`
+- 验证：`python3 install-bootstrap.py -p .` 通过，`python3 test/run_deterministic.py` 通过（fresh/existing/self-source 全绿），`git diff --check` 通过；对应基线改动已归档到 `8b41c9e`
+- 提交锚点：业务基线已提交为 `8b41c9e feat(self-host): 启用 agentwork 自承载工作流基线`；本 session 文件自身因自引用无法预先写入最终提交 hash，保留 `提交: -`
 - 风险/待办：决定 root installed wrappers 是否要纳入正式基线；若未来把 tool self-install 也当成 source repo 的第一类能力，需要补自动化回归
 
 ### 2026-04-15 09:22
 - 变更：修复原地 self-install 会把 source-root `AGENTS.md` 覆盖成 target-root 版本的问题；现在 self-install 会保留 source repo 引导文案，并把该约束纳入 deterministic harness
 - 验证：`python3 install-bootstrap.py -p .` 通过且 `AGENTS.md` 保留 source-root 标记；`python3 test/run_deterministic.py` 继续全绿；`git diff --check` 通过
-- 提交锚点：source-root 回归修复已提交为 `3733aa2 修复 self-install 的 source-root 引导文案`
+- 提交锚点：source-root 回归修复已提交为 `19f2aa7 fix(bootstrap): 修复 self-install 的 source-root 引导文案`
 - 风险/待办：若后续还要让 source repo 支持更多“原地安装”变体，需要继续防止 source/target 文案或生成物互相覆盖
 
 ### 2026-04-15 16:07
 - 变更：将 session 产出格式收敛为“当前批次工作集 + 产出批次（提交锚点）”；同步更新模板、`session-review.sh`、相关命令文档，并按新规范重构本 session
 - 验证：`bash -n .shared/scripts/session-review.sh` 通过；`.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md` 能正确解析 1 个当前批次文件与 3 个已提交锚点；当前样例 session 已从逐文件锚点清单收敛为按批次归档
-- 提交锚点：session 轻量格式收敛主体已提交为 `510f209 收敛 session 轻量产出格式`；本 session 文件自身保留 `提交: -`
+- 提交锚点：session 轻量格式收敛主体已提交为 `e7e2c8c refactor(session): 收敛 session 轻量产出格式`；本 session 文件自身保留 `提交: -`
 - 风险/待办：若后续希望按目录范围自动展开或校验“产出批次”的覆盖面，需要额外定义范围语法；当前版本只把它当作轻量索引而非严格 manifest
 
 ### 2026-04-15 16:28
 - 变更：补充 session 自身提交锚点的实践规则，并明确 `/session load` 只恢复任务快照；需要精确实现、真实 diff 或提交边界时，继续读取实际文件并按需使用 git 取证
 - 验证：`git diff --check` 通过；`python3 test/run_deterministic.py` 通过；新增规则已回填到 `.shared/commands/session.md`、`.shared/patterns/session-workflow.md`、`.shared/session/README.md` 与 bootstrap data block
-- 提交锚点：load 取证规则已提交为 `2fbaf62 补充 session load 取证规则`；本 session 文件自身保留 `提交: -`
+- 提交锚点：load 取证规则已提交为 `791b31a docs(session): 补充 session load 取证规则`；本 session 文件自身保留 `提交: -`
 - 风险/待办：当前只约束“需要时主动取证”，尚未把 `git show <commit>` / `git diff <commit>^!` 之类细化成固定模板，后续若发现 agent 行为仍不稳定再补
 
 ### 2026-04-15 16:30
 - 变更：进一步明确 session 文件自身的锚点规则：允许“自身这一笔”继续保留 `提交: -`，不要求为了回填 session 自身再额外做第三次提交
 - 验证：`.shared/commands/commit.md` 与 `.shared/session/README.md` 已同步补上该约束，规则与当前 session 轻量双提交实践一致
-- 提交锚点：该规则已提交为 `d2657cc 明确 session 自身锚点规则`；本 session 文件自身仍保留 `提交: -`
+- 提交锚点：该规则已提交为 `45bad97 docs(commit): 明确 session 自身锚点规则`；本 session 文件自身仍保留 `提交: -`
 - 风险/待办：若未来出现需要对 session 文件自身做严格可追溯闭环的场景，再单独设计不依赖第三次提交的标记方式
+
+### 2026-04-15 16:43
+- 变更：将本地未 push 的历史提交统一重写为 label 风格，并同步回填本 session 中引用到的提交 hash 与标题
+- 验证：重写后 `git log --reverse --format='%h %s'` 已统一为 label 风格；当前 session 的提交锚点已同步为新 hash
+- 提交锚点：本轮仅更新 session 记录；本 session 文件自身继续保留 `提交: -`
+- 风险/待办：若后续继续重写更早历史或拆分旧提交，需要再次同步回填 session 中的提交锚点
 
 ## 建议摘录到 Project（可选）
 - 无；本轮已直接把稳定结论回填到 `.shared/project/agentwork.md`
