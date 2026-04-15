@@ -67,6 +67,7 @@
 - 提交: `3733aa2 修复 self-install 的 source-root 引导文案` | 范围: `AGENTS.md`, `install-bootstrap.py`, `test/run_deterministic.py`
 - 提交: `510f209 收敛 session 轻量产出格式` | 范围: `.agentwork/bootstrap/data/session-readme.block.md`, `.shared/commands/commit.md`, `.shared/commands/exec.md`, `.shared/commands/review.md`, `.shared/commands/session.md`, `.shared/scripts/README.md`, `.shared/scripts/session-review.sh`, `.shared/session/README.md`, `.shared/templates/session.md`
 - 提交: `2fbaf62 补充 session load 取证规则` | 范围: `.agentwork/bootstrap/data/session-readme.block.md`, `.shared/commands/session.md`, `.shared/patterns/session-workflow.md`, `.shared/session/README.md`
+- 提交: `d2657cc 明确 session 自身锚点规则` | 范围: `.shared/commands/commit.md`, `.shared/session/README.md`
 - 提交: `-` | 范围: `.shared/session/20260415-0049-agentwork-self-host-baseline.md`
 
 ## 风险 / 阻塞
@@ -118,6 +119,12 @@
 - 验证：`git diff --check` 通过；`python3 test/run_deterministic.py` 通过；新增规则已回填到 `.shared/commands/session.md`、`.shared/patterns/session-workflow.md`、`.shared/session/README.md` 与 bootstrap data block
 - 提交锚点：load 取证规则已提交为 `2fbaf62 补充 session load 取证规则`；本 session 文件自身保留 `提交: -`
 - 风险/待办：当前只约束“需要时主动取证”，尚未把 `git show <commit>` / `git diff <commit>^!` 之类细化成固定模板，后续若发现 agent 行为仍不稳定再补
+
+### 2026-04-15 16:30
+- 变更：进一步明确 session 文件自身的锚点规则：允许“自身这一笔”继续保留 `提交: -`，不要求为了回填 session 自身再额外做第三次提交
+- 验证：`.shared/commands/commit.md` 与 `.shared/session/README.md` 已同步补上该约束，规则与当前 session 轻量双提交实践一致
+- 提交锚点：该规则已提交为 `d2657cc 明确 session 自身锚点规则`；本 session 文件自身仍保留 `提交: -`
+- 风险/待办：若未来出现需要对 session 文件自身做严格可追溯闭环的场景，再单独设计不依赖第三次提交的标记方式
 
 ## 建议摘录到 Project（可选）
 - 无；本轮已直接把稳定结论回填到 `.shared/project/agentwork.md`
