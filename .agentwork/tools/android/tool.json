@@ -1,0 +1,45 @@
+{
+  "name": "android",
+  "kind": [
+    "command",
+    "automation"
+  ],
+  "description": "Android optional tool with fallback shell+pull evidence collection and cross-AI wrappers.",
+  "entries": [
+    {
+      "surface": "shared",
+      "from": "shared/commands/android.md",
+      "to": ".shared/commands/android.md"
+    },
+    {
+      "surface": "shared",
+      "from": "shared/scripts/android-shell-pull-fallback.sh",
+      "to": ".shared/scripts/android-shell-pull-fallback.sh"
+    },
+    {
+      "surface": "codex",
+      "from": "codex/skills/android/SKILL.md",
+      "to": ".codex/skills/android/SKILL.md"
+    },
+    {
+      "surface": "claude",
+      "from": "claude/commands/android.md",
+      "to": ".claude/commands/android.md"
+    },
+    {
+      "surface": "agent",
+      "from": "agent/workflows/android.md",
+      "to": ".agent/workflows/android.md"
+    },
+    {
+      "surface": "cursor",
+      "from": "cursor/rules/android.mdc",
+      "to": ".cursor/rules/android.mdc"
+    },
+    {
+      "surface": "copilot",
+      "from": "copilot/prompts/android.instructions.md",
+      "to": ".github/prompts/android.instructions.md"
+    }
+  ]
+}

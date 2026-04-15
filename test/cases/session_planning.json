@@ -1,0 +1,119 @@
+{
+  "name": "session_planning",
+  "description": "真实调用助手，在 bootstrap 仓库中落地一个最小 session 规划文件。",
+  "timeout_seconds": 420,
+  "setup_files": {
+    "README.md": "# Demo Repo\n\n这是一个用于 agentwork 真实 harness 的示例仓库。\n"
+  },
+  "target_file_template": ".shared/session/harness-session-{provider}.md",
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "created_files": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "summary": {
+        "type": "string"
+      },
+      "next_step": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "created_files",
+      "summary",
+      "next_step"
+    ],
+    "additionalProperties": false
+  },
+  "prompt_template": "请阅读 AGENTS.md、.shared/INDEX.md、.shared/commands/session.md 与 .shared/templates/session.md。然后创建 `{target_file}`，主题是“为 README 增加一句项目介绍”。只做 session 规划，不修改 README 或其他业务文件。session 文件必须填入真实内容，不要保留模板占位符。最后只输出符合 schema 的 JSON。",
+  "assertions": [
+    {
+      "type": "exit-code",
+      "value": 0
+    },
+    {
+      "type": "json-key-exists",
+      "key": "created_files"
+    },
+    {
+      "type": "json-key-exists",
+      "key": "summary"
+    },
+    {
+      "type": "json-key-exists",
+      "key": "next_step"
+    },
+    {
+      "type": "json-list-contains",
+      "key": "created_files",
+      "value_template": "{target_file}"
+    },
+    {
+      "type": "file-exists",
+      "path_template": "{target_file}"
+    },
+    {
+      "type": "file-contains",
+      "path_template": "{target_file}",
+      "value": "## 任务列表（按优先级）"
+    },
+    {
+      "type": "file-contains",
+      "path_template": "{target_file}",
+      "value": "## 已确认结论（当前版本）"
+    },
+    {
+      "type": "file-contains",
+      "path_template": "{target_file}",
+      "value": "### 目标"
+    },
+    {
+      "type": "file-contains",
+      "path_template": "{target_file}",
+      "value": "### 边界"
+    },
+    {
+      "type": "file-contains",
+      "path_template": "{target_file}",
+      "value": "### 约束"
+    },
+    {
+      "type": "file-contains",
+      "path_template": "{target_file}",
+      "value": "### 已选方案"
+    },
+    {
+      "type": "file-contains",
+      "path_template": "{target_file}",
+      "value": "## 风险 / 阻塞"
+    },
+    {
+      "type": "file-not-contains",
+      "path_template": "{target_file}",
+      "value": "{name}"
+    },
+    {
+      "type": "file-not-contains",
+      "path_template": "{target_file}",
+      "value": "{desc}"
+    },
+    {
+      "type": "file-not-contains",
+      "path_template": "{target_file}",
+      "value": "{YYYY-MM-DD HH:MM}"
+    },
+    {
+      "type": "file-unchanged",
+      "path": "README.md"
+    }
+  ],
+  "manual_review": [
+    "session 是否真的围绕“README 增加一句项目介绍”展开，而不是泛泛而谈",
+    "任务列表是否足够小颗粒，后续可直接进入 /exec",
+    "边界是否明确写明本轮不修改 README 或其他业务文件"
+  ]
+}

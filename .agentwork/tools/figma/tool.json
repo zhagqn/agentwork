@@ -1,0 +1,50 @@
+{
+  "name": "figma",
+  "kind": [
+    "command",
+    "mcp"
+  ],
+  "description": "Figma optional tool pack with MCP config guidance and cross-AI wrappers.",
+  "entries": [
+    {
+      "surface": "shared",
+      "from": "shared/commands/figma.md",
+      "to": ".shared/commands/figma.md"
+    },
+    {
+      "surface": "shared",
+      "from": "shared/scripts/figma-mcp-health-check.sh",
+      "to": ".shared/scripts/figma-mcp-health-check.sh"
+    },
+    {
+      "surface": "shared",
+      "from": "shared/mcp/figma.md",
+      "to": ".shared/mcp/figma.md"
+    },
+    {
+      "surface": "codex",
+      "from": "codex/skills/figma/SKILL.md",
+      "to": ".codex/skills/figma/SKILL.md"
+    },
+    {
+      "surface": "claude",
+      "from": "claude/commands/figma.md",
+      "to": ".claude/commands/figma.md"
+    },
+    {
+      "surface": "agent",
+      "from": "agent/workflows/figma.md",
+      "to": ".agent/workflows/figma.md"
+    },
+    {
+      "surface": "cursor",
+      "from": "cursor/rules/figma.mdc",
+      "to": ".cursor/rules/figma.mdc"
+    },
+    {
+      "surface": "copilot",
+      "from": "copilot/prompts/figma.instructions.md",
+      "to": ".github/prompts/figma.instructions.md"
+    }
+  ]
+}

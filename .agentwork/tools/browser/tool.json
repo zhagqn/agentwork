@@ -1,0 +1,44 @@
+{
+  "name": "browser",
+  "kind": [
+    "skill"
+  ],
+  "description": "Browser automation tool pack with local browser-run wrapper and cross-AI wrappers.",
+  "entries": [
+    {
+      "surface": "shared",
+      "from": "shared/skills/browser/SKILL.md",
+      "to": ".shared/skills/browser/SKILL.md"
+    },
+    {
+      "surface": "shared",
+      "from": "shared/skills/browser/scripts/browser-run.sh",
+      "to": ".shared/skills/browser/scripts/browser-run.sh"
+    },
+    {
+      "surface": "codex",
+      "from": "codex/skills/browser/SKILL.md",
+      "to": ".codex/skills/browser/SKILL.md"
+    },
+    {
+      "surface": "claude",
+      "from": "claude/skills/browser/SKILL.md",
+      "to": ".claude/skills/browser/SKILL.md"
+    },
+    {
+      "surface": "agent",
+      "from": "agent/skills/browser/SKILL.md",
+      "to": ".agent/skills/browser/SKILL.md"
+    },
+    {
+      "surface": "cursor",
+      "from": "cursor/rules/browser.mdc",
+      "to": ".cursor/rules/browser.mdc"
+    },
+    {
+      "surface": "copilot",
+      "from": "copilot/prompts/browser.instructions.md",
+      "to": ".github/prompts/browser.instructions.md"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "name": "exec_readme_intro",
+  "description": "真实调用助手，基于已有 standalone plan 执行一次最小 README 文案修改，并回写 plan。",
+  "timeout_seconds": 420,
+  "setup_files": {
+    "README.md": "# Demo Repo\n\n这是一个用于 agentwork 真实 harness 的示例仓库。\n",
+    ".tmp/agentwork/plan/readme-intro-plan.md": "# Plan: readme-intro-plan\n\n> 创建: 2026-04-14 16:05\n> 来源: .tmp/agentwork/brain/readme-intro-brain.md\n\n## Goal\n- 为 `README.md` 增加一句精确的项目定位介绍。\n\n## Scope\n- In Scope: 仅修改 `README.md` 并同步当前 plan 的任务状态与执行记录。\n- Out of Scope: 不改其他文件，不重写 README 结构。\n\n## 关键文件 / 边界\n- `README.md`\n- `.tmp/agentwork/plan/readme-intro-plan.md`\n- 不新增其他业务文件\n\n## 任务列表（按优先级）\n- [ ] 在 `README.md` 中加入这句：`Agentwork 是一个面向多助手协作的轻量工作流 bootstrap 仓库。`\n- [ ] 更新本 plan 的任务状态与执行记录，说明已执行的 README 改动。\n\n## 验证策略\n- `README.md` 包含目标句子。\n- plan 的任务状态与执行记录已更新。\n\n## 完成标准（可选）\n- README 新增句子且无其他文件被误改。\n- plan 可说明本轮执行结果。\n\n## Blockers / Risks\n- 新增句子需要与现有 README 语气保持一致。\n\n## 执行记录（可选）\n- 待执行\n"
+  },
+  "target_file_template": ".tmp/agentwork/plan/readme-intro-plan.md",
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "changed_files": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "summary": {
+        "type": "string"
+      },
+      "verification": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "changed_files",
+      "summary",
+      "verification"
+    ],
+    "additionalProperties": false
+  },
+  "prompt_template": "请阅读 AGENTS.md、.shared/INDEX.md、.shared/commands/exec.md，以及 `.tmp/agentwork/plan/readme-intro-plan.md`。然后按该 plan 执行当前批次：只允许修改 `README.md` 和 `.tmp/agentwork/plan/readme-intro-plan.md`，把精确句子 `Agentwork 是一个面向多助手协作的轻量工作流 bootstrap 仓库。` 加入 README，并同步 plan 的任务状态与执行记录。不要创建额外文件。最后只输出符合 schema 的 JSON。",
+  "assertions": [
+    {
+      "type": "exit-code",
+      "value": 0
+    },
+    {
+      "type": "json-key-exists",
+      "key": "changed_files"
+    },
+    {
+      "type": "json-key-exists",
+      "key": "summary"
+    },
+    {
+      "type": "json-key-exists",
+      "key": "verification"
+    },
+    {
+      "type": "json-list-contains",
+      "key": "changed_files",
+      "value": "README.md"
+    },
+    {
+      "type": "json-list-contains",
+      "key": "changed_files",
+      "value": ".tmp/agentwork/plan/readme-intro-plan.md"
+    },
+    {
+      "type": "file-contains",
+      "path": "README.md",
+      "value": "Agentwork 是一个面向多助手协作的轻量工作流 bootstrap 仓库。"
+    },
+    {
+      "type": "file-contains",
+      "path": ".tmp/agentwork/plan/readme-intro-plan.md",
+      "value": "- [x] 在 `README.md` 中加入这句：`Agentwork 是一个面向多助手协作的轻量工作流 bootstrap 仓库。`"
+    },
+    {
+      "type": "file-contains",
+      "path": ".tmp/agentwork/plan/readme-intro-plan.md",
+      "value": "## 执行记录"
+    },
+    {
+      "type": "file-contains",
+      "path": ".tmp/agentwork/plan/readme-intro-plan.md",
+      "value": "README.md"
+    },
+    {
+      "type": "file-not-contains",
+      "path": ".tmp/agentwork/plan/readme-intro-plan.md",
+      "value": "{执行时可补充简短状态}"
+    }
+  ],
+  "manual_review": [
+    "README 新增句子是否插入在合理位置，没有破坏现有结构",
+    "plan 是否同步标记任务完成并补上执行记录",
+    "是否严格只改了 README 和 plan 两个文件"
+  ]
+}

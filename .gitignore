@@ -1,0 +1,4 @@
+.codex/*
+.tmp/
+__pycache__/
+*.pyc

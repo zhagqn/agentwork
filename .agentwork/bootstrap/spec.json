@@ -1,0 +1,135 @@
+{
+  "common": {
+    "repo_intro": "本仓库协作规范集中在 `.shared/`，此文件为启动时必读的引导规则。",
+    "warning": "这里只放**稳定的入口/约束**，不要写“当前任务的临时上下文”（临时上下文统一写入 `.shared/session/*.md` 并手动加载）。",
+    "safety_title": "## 核心安全约束（必须遵守）",
+    "danger_intro": "**高风险操作前必须确认**：",
+    "danger_items": [
+      "`rm -rf`、`git push --force`、`git reset --hard`、数据库删除/重建",
+      "执行前说明风险 → 给替代方案 → 确认用户意图"
+    ],
+    "self_fix": "**自引入错误可直接修复**：语法错误、格式问题、编译错误。",
+    "startup_title": "## 启动必读",
+    "startup_items": [
+      "`.shared/INDEX.md`",
+      "`.shared/project/index.md`",
+      "`.shared/constraints/coding-style.md`"
+    ],
+    "basic_title": "## 基本规则",
+    "basic_items": [
+      "默认使用简体中文沟通",
+      "仅在用户明确要求或必须原样输出代码/命令时使用其他语言",
+      "高风险操作必须确认",
+      "不自动加载 `.shared/session/*`",
+      "临时工件统一写入 `.tmp/`",
+      "可选工具默认不预装，按项目约定单独引入",
+      "优先写项目级配置，避免污染全局配置"
+    ],
+    "workflow_title": "## 工作流起步建议",
+    "workflow_items": [
+      "需求不清晰、边界模糊：先 `/brain`",
+      "已有方向、需要拆执行步骤：先 `/plan`",
+      "开始做当前批次工作：用 `/exec`",
+      "一轮工作完成后：先 `/review`，再决定是否 `/commit`"
+    ],
+    "complex_title": "## 复杂任务",
+    "complex_items": [
+      "当任务涉及多步骤/跨文件/需要调研时，参考：`.shared/patterns/session-workflow.md`"
+    ],
+    "navigation_title": "## 代码导航默认策略",
+    "navigation_items": [
+      "处理当前项目内的代码任务时，优先遵循：`.shared/patterns/semantic-navigation.md`",
+      "对 definition / references / symbols / rename-preview / diagnostics 这类语义查询，助手应默认使用对应语义导航能力",
+      "路径默认使用当前项目内的相对路径，不写用户目录或绝对工程路径示例"
+    ]
+  },
+  "variants": {
+    "root": {
+      "title": "# AGENTS.md",
+      "intro": "本项目使用 `agentwork` 作为工作流基础层。",
+      "note": "这是目标项目的启动说明版本。",
+      "extra_complex": [
+        "如需确认跨平台（Codex / Claude / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
+      ],
+      "extra_basic": []
+    },
+    "claude": {
+      "title": "# Claude Code 项目指引",
+      "intro": "",
+      "note": "本文件会被 Claude Code 自动加载。",
+      "extra_complex": []
+    },
+    "antigravity": {
+      "title": "# Bootstrap（启动规则）",
+      "intro": "",
+      "note": "本文件会被助手自动加载。Antigravity 适配层当前按本仓库兼容约定维护。",
+      "extra_complex": [
+        "如需确认跨平台（Codex / Claude / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
+      ]
+    },
+    "copilot": {
+      "title": "# Copilot 仓库说明",
+      "intro": "VS Code / GitHub Copilot 的仓库级说明。",
+      "note": "Copilot 仓库说明应保持简短、与仓库直接相关。",
+      "extra_complex": []
+    },
+    "cursor": {
+      "title": "---\ndescription: agentwork 启动规则（Cursor）\nglobs: []\nalwaysApply: true\n---\n\n# agentwork-bootstrap",
+      "intro": "Cursor 项目规则，来自 agentwork bootstrap 单一源模板。",
+      "note": "Cursor 官方更推荐 `.cursor/rules/*.mdc` 项目规则；AGENTS.md 也可用，但这里优先生成 rule 文件。",
+      "extra_complex": []
+    },
+    "source_root": {
+      "title": "# AGENTS.md",
+      "intro": "本项目使用 `agentwork` 作为工作流基础层。",
+      "note": "`agentwork` 源仓库自身也按目标项目结构自测，但仓库根目录仍保留 source-repo 维护入口。",
+      "extra_complex": [
+        "如需确认跨平台（Codex / Claude / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
+      ],
+      "extra_basic": [
+        "source repo 的安装入口：`install-bootstrap.py`、`install-tool.py`"
+      ]
+    },
+    "target_root": {
+      "title": "# AGENTS.md",
+      "intro": "本项目使用 `agentwork` 作为工作流基础层。",
+      "note": "这是目标项目的启动说明版本。",
+      "extra_complex": [
+        "如需确认跨平台（Codex / Claude / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
+      ],
+      "extra_basic": []
+    }
+  },
+  "wrappers": [
+    {
+      "name": "brain",
+      "title": "/brain <brain-topic>",
+      "target": ".shared/commands/brain.md"
+    },
+    {
+      "name": "plan",
+      "title": "/plan [plan-source]",
+      "target": ".shared/commands/plan.md"
+    },
+    {
+      "name": "exec",
+      "title": "/exec [--ralph] [exec-source]",
+      "target": ".shared/commands/exec.md"
+    },
+    {
+      "name": "review",
+      "title": "/review [review-source]",
+      "target": ".shared/commands/review.md"
+    },
+    {
+      "name": "session",
+      "title": "/session [subcommand] [args]",
+      "target": ".shared/commands/session.md"
+    },
+    {
+      "name": "commit",
+      "title": "/commit",
+      "target": ".shared/commands/commit.md"
+    }
+  ]
+}

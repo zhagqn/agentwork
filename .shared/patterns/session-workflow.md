@@ -1,0 +1,49 @@
+# Session Workflow
+
+Session 是 agentwork 的**任务快照与工作流外壳**：
+- `new / load` 管理工件
+- `brain / plan / exec / review` 负责真正的工作流推进
+- `exec --ralph` 提供可选持久执行策略
+- `/session ...` 只是把这些动作串起来，围绕当前 session 运转
+
+## 核心原则
+1. 手动控制上下文：不自动加载旧 session
+2. 设计先于动作：对含糊任务先 `/brain`
+3. 计划先于执行：设计确认后先 `/plan`
+4. 执行小步化：通过 `/exec` 小批次推进
+5. 持久执行可选化：通过 `/exec --ralph` 或 `/session exec --ralph`
+6. review 双层化：通过 `/review` 同时 review 工件与工作产物
+7. standalone 可工作：没有 session 也能通过 `.tmp/agentwork/*` 跑通
+
+## 命令分层
+| 命令 | 角色 | standalone 落点 |
+| --- | --- | --- |
+| `/brain` | 设计收敛 | `.tmp/agentwork/brain/*.md` |
+| `/plan` | 轻量计划落地 | `.tmp/agentwork/plan/*.md` |
+| `/exec` | 小步执行 / 可选持久执行 | 更新 `.tmp/agentwork/plan/*.md` |
+| `/review` | 工件 + 工作双层审查 | `.tmp/agentwork/review/*.md` |
+| `/session` | 当前 session 的入口壳层 | `.shared/session/*.md` |
+
+## 典型流程
+### Session 模式
+```text
+/session brain 修复欢迎页焦点问题
+/session exec --ralph
+/session review
+/commit
+```
+
+### Standalone 模式
+```text
+/brain 欢迎页焦点问题
+/plan
+/exec --ralph
+/review
+```
+
+## 工件分层
+- `.shared/session/*.md`：当前任务快照
+- `.tmp/agentwork/brain/*.md`：设计 note
+- `.tmp/agentwork/plan/*.md`：轻量计划
+- `.tmp/agentwork/review/*.md`：review note
+- `.tmp/agentwork/ralph/{slug}/*`：持久执行辅助工件

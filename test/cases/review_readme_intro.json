@@ -1,0 +1,109 @@
+{
+  "name": "review_readme_intro",
+  "description": "真实调用助手，针对一个已执行完成的 standalone plan 生成 review 工件。",
+  "timeout_seconds": 420,
+  "setup_files": {
+    "README.md": "# Demo Repo\n\n这是一个用于 agentwork 真实 harness 的示例仓库。\n\nAgentwork 是一个面向多助手协作的轻量工作流 bootstrap 仓库。\n",
+    ".tmp/agentwork/plan/readme-intro-plan.md": "# Plan: readme-intro-plan\n\n> 创建: 2026-04-14 16:05\n> 来源: .tmp/agentwork/brain/readme-intro-brain.md\n\n## Goal\n- 为 `README.md` 增加一句精确的项目定位介绍。\n\n## Scope\n- In Scope: 仅修改 `README.md` 并同步当前 plan 的任务状态与执行记录。\n- Out of Scope: 不改其他文件，不重写 README 结构。\n\n## 关键文件 / 边界\n- `README.md`\n- `.tmp/agentwork/plan/readme-intro-plan.md`\n- 不新增其他业务文件\n\n## 任务列表（按优先级）\n- [x] 在 `README.md` 中加入这句：`Agentwork 是一个面向多助手协作的轻量工作流 bootstrap 仓库。`\n- [x] 更新本 plan 的任务状态与执行记录，说明已执行的 README 改动。\n\n## 验证策略\n- `README.md` 包含目标句子。\n- plan 的任务状态与执行记录已更新。\n\n## 完成标准（可选）\n- README 新增句子且无其他文件被误改。\n- plan 可说明本轮执行结果。\n\n## Blockers / Risks\n- 新增句子需要与现有 README 语气保持一致。\n\n## 执行记录（可选）\n- 已在 `README.md` 增加目标句子，并同步更新任务状态。\n"
+  },
+  "target_file_template": ".tmp/agentwork/review/readme-intro-review-{provider}.md",
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "created_files": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "summary": {
+        "type": "string"
+      },
+      "next_recommendation": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "created_files",
+      "summary",
+      "next_recommendation"
+    ],
+    "additionalProperties": false
+  },
+  "prompt_template": "请阅读 AGENTS.md、.shared/INDEX.md、.shared/commands/review.md、.shared/templates/review.md，以及 `.tmp/agentwork/plan/readme-intro-plan.md` 和 `README.md`。然后创建 `{target_file}`，对当前 plan 与工作区事实做 standalone review。只允许创建 review 文件，不修改 README 或 plan。若你确认 README 已包含目标句子 `Agentwork 是一个面向多助手协作的轻量工作流 bootstrap 仓库。`，请在 `## Verification Status` 下明确写出 `README 已包含目标介绍句`。如果没有 critical 问题，请在 `### Critical` 下写 `none`。最后只输出符合 schema 的 JSON。",
+  "assertions": [
+    {
+      "type": "exit-code",
+      "value": 0
+    },
+    {
+      "type": "json-key-exists",
+      "key": "created_files"
+    },
+    {
+      "type": "json-key-exists",
+      "key": "summary"
+    },
+    {
+      "type": "json-key-exists",
+      "key": "next_recommendation"
+    },
+    {
+      "type": "json-list-contains",
+      "key": "created_files",
+      "value_template": "{target_file}"
+    },
+    {
+      "type": "file-exists",
+      "path_template": "{target_file}"
+    },
+    {
+      "type": "file-contains",
+      "path_template": "{target_file}",
+      "value": "## Review Basis"
+    },
+    {
+      "type": "file-contains",
+      "path_template": "{target_file}",
+      "value": "## Findings"
+    },
+    {
+      "type": "file-contains",
+      "path_template": "{target_file}",
+      "value": "### Critical"
+    },
+    {
+      "type": "file-contains",
+      "path_template": "{target_file}",
+      "value": "none"
+    },
+    {
+      "type": "file-contains",
+      "path_template": "{target_file}",
+      "value": "## Verification Status"
+    },
+    {
+      "type": "file-contains",
+      "path_template": "{target_file}",
+      "value": "README 已包含目标介绍句"
+    },
+    {
+      "type": "file-contains",
+      "path_template": "{target_file}",
+      "value": "## Next Recommendation"
+    },
+    {
+      "type": "file-unchanged",
+      "path": "README.md"
+    },
+    {
+      "type": "file-unchanged",
+      "path": ".tmp/agentwork/plan/readme-intro-plan.md"
+    }
+  ],
+  "manual_review": [
+    "review 是否真的对 plan 与工作区事实做了双层审查，而不是只复述 plan",
+    "Verification Status 是否对齐当前文件事实",
+    "Next Recommendation 是否合理，不会无根据要求回滚或扩 scope"
+  ]
+}
