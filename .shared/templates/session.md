@@ -2,7 +2,6 @@
 
 > 创建: {YYYY-MM-DD HH:MM}
 > 简述: {desc}
-> 当前阶段: {brainstorming|planning|execution|review}
 
 ## 任务列表（按优先级）
 - [ ] {下一步要做的事}

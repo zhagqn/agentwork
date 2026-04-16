@@ -17,6 +17,7 @@ Session 管理与推进命令。
 ## 说明
 - 独立命令 `/brain` `/plan` `/exec` `/review` 不要求必须处于 session 上下文
 - 没有当前 session 时，它们可以直接使用 `.tmp/agentwork/*` 下的 standalone 工件
+- session 不使用固定阶段字段；当前处于什么状态，以任务列表、结论、当前批次工作集和审查记录表达
 
 ## /session（无参数）
 把当前对话新增信息同步到当前 session。
