@@ -12,6 +12,7 @@
 - `browser`
 - `android`
 - `godot`
+- `architecture`
 
 ## 安装入口
 ```bash

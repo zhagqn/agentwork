@@ -1,0 +1,173 @@
+{
+  "id": "workflow-core-detail",
+  "title": "Workflow Core Detail",
+  "summary": "from design convergence to execution and review",
+  "meta": {
+    "updated_at": "2026-04-16"
+  },
+  "viewport": {
+    "width": 1480,
+    "height": 760
+  },
+  "nodes": [
+    {
+      "id": "brain",
+      "label": "/brain",
+      "kind": "frontend",
+      "x": 84,
+      "y": 272,
+      "w": 160,
+      "h": 110,
+      "lines": [
+        "设计收敛",
+        "方案对比",
+        "收敛边界"
+      ]
+    },
+    {
+      "id": "plan",
+      "label": "/plan",
+      "kind": "backend",
+      "x": 314,
+      "y": 272,
+      "w": 160,
+      "h": 110,
+      "lines": [
+        "bite-sized tasks",
+        "验证策略",
+        "完成标准"
+      ]
+    },
+    {
+      "id": "exec",
+      "label": "/exec",
+      "kind": "cloud",
+      "x": 544,
+      "y": 272,
+      "w": 168,
+      "h": 110,
+      "lines": [
+        "standard / --ralph",
+        "推进当前批次",
+        "执行验证"
+      ]
+    },
+    {
+      "id": "review",
+      "label": "/review",
+      "kind": "security",
+      "x": 794,
+      "y": 272,
+      "w": 170,
+      "h": 110,
+      "lines": [
+        "双层 review",
+        "对齐事实",
+        "整理结论"
+      ]
+    },
+    {
+      "id": "artifacts",
+      "label": ".tmp/agentwork/*",
+      "kind": "database",
+      "x": 520,
+      "y": 540,
+      "w": 216,
+      "h": 118,
+      "lines": [
+        "brain / plan / review",
+        "ralph context / progress",
+        "standalone artifacts"
+      ]
+    },
+    {
+      "id": "session",
+      "label": ".shared/session/*.md",
+      "kind": "message",
+      "x": 520,
+      "y": 74,
+      "w": 216,
+      "h": 110,
+      "lines": [
+        "当前任务快照",
+        "任务 / 结论 / 风险",
+        "产出锚点"
+      ]
+    },
+    {
+      "id": "source",
+      "label": "Repo Facts",
+      "kind": "actor",
+      "x": 1056,
+      "y": 272,
+      "w": 148,
+      "h": 110,
+      "lines": [
+        "files + git",
+        "fresh evidence"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "brain",
+      "to": "plan",
+      "label": "converge"
+    },
+    {
+      "from": "plan",
+      "to": "exec",
+      "label": "execute"
+    },
+    {
+      "from": "exec",
+      "to": "review",
+      "label": "verify"
+    },
+    {
+      "from": "review",
+      "to": "session",
+      "label": "sync"
+    },
+    {
+      "from": "session",
+      "to": "exec",
+      "label": "guide",
+      "style": "dashed"
+    },
+    {
+      "from": "exec",
+      "to": "artifacts",
+      "label": "update"
+    },
+    {
+      "from": "review",
+      "to": "source",
+      "label": "inspect",
+      "style": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "title": "Flow",
+      "items": [
+        "先收敛设计，再落计划，再执行，再 review",
+        "session 只做快照，不替代仓库事实"
+      ]
+    },
+    {
+      "title": "Ralph",
+      "items": [
+        "/exec --ralph 会追加 context / progress / review 工件",
+        "主上下文只保留高信号摘要"
+      ]
+    },
+    {
+      "title": "Evidence",
+      "items": [
+        "精确实现与差异仍需读取实际文件与 git 记录",
+        "完成态必须基于 fresh evidence"
+      ]
+    }
+  ]
+}

@@ -60,6 +60,10 @@ def collect_optional_shared_relpaths() -> set[Path]:
     return relpaths
 
 
+def is_optional_shared_relpath(rel: Path, optional_shared_relpaths: set[Path]) -> bool:
+    return any(rel == optional_rel or optional_rel in rel.parents for optional_rel in optional_shared_relpaths)
+
+
 def collect_core_shared_writes(target: Path):
     writes = []
     optional_shared_relpaths = collect_optional_shared_relpaths()
@@ -67,7 +71,7 @@ def collect_core_shared_writes(target: Path):
         rel = src.relative_to(SHARED_ROOT)
         if rel.parts and rel.parts[0] in {'project', 'session'}:
             continue
-        if rel in optional_shared_relpaths:
+        if is_optional_shared_relpath(rel, optional_shared_relpaths):
             continue
         writes.append((src, target / '.shared' / rel, 'file', 'core shared file'))
     return writes

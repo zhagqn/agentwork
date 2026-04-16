@@ -1,0 +1,49 @@
+{
+  "name": "architecture",
+  "kind": [
+    "command"
+  ],
+  "description": "Architecture diagram tool pack with structured source, static HTML renderer, nested drill-down examples, and cross-AI wrappers.",
+  "entries": [
+    {
+      "surface": "shared",
+      "from": "shared/commands/architecture.md",
+      "to": ".shared/commands/architecture.md"
+    },
+    {
+      "surface": "shared",
+      "from": "shared/scripts/architecture-render.py",
+      "to": ".shared/scripts/architecture-render.py"
+    },
+    {
+      "surface": "shared",
+      "from": "shared/templates/architecture",
+      "to": ".shared/templates/architecture"
+    },
+    {
+      "surface": "codex",
+      "from": "codex/skills/architecture/SKILL.md",
+      "to": ".codex/skills/architecture/SKILL.md"
+    },
+    {
+      "surface": "claude",
+      "from": "claude/commands/architecture.md",
+      "to": ".claude/commands/architecture.md"
+    },
+    {
+      "surface": "agent",
+      "from": "agent/workflows/architecture.md",
+      "to": ".agent/workflows/architecture.md"
+    },
+    {
+      "surface": "cursor",
+      "from": "cursor/rules/architecture.mdc",
+      "to": ".cursor/rules/architecture.mdc"
+    },
+    {
+      "surface": "copilot",
+      "from": "copilot/prompts/architecture.instructions.md",
+      "to": ".github/prompts/architecture.instructions.md"
+    }
+  ]
+}

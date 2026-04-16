@@ -1,0 +1,99 @@
+{
+  "id": "renderer-runtime",
+  "title": "Renderer Runtime Detail",
+  "summary": "from structured source to nested static pages",
+  "meta": {
+    "updated_at": "2026-04-16"
+  },
+  "viewport": {
+    "width": 980,
+    "height": 640
+  },
+  "nodes": [
+    {
+      "id": "loader",
+      "label": "JSON Loader",
+      "kind": "database",
+      "x": 60,
+      "y": 220,
+      "w": 180,
+      "h": 100,
+      "lines": [
+        "load diagram.arch.json",
+        "validate nodes/edges"
+      ]
+    },
+    {
+      "id": "linker",
+      "label": "Child Link Resolver",
+      "kind": "security",
+      "x": 300,
+      "y": 220,
+      "w": 180,
+      "h": 100,
+      "lines": [
+        "children -> href",
+        "parent breadcrumb"
+      ]
+    },
+    {
+      "id": "svg",
+      "label": "SVG Builder",
+      "kind": "backend",
+      "x": 540,
+      "y": 220,
+      "w": 180,
+      "h": 100,
+      "lines": [
+        "nodes + edges",
+        "system font stack"
+      ]
+    },
+    {
+      "id": "page",
+      "label": "HTML Page",
+      "kind": "cloud",
+      "x": 780,
+      "y": 220,
+      "w": 140,
+      "h": 100,
+      "lines": [
+        "index.html",
+        "cards + footer"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "loader",
+      "to": "linker",
+      "label": "diagram data"
+    },
+    {
+      "from": "linker",
+      "to": "svg",
+      "label": "resolved href"
+    },
+    {
+      "from": "svg",
+      "to": "page",
+      "label": "inline svg"
+    }
+  ],
+  "cards": [
+    {
+      "title": "What It Proves",
+      "items": [
+        "结构化 source 足以支撑 overview + child",
+        "breadcrumb 可由目录结构自动推断"
+      ]
+    },
+    {
+      "title": "Rendering Style",
+      "items": [
+        "无外部字体依赖",
+        "静态 HTML + inline SVG"
+      ]
+    }
+  ]
+}

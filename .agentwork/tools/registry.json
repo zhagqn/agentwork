@@ -30,6 +30,13 @@
       "kind": [
         "command"
       ]
+    },
+    {
+      "name": "architecture",
+      "dir": "architecture",
+      "kind": [
+        "command"
+      ]
     }
   ]
 }

@@ -123,6 +123,7 @@ def main() -> int:
     )
 
     figma_targets = tool_targets('figma')
+    architecture_targets = tool_targets('architecture')
 
     tool_seeded_source = REPOS / 'tool-seeded-source'
     shutil.copytree(ROOT, tool_seeded_source, ignore=SELF_SOURCE_COPY_IGNORE)
@@ -217,6 +218,112 @@ def main() -> int:
                 ('tool-lifecycle-install-figma', tool_install),
                 ('tool-lifecycle-uninstall-figma', tool_uninstall),
                 ('tool-list-short', tool_list),
+            ],
+            details,
+        )
+    )
+
+    architecture_smoke = REPOS / 'architecture-smoke'
+    ensure_git_repo(architecture_smoke)
+    architecture_bootstrap = run(['python3', str(ROOT / 'install-bootstrap.py'), '-p', str(architecture_smoke)])
+    write_process_logs('architecture-smoke-bootstrap', architecture_bootstrap)
+    architecture_install = run(['python3', str(ROOT / 'install-tool.py'), '-i', 'architecture', '-p', str(architecture_smoke)])
+    write_process_logs('architecture-smoke-install', architecture_install)
+    architecture_installed = all((architecture_smoke / rel).exists() for rel in architecture_targets)
+    example_src = architecture_smoke / '.shared/templates/architecture/examples/architecture-tool'
+    example_dst = architecture_smoke / 'docs/architecture'
+    shutil.copytree(example_src, example_dst)
+    architecture_render = run(
+        [
+            'python3',
+            str(architecture_smoke / '.shared/scripts/architecture-render.py'),
+            str(example_dst),
+            '--recursive',
+        ],
+        cwd=architecture_smoke,
+    )
+    write_process_logs('architecture-smoke-render', architecture_render)
+    root_html = example_dst / 'index.html'
+    child_html = example_dst / 'nodes/renderer-runtime/index.html'
+    root_html_text = root_html.read_text(encoding='utf-8') if root_html.exists() else ''
+    child_html_text = child_html.read_text(encoding='utf-8') if child_html.exists() else ''
+    root_html_ok = root_html.exists() and 'nodes/renderer-runtime/index.html' in root_html_text and 'Architecture Tool Overview' in root_html_text
+    child_html_ok = child_html.exists() and '../../index.html' in child_html_text and 'Renderer Runtime Detail' in child_html_text
+    auto_canvas = architecture_smoke / 'docs/architecture-auto'
+    auto_canvas.mkdir(parents=True, exist_ok=True)
+    (auto_canvas / 'diagram.arch.json').write_text(
+        json.dumps(
+            {
+                'id': 'auto-canvas',
+                'title': 'Auto Canvas',
+                'summary': 'viewport width/height act as minimum values',
+                'viewport': {
+                    'width': 400,
+                    'height': 280,
+                },
+                'nodes': [
+                    {
+                        'id': 'wide-node',
+                        'label': 'Wide Node',
+                        'kind': 'backend',
+                        'x': 520,
+                        'y': 220,
+                        'w': 180,
+                        'h': 110,
+                        'lines': ['forces canvas expansion'],
+                    }
+                ],
+                'edges': [],
+                'cards': [],
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding='utf-8',
+    )
+    auto_canvas_render = run(
+        [
+            'python3',
+            str(architecture_smoke / '.shared/scripts/architecture-render.py'),
+            str(auto_canvas),
+        ],
+        cwd=architecture_smoke,
+    )
+    write_process_logs('architecture-auto-canvas-render', auto_canvas_render)
+    auto_canvas_html = auto_canvas / 'index.html'
+    auto_canvas_text = auto_canvas_html.read_text(encoding='utf-8') if auto_canvas_html.exists() else ''
+    auto_canvas_ok = (
+        auto_canvas_render.returncode == 0
+        and auto_canvas_html.exists()
+        and '<svg width="730" height="360"' in auto_canvas_text
+    )
+    details = {
+        'ok': (
+            architecture_bootstrap.returncode == 0
+            and architecture_install.returncode == 0
+            and architecture_render.returncode == 0
+            and auto_canvas_render.returncode == 0
+            and architecture_installed
+            and root_html_ok
+            and child_html_ok
+            and auto_canvas_ok
+        ),
+        'architecture_installed': architecture_installed,
+        'root_html_ok': root_html_ok,
+        'child_html_ok': child_html_ok,
+        'auto_canvas_ok': auto_canvas_ok,
+        'render_stdout': architecture_render.stdout.strip(),
+        'render_stderr': architecture_render.stderr.strip(),
+        'auto_canvas_render_stdout': auto_canvas_render.stdout.strip(),
+        'auto_canvas_render_stderr': auto_canvas_render.stderr.strip(),
+    }
+    results.append(
+        scenario_result(
+            'architecture_render_smoke',
+            [
+                ('architecture-smoke-bootstrap', architecture_bootstrap),
+                ('architecture-smoke-install', architecture_install),
+                ('architecture-smoke-render', architecture_render),
             ],
             details,
         )

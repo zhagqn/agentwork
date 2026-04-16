@@ -14,7 +14,7 @@
 
 ## 当前脚本
 - `check_bootstrap_contract.py`：检查 bootstrap 产物结构、project/session block、本地内容保留、Codex skill frontmatter
-- `run_deterministic.py`：bootstrap、轻量 project 索引、tool 安装/卸载、bootstrap-tool 隔离的硬校验
+- `run_deterministic.py`：bootstrap、轻量 project 索引、tool 安装/卸载、bootstrap-tool 隔离，以及 architecture render smoke 的硬校验
 - `run_real_cli.py`：真实调用 Codex / Claude CLI 的 harness
 - `cases/*.json`：promptfoo 风格的轻量断言用例（只保留 deterministic assertions + 人工审查清单）
 

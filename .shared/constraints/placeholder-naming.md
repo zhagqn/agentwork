@@ -23,6 +23,9 @@
 | `<commit-hash>` | Git 提交 hash（通常为短 hash） | `9f3c2ab` |
 | `<commit-subject>` | Git 提交标题（单行 subject） | `修复登录页焦点回退` |
 | `<lsp-location>` | LSP 位置（`path:line:column`，1-based） | `src/main.ts:18:7` |
+| `[architecture-root]` | 架构图工具的目标根目录 | `docs/architecture` / `.tmp/architecture` |
+| `<architecture-task-desc>` | 架构图工具的口语化任务描述 | `生成总览图并为 API 节点补子图` |
+| `[diagram-ref]` | 架构图目录或具体 `diagram.arch.json` 路径 | `docs/architecture` / `docs/architecture/diagram.arch.json` |
 
 > 说明：这里只保留**当前仓库里已经实际使用**的占位符。后续如果某个命令/模板重新引入新占位符，再把对应条目加回来。
 

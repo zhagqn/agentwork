@@ -1,0 +1,142 @@
+{
+  "id": "architecture-tool-overview",
+  "title": "Architecture Tool Overview",
+  "summary": "language-driven source -> render -> nested drill-down",
+  "meta": {
+    "updated_at": "2026-04-16"
+  },
+  "viewport": {
+    "width": 1120,
+    "height": 720
+  },
+  "nodes": [
+    {
+      "id": "user",
+      "label": "Developer",
+      "kind": "actor",
+      "x": 40,
+      "y": 276,
+      "w": 140,
+      "h": 88,
+      "lines": [
+        "自然语言描述",
+        "生成 / 调整架构图"
+      ]
+    },
+    {
+      "id": "command",
+      "label": "/architecture",
+      "kind": "frontend",
+      "x": 220,
+      "y": 254,
+      "w": 176,
+      "h": 132,
+      "lines": [
+        "单入口",
+        "自动初始化",
+        "更新 source"
+      ]
+    },
+    {
+      "id": "source",
+      "label": "diagram.arch.json",
+      "kind": "database",
+      "x": 448,
+      "y": 114,
+      "w": 208,
+      "h": 120,
+      "lines": [
+        "事实源",
+        "节点 / 连线 / 子图",
+        "绝对坐标"
+      ]
+    },
+    {
+      "id": "renderer",
+      "label": "architecture-render.py",
+      "kind": "backend",
+      "x": 448,
+      "y": 404,
+      "w": 208,
+      "h": 120,
+      "lines": [
+        "静态 HTML renderer",
+        "recursive render",
+        "生成 breadcrumb"
+      ]
+    },
+    {
+      "id": "output",
+      "label": "index.html",
+      "kind": "cloud",
+      "x": 720,
+      "y": 254,
+      "w": 208,
+      "h": 132,
+      "lines": [
+        "总览图 + 子图",
+        "页面跳转 drill-down",
+        "系统字体栈"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "user",
+      "to": "command",
+      "label": "describe"
+    },
+    {
+      "from": "command",
+      "to": "source",
+      "label": "update"
+    },
+    {
+      "from": "source",
+      "to": "renderer",
+      "label": "render input"
+    },
+    {
+      "from": "renderer",
+      "to": "output",
+      "label": "build"
+    },
+    {
+      "from": "command",
+      "to": "renderer",
+      "label": "invoke",
+      "style": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "title": "Workflow",
+      "items": [
+        "用自然语言驱动同一个 /architecture 入口",
+        "优先维护 diagram.arch.json",
+        "每层图各自产出 index.html"
+      ]
+    },
+    {
+      "title": "MVP",
+      "items": [
+        "只做页面跳转",
+        "不内置字体 assets",
+        "不兼容外部 DSL"
+      ]
+    },
+    {
+      "title": "Child Diagram",
+      "items": [
+        "renderer 节点挂一层子图",
+        "证明 drill-down 与 breadcrumb 跑通"
+      ]
+    }
+  ],
+  "children": [
+    {
+      "node_id": "renderer",
+      "path": "nodes/renderer-runtime"
+    }
+  ]
+}

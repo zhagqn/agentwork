@@ -1,0 +1,186 @@
+{
+  "id": "agentwork-workflow-overview",
+  "title": "agentwork Workflow Architecture",
+  "summary": "session shell + core workflow + source-maintenance layers",
+  "meta": {
+    "updated_at": "2026-04-16"
+  },
+  "viewport": {
+    "width": 1480,
+    "height": 860
+  },
+  "nodes": [
+    {
+      "id": "assistants",
+      "label": "AI Assistants",
+      "kind": "actor",
+      "x": 56,
+      "y": 306,
+      "w": 170,
+      "h": 108,
+      "lines": [
+        "Codex / Claude",
+        "Cursor / Agent",
+        "手动加载 session"
+      ]
+    },
+    {
+      "id": "session-shell",
+      "label": "Session Shell",
+      "kind": "frontend",
+      "x": 292,
+      "y": 284,
+      "w": 190,
+      "h": 152,
+      "lines": [
+        "/session load/new",
+        "/session exec",
+        "/session review"
+      ]
+    },
+    {
+      "id": "workflow-core",
+      "label": "Workflow Core",
+      "kind": "backend",
+      "x": 572,
+      "y": 132,
+      "w": 220,
+      "h": 154,
+      "lines": [
+        "/brain /plan",
+        "/exec /review",
+        "standalone + session"
+      ]
+    },
+    {
+      "id": "shared-contract",
+      "label": ".shared/",
+      "kind": "database",
+      "x": 572,
+      "y": 560,
+      "w": 220,
+      "h": 154,
+      "lines": [
+        "commands / patterns",
+        "templates / scripts",
+        "session / project"
+      ]
+    },
+    {
+      "id": "source-maintenance",
+      "label": ".agentwork/",
+      "kind": "cloud",
+      "x": 892,
+      "y": 132,
+      "w": 240,
+      "h": 154,
+      "lines": [
+        "bootstrap / tools",
+        "upstreams",
+        "source-of-truth"
+      ]
+    },
+    {
+      "id": "installers",
+      "label": "Install Scripts",
+      "kind": "security",
+      "x": 892,
+      "y": 560,
+      "w": 240,
+      "h": 152,
+      "lines": [
+        "install-bootstrap.py",
+        "install-tool.py",
+        "project-local install"
+      ]
+    },
+    {
+      "id": "test-harness",
+      "label": "test/",
+      "kind": "message",
+      "x": 1218,
+      "y": 312,
+      "w": 130,
+      "h": 96,
+      "lines": [
+        "deterministic",
+        "real-cli"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "assistants",
+      "to": "session-shell",
+      "label": "manual context"
+    },
+    {
+      "from": "session-shell",
+      "to": "workflow-core",
+      "label": "orchestrate"
+    },
+    {
+      "from": "workflow-core",
+      "to": "shared-contract",
+      "label": "read / update"
+    },
+    {
+      "from": "source-maintenance",
+      "to": "installers",
+      "label": "render / install"
+    },
+    {
+      "from": "installers",
+      "to": "shared-contract",
+      "label": "sync core"
+    },
+    {
+      "from": "source-maintenance",
+      "to": "test-harness",
+      "label": "verify",
+      "style": "dashed"
+    },
+    {
+      "from": "shared-contract",
+      "to": "test-harness",
+      "label": "contract check",
+      "style": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "title": "Task Snapshot",
+      "items": [
+        "session 负责任务快照与流程串联",
+        "当前任务上下文通过显式 load 管理"
+      ]
+    },
+    {
+      "title": "Core Workflow",
+      "items": [
+        "/brain /plan /exec /review 是核心动作",
+        "既支持 session mode，也支持 standalone"
+      ]
+    },
+    {
+      "title": "Source Repo",
+      "items": [
+        ".agentwork/ 维护 source",
+        "install-* 负责向目标项目物化"
+      ]
+    },
+    {
+      "title": "Validation",
+      "items": [
+        "test/run_deterministic.py 做硬校验",
+        "工具真实可用性仍保留人工审查"
+      ]
+    }
+  ],
+  "children": [
+    {
+      "node_id": "workflow-core",
+      "path": "nodes/workflow-core"
+    }
+  ]
+}
