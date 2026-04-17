@@ -20,6 +20,23 @@ BLOCK_TARGETS = [
     (Path('.shared/project/index.md'), DATA / 'project-index.block.md', '# Project 索引\n\n## 本项目自定义内容\n'),
     (Path('.shared/session/README.md'), DATA / 'session-readme.block.md', '# Session 目录说明\n\n## 本项目补充说明\n'),
 ]
+GITIGNORE_BLOCK_START = '# >>> AGENTWORK bootstrap: tmp artifacts >>>'
+GITIGNORE_BLOCK_END = '# <<< AGENTWORK bootstrap: tmp artifacts <<<'
+GITIGNORE_BLOCK = '\n'.join(
+    [
+        GITIGNORE_BLOCK_START,
+        '.tmp/',
+        GITIGNORE_BLOCK_END,
+    ]
+)
+TMP_GITIGNORE_PATTERNS = {
+    '.tmp',
+    '.tmp/',
+    '.tmp/*',
+    '/.tmp',
+    '/.tmp/',
+    '/.tmp/*',
+}
 
 
 def copy_file(src: Path, dst: Path) -> None:
@@ -131,6 +148,39 @@ def update_managed_indexes(target: Path) -> None:
         upsert_block(target / rel, block_file, scaffold)
 
 
+def has_tmp_gitignore_rule(text: str) -> bool:
+    return any(line.strip() in TMP_GITIGNORE_PATTERNS for line in text.splitlines())
+
+
+def upsert_gitignore(target: Path) -> str:
+    gitignore = target / '.gitignore'
+    if gitignore.exists():
+        text = gitignore.read_text(encoding='utf-8')
+    else:
+        text = ''
+
+    block = GITIGNORE_BLOCK + '\n'
+    start_idx = text.find(GITIGNORE_BLOCK_START)
+    end_idx = text.find(GITIGNORE_BLOCK_END)
+    if start_idx != -1 and end_idx != -1 and start_idx < end_idx:
+        end_idx += len(GITIGNORE_BLOCK_END)
+        updated = text[:start_idx] + GITIGNORE_BLOCK + text[end_idx:]
+        if updated and not updated.endswith('\n'):
+            updated += '\n'
+        gitignore.write_text(updated, encoding='utf-8')
+        return 'updated managed .gitignore block'
+
+    if has_tmp_gitignore_rule(text):
+        return 'kept existing .gitignore tmp rule'
+
+    if text and not text.endswith('\n'):
+        text += '\n'
+    if text:
+        text += '\n'
+    gitignore.write_text(text + block, encoding='utf-8')
+    return 'appended managed .gitignore tmp rule'
+
+
 def target_rel(target: Path, path: Path) -> str:
     try:
         return str(path.relative_to(target))
@@ -161,6 +211,7 @@ def main() -> int:
     print('== Updating managed data layer ==')
     update_managed_indexes(target)
     print('- refreshed managed project/session index blocks')
+    print(f'- {upsert_gitignore(target)}')
     print('- left existing local project/session files in place')
     print('- left existing installed tool files in place')
     return 0

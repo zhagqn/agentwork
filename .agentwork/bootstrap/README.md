@@ -14,6 +14,7 @@ Bootstrap 是新项目复用 agentwork 核心工作流时的启动层源。
 ## Bootstrap does
 - 安装核心 `.shared`
 - 安装不同 AI 助手的最小启动文件
+- 增量补充 `.gitignore`，确保 `.tmp/` 默认不进版本控制
 - 保持 source repo 与目标项目输出一致
 - 通过 block 更新 `.shared/project/index.md` 与 `.shared/session/README.md`
 

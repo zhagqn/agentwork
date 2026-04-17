@@ -11,6 +11,7 @@ REGISTRY = TOOLS_ROOT / 'registry.json'
 
 REQUIRED_FILES = [
     'AGENTS.md',
+    '.gitignore',
     '.shared/INDEX.md',
     '.shared/commands/session.md',
     '.shared/project/index.md',
@@ -44,6 +45,14 @@ PROJECT_START = '<!-- AGENTWORK:PROJECT-INDEX:START -->'
 PROJECT_END = '<!-- AGENTWORK:PROJECT-INDEX:END -->'
 SESSION_START = '<!-- AGENTWORK:SESSION-README:START -->'
 SESSION_END = '<!-- AGENTWORK:SESSION-README:END -->'
+TMP_GITIGNORE_PATTERNS = {
+    '.tmp',
+    '.tmp/',
+    '.tmp/*',
+    '/.tmp',
+    '/.tmp/',
+    '/.tmp/*',
+}
 
 
 def optional_tool_targets() -> list[str]:
@@ -64,6 +73,12 @@ def iter_text_files(root: Path):
         if any(part in SKIP_DIRS for part in path.parts):
             continue
         yield path
+
+
+def has_tmp_gitignore_rule(text: str) -> bool:
+    return any(line.strip() in TMP_GITIGNORE_PATTERNS for line in text.splitlines())
+
+
 def main() -> int:
     if len(sys.argv) != 2:
         print('usage: check_bootstrap_contract.py <repo>', file=sys.stderr)
@@ -104,6 +119,14 @@ def main() -> int:
         text = session_readme.read_text(encoding='utf-8')
         if SESSION_START not in text or SESSION_END not in text:
             failures.append('missing_session_readme_block')
+
+    gitignore = root / '.gitignore'
+    if not gitignore.exists():
+        failures.append('missing:.gitignore')
+    else:
+        text = gitignore.read_text(encoding='utf-8')
+        if not has_tmp_gitignore_rule(text):
+            failures.append('missing_gitignore_tmp_rule')
 
     for rel in optional_tool_targets():
         if (root / rel).exists():

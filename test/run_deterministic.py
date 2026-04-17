@@ -96,20 +96,38 @@ def main() -> int:
     (existing / '.shared/project/index.md').write_text('# Project 索引\n\n## 本项目自定义内容\n- local keep\n', encoding='utf-8')
     (existing / '.shared/project/sample.md').write_text('# Project: sample\n\n- local keep\n', encoding='utf-8')
     (existing / '.shared/session/README.md').write_text('# Session 目录说明\n\n## 本项目补充说明\n- local keep\n', encoding='utf-8')
+    (existing / '.gitignore').write_text('node_modules/\n.local-cache/\n', encoding='utf-8')
     existing_install = run(['python3', str(ROOT / 'install-bootstrap.py'), '-p', str(existing)])
     write_process_logs('existing-bootstrap', existing_install)
+    existing_reinstall = run(['python3', str(ROOT / 'install-bootstrap.py'), '-p', str(existing)])
+    write_process_logs('existing-bootstrap-reinstall', existing_reinstall)
     existing_contract = run(['python3', str(ROOT / 'test/check_bootstrap_contract.py'), str(existing)])
     write_process_logs('existing-bootstrap-contract', existing_contract)
     existing_project_doc = (existing / '.shared/project/sample.md').read_text(encoding='utf-8')
     existing_project_doc_ok = 'local keep' in existing_project_doc
+    existing_gitignore = (existing / '.gitignore').read_text(encoding='utf-8')
+    existing_gitignore_ok = (
+        'node_modules/' in existing_gitignore
+        and '.local-cache/' in existing_gitignore
+        and existing_gitignore.count('.tmp/') == 1
+    )
 
     details = {
-        'ok': fresh_contract.returncode == 0 and existing_contract.returncode == 0 and existing_project_doc_ok,
+        'ok': (
+            fresh_contract.returncode == 0
+            and existing_contract.returncode == 0
+            and existing_project_doc_ok
+            and existing_gitignore_ok
+            and existing_reinstall.returncode == 0
+        ),
         'fresh_install_contract_stdout': fresh_contract.stdout.strip(),
         'fresh_install_contract_stderr': fresh_contract.stderr.strip(),
         'existing_reinstall_contract_stdout': existing_contract.stdout.strip(),
         'existing_reinstall_contract_stderr': existing_contract.stderr.strip(),
+        'existing_reinstall_stdout': existing_reinstall.stdout.strip(),
+        'existing_reinstall_stderr': existing_reinstall.stderr.strip(),
         'existing_project_doc_ok': existing_project_doc_ok,
+        'existing_gitignore_ok': existing_gitignore_ok,
     }
     results.append(
         scenario_result(
@@ -117,6 +135,7 @@ def main() -> int:
             [
                 ('fresh-bootstrap', fresh_install),
                 ('existing-bootstrap', existing_install),
+                ('existing-bootstrap-reinstall', existing_reinstall),
             ],
             details,
         )
