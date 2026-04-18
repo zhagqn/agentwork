@@ -61,7 +61,7 @@
 ### 执行批次 / 优先级
 - 已完成：runtime-agnostic/self-host baseline、optional tool source、upstream mapping、deterministic self-source 回归
 - 已完成当前最高优先级批次：`architecture` optional tool MVP 第一轮；已落工具骨架、`diagram.arch.json` schema v1、总览图 + 子图样例、静态 HTML renderer 与 deterministic render smoke
-- 当前文档批次：补强 `/brain` 的澄清 / 方案对比约束，并把重复定义收敛到 `/brain` 主定义；当前工作区改动尚未提交
+- 当前文档批次：`/brain` 澄清 / 方案对比约束收敛已提交为 `3fec736 docs(brain): 收敛 brain 流程约束`；当前只剩 session 记录同步这一笔
 - 下一批次：按 baseline 边界整理并提交 `architecture` tool 相关改动；后续再评估是否补更细的坐标分组能力或 tool self-install / real-cli 回归
 ### 执行策略（可选）
 - standard
@@ -89,10 +89,6 @@
 - `docs/architecture/`
 
 ## 当前批次工作集（可选）
-- `.shared/commands/brain.md`
-- `.shared/commands/session.md`
-- `.shared/patterns/session-workflow.md`
-- `.shared/templates/brain.md`
 - `.shared/session/20260415-0049-agentwork-self-host-baseline.md`
 
 ## 产出批次（提交锚点）
@@ -102,6 +98,7 @@
 - 提交: `791b31a docs(session): 补充 session load 取证规则` | 范围: `.agentwork/bootstrap/data/session-readme.block.md`, `.shared/commands/session.md`, `.shared/patterns/session-workflow.md`, `.shared/session/README.md`
 - 提交: `45bad97 docs(commit): 明确 session 自身锚点规则` | 范围: `.shared/commands/commit.md`, `.shared/session/README.md`
 - 提交: `cf4efdd feat(architecture): 新增架构图 optional tool` | 范围: `.agentwork/tools/architecture/`, `.agentwork/tools/README.md`, `.agentwork/tools/registry.json`, `.agent/`, `.claude/`, `.cursor/`, `.github/prompts/architecture.instructions.md`, `.shared/commands/architecture.md`, `.shared/scripts/architecture-render.py`, `.shared/templates/architecture/`, `.shared/constraints/placeholder-naming.md`, `docs/architecture/`, `install-bootstrap.py`, `test/README.md`, `test/run_deterministic.py`
+- 提交: `3fec736 docs(brain): 收敛 brain 流程约束` | 范围: `.shared/commands/brain.md`, `.shared/commands/session.md`, `.shared/patterns/session-workflow.md`, `.shared/templates/brain.md`, `.shared/session/20260415-0049-agentwork-self-host-baseline.md`
 - 提交: `-` | 范围: `.shared/session/20260415-0049-agentwork-self-host-baseline.md`
 
 ## 风险 / 阻塞
@@ -114,10 +111,15 @@
 - 当前 `/brain` 约束已压回 live docs 与模板，但还没有脚本级 checklist 或 review 侧结构化校验；若 agent 行为仍不稳定，需要再补自动检查
 
 ## 审查记录
+### 2026-04-19 01:21
+- 变更：执行第一笔提交 `3fec736 docs(brain): 收敛 brain 流程约束` 后确认实际范围包含 5 个文件，其中也带上了本 session 文件；现已按真实提交结果回填产出批次锚点，并把当前批次工作集收敛为 session 文件自身，准备提交本次记录同步
+- 验证：`git show --stat 3fec736` 已确认实际提交范围；`git diff --check` 通过
+- 风险/待办：当前仅剩 session 文件待提交；本 session 仍为“自身这一笔”，继续保留 `提交: -`
+
 ### 2026-04-19 00:13
 - 变更：围绕 `/brain` 的执行约束做了一轮 live docs 收敛：补强“澄清结果 + 方案对比 + 推荐决策”的显式要求，更新 `brain` 模板，并把 `/session brain` 与 `session-workflow` 改为引用 `/brain` 这份单一完整规范；同时把本 session 的当前批次工作集切换为本轮实际修改的 5 个文件
 - 验证：`.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md` 已对齐为 5 个当前批次文件与 5 个工作区改动，无未记录或过期条目；`git diff --check` 通过
-- 风险/待办：当前 4 个 brain/session 相关文档已 staged，而 session 文件自身仍未 staged；若后续准备提交，需要决定是否把“文档收敛”与“session 记录”拆开提交；若 agent 仍绕过 `/brain` 流程，再补 checklist 或 review 侧结构化校验
+- 风险/待办：若 agent 仍绕过 `/brain` 流程，再补 checklist 或 review 侧结构化校验
 
 ### 2026-04-16 14:32
 - 变更：移除 session 固定“当前阶段”字段，更新 session 模板、README、bootstrap data block 与 `/session` 文档，改为只通过任务列表、结论、当前批次工作集与审查记录表达推进状态；同时回填本轮 `architecture` 业务提交锚点 `cf4efdd`
