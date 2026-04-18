@@ -16,6 +16,10 @@ Session 是 agentwork 的**任务快照与工作流外壳**：
 7. standalone 可工作：没有 session 也能通过 `.tmp/agentwork/*` 跑通
 8. 快照不替代事实：load session 后，若需要精确代码/差异/提交上下文，继续以仓库当前文件与 git 记录为准
 
+## Brain 约束
+- 含糊任务先 `/brain`；澄清、方案对比、推荐、默认假设的细则统一以 `.shared/commands/brain.md` 为准
+- session 正文只保留最终确认结论；方案对比默认保留在当前回复或 brain note
+
 ## 命令分层
 | 命令 | 角色 | standalone 落点 |
 | --- | --- | --- |

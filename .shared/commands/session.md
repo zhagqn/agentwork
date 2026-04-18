@@ -9,7 +9,7 @@ Session 管理与推进命令。
 | --- | --- | --- |
 | （无） | 同步当前 session | 更新当前 session 的结论 / 任务 / 当前批次工作集 / 产出批次 |
 | `new <session-desc>` | 创建新 session | 仅建文件，不自动脑暴 |
-| `brain <brain-topic>` | 新建 session 并完成设计+计划收敛 | `/session new` → `/brain` → `/plan` |
+| `brain <brain-topic>` | 新建 session，并按 `/brain` 收敛后进入计划 | `/session new` → `/brain` → `/plan` |
 | `load <session-id>` | 手动加载 session | 读取任务 / 结论 / 当前批次工作集 / 最近产出批次 / 最近审查记录 |
 | `exec [--ralph]` | 按任务列表推进当前批次，或进入持久执行模式 | 调用 `/exec` 或 `/exec --ralph` |
 | `review [session-id]` | 审查 session 与当前工作 | 调用 `/review` |
@@ -26,7 +26,11 @@ Session 管理与推进命令。
 创建新的 session 文件并设为当前 session。
 
 ## /session brain <brain-topic>
-等价于：`/session new <brain-topic>` → `/brain <brain-topic>` → `/plan`
+等价于：`/session new <brain-topic>` → `/brain <brain-topic>` → `/plan`。
+
+额外约束只有两条：
+- `/brain` 的澄清、方案对比、推荐、默认假设规则，统一以 `.shared/commands/brain.md` 为准，`/session brain` 不再重复定义一套流程
+- session 模式只把最终确认结论和任务列表写回 session；方案对比默认保留在当前回复或临时 brain note，需要时再额外落 `.tmp/agentwork/brain/*.md`
 
 ## /session load <session-id>
 优先读取：任务列表、已确认结论、计划摘要、关联工件、当前批次工作集、最近产出批次、最近审查记录。

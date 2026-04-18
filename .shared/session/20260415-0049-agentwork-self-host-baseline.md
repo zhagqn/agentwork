@@ -9,9 +9,11 @@
 - [x] 在实现中补齐 architecture 关键小决策：保留可选 `/architecture review`、默认自动初始化、首轮使用绝对坐标、slug 仅推荐英文 kebab-case
 - [x] 对 `architecture` tool 做一次 `/review`，并在当前项目中安装工具后以“当前工作流架构”为目标完成真实渲染测试
 - [x] 确认 `architecture` tool 当前实现已基本满足需求；后续按 optional tool 并入 baseline，并保留当前项目内已安装 wrapper 与 `docs/architecture/` 作为自承载验证样例
+- [x] 补强 `/brain` 的“澄清结果 + 方案对比 + 推荐决策”流程，并收敛 `session` / workflow / template 的重复定义，避免 session mode 与 standalone mode 行为漂移
 - [ ] 在下一轮按 baseline 边界整理并提交 `architecture` tool 相关改动
 - [ ] 决定是否将根目录 bootstrap 产物（`.claude/`、`.agent/`、`.cursor/`、`.github/`）纳入正式版本基线
 - [ ] 若后续要把 source repo 自测扩到可选工具层，再补充 tool self-install / real-cli 回归策略
+- [ ] 若后续仍发现 `/brain` 会绕过澄清或方案对比，再补 checklist 或 review 侧结构化校验
 
 ## 已确认结论（当前版本）
 ### 目标
@@ -25,12 +27,14 @@
 - `.shared/` 只承载项目内直接可用的核心工作流契约；可选工具保留在 `.agentwork/tools/*`
 - Session 是手动任务快照，不是 runtime state，不自动加载旧 session
 - session 不设置固定“当前阶段”字段；推进状态以任务列表、已确认结论、当前批次工作集与审查记录表达
+- `/brain` 必须先显式产出“澄清结果 + 方案对比 + 推荐决策”，不能直接跳到“已选方案”或 `/plan`
 - `/brain`、`/plan`、`/exec`、`/review` 必须支持 standalone 模式，临时工件统一落到 `.tmp/agentwork/*`
 - Ralph 只作为 `/exec --ralph` / `/session exec --ralph` 的执行策略存在，不单独扩成平行主工作流
 - source repo 原地 bootstrap 时必须跳过与 source 同路径的核心 `.shared` 文件，只刷新根目录适配层与 managed block
 ### 已选方案
 - 采用“四层结构”维护仓库：`.shared/` = 核心 workflow contract，`.agentwork/bootstrap/` = 多 AI 薄封装 source，`.agentwork/tools/` = 可选工具 source，`.agentwork/upstreams/` = 上游方法论映射
 - `/session` 只做任务快照和流程串联；真正的工作由 `/brain`、`/plan`、`/exec`、`/review` 完成
+- `/brain` 作为 brain 流程的唯一完整规范；`/session brain` 与 `session-workflow` 只保留引用和 session-mode 额外约束，避免多处定义漂移
 - source repo 自身通过 `python3 install-bootstrap.py -p .` 自刷新核心层，optional tools 仍保持按需安装
 - 当前 live docs 已明确：handoff 不是新的核心层，session 才是当前任务的主快照
 ### 当前最优先续作
@@ -57,6 +61,7 @@
 ### 执行批次 / 优先级
 - 已完成：runtime-agnostic/self-host baseline、optional tool source、upstream mapping、deterministic self-source 回归
 - 已完成当前最高优先级批次：`architecture` optional tool MVP 第一轮；已落工具骨架、`diagram.arch.json` schema v1、总览图 + 子图样例、静态 HTML renderer 与 deterministic render smoke
+- 当前文档批次：补强 `/brain` 的澄清 / 方案对比约束，并把重复定义收敛到 `/brain` 主定义；当前工作区改动尚未提交
 - 下一批次：按 baseline 边界整理并提交 `architecture` tool 相关改动；后续再评估是否补更细的坐标分组能力或 tool self-install / real-cli 回归
 ### 执行策略（可选）
 - standard
@@ -84,46 +89,10 @@
 - `docs/architecture/`
 
 ## 当前批次工作集（可选）
-- `.agentwork/tools/architecture/`
-- `.agentwork/tools/README.md`
-- `.agentwork/tools/registry.json`
-- `.agentwork/tools/architecture/README.md`
-- `.agentwork/tools/architecture/INSTALL.md`
-- `.agentwork/tools/architecture/tool.json`
-- `.agentwork/tools/architecture/shared/commands/architecture.md`
-- `.agentwork/tools/architecture/shared/scripts/architecture-render.py`
-- `.agentwork/tools/architecture/shared/templates/architecture/README.md`
-- `.agentwork/tools/architecture/shared/templates/architecture/page.html.tmpl`
-- `.agentwork/tools/architecture/shared/templates/architecture/examples/architecture-tool/diagram.arch.json`
-- `.agentwork/tools/architecture/shared/templates/architecture/examples/architecture-tool/nodes/renderer-runtime/diagram.arch.json`
-- `.agentwork/tools/architecture/codex/skills/architecture/SKILL.md`
-- `.agentwork/tools/architecture/claude/commands/architecture.md`
-- `.agentwork/tools/architecture/agent/workflows/architecture.md`
-- `.agentwork/tools/architecture/cursor/rules/architecture.mdc`
-- `.agentwork/tools/architecture/copilot/prompts/architecture.instructions.md`
-- `.github/prompts/`
-- `.shared/commands/architecture.md`
+- `.shared/commands/brain.md`
 - `.shared/commands/session.md`
-- `.shared/scripts/architecture-render.py`
-- `.shared/session/README.md`
-- `.shared/templates/architecture/`
-- `.shared/templates/session.md`
-- `.claude/commands/architecture.md`
-- `.agent/workflows/architecture.md`
-- `.cursor/rules/architecture.mdc`
-- `.github/prompts/architecture.instructions.md`
-- `.agentwork/bootstrap/data/session-readme.block.md`
-- `docs/architecture/`
-- `.shared/constraints/placeholder-naming.md`
-- `install-bootstrap.py`
-- `test/README.md`
-- `test/run_deterministic.py`
-- `.tmp/agentwork/brain/20260416-0011-architecture-tool.md`
-- `.tmp/agentwork/plan/20260416-0950-architecture-tool.md`
-- `.tmp/agentwork/ralph/architecture-tool/context.md`
-- `.tmp/agentwork/ralph/architecture-tool/progress.json`
-- `.tmp/agentwork/ralph/architecture-tool/review.md`
-- `docs/`
+- `.shared/patterns/session-workflow.md`
+- `.shared/templates/brain.md`
 - `.shared/session/20260415-0049-agentwork-self-host-baseline.md`
 
 ## 产出批次（提交锚点）
@@ -142,8 +111,14 @@
 - 当前已完成 `/review`，未发现阻断性实现问题；当前剩余主要是 baseline 提交边界，而不是实现缺口
 - 根目录 bootstrap 产物已提交到仓库，但是否将这些产物长期视为 source repo 正式基线，仍需后续明确
 - optional tools 已 source-managed，但 source repo 场景下的 tool self-install 目前只有人工 smoke / 手动审查，没有纳入 deterministic 自动评分
+- 当前 `/brain` 约束已压回 live docs 与模板，但还没有脚本级 checklist 或 review 侧结构化校验；若 agent 行为仍不稳定，需要再补自动检查
 
 ## 审查记录
+### 2026-04-19 00:13
+- 变更：围绕 `/brain` 的执行约束做了一轮 live docs 收敛：补强“澄清结果 + 方案对比 + 推荐决策”的显式要求，更新 `brain` 模板，并把 `/session brain` 与 `session-workflow` 改为引用 `/brain` 这份单一完整规范；同时把本 session 的当前批次工作集切换为本轮实际修改的 5 个文件
+- 验证：`.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md` 已对齐为 5 个当前批次文件与 5 个工作区改动，无未记录或过期条目；`git diff --check` 通过
+- 风险/待办：当前 4 个 brain/session 相关文档已 staged，而 session 文件自身仍未 staged；若后续准备提交，需要决定是否把“文档收敛”与“session 记录”拆开提交；若 agent 仍绕过 `/brain` 流程，再补 checklist 或 review 侧结构化校验
+
 ### 2026-04-16 14:32
 - 变更：移除 session 固定“当前阶段”字段，更新 session 模板、README、bootstrap data block 与 `/session` 文档，改为只通过任务列表、结论、当前批次工作集与审查记录表达推进状态；同时回填本轮 `architecture` 业务提交锚点 `cf4efdd`
 - 验证：`.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md` 通过；`git diff --check` 通过
