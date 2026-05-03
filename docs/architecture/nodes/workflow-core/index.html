@@ -24,9 +24,7 @@
     body {
       margin: 0;
       min-height: 100%;
-      background:
-        radial-gradient(circle at top right, rgba(14, 116, 144, 0.18), transparent 34%),
-        linear-gradient(180deg, #08111e 0%, #040913 100%);
+      background: linear-gradient(180deg, #08111e 0%, #040913 100%);
       color: var(--text);
       font-family: "SF Pro Text", "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", sans-serif;
     }
@@ -75,7 +73,7 @@
 
     h1 {
       margin: 0;
-      font-size: clamp(28px, 4vw, 40px);
+      font-size: 38px;
       line-height: 1.1;
     }
 
@@ -107,7 +105,7 @@
     .panel {
       background: var(--panel);
       border: 1px solid var(--panel-border);
-      border-radius: 24px;
+      border-radius: 10px;
       padding: 0;
       box-shadow: 0 24px 80px rgba(2, 8, 23, 0.35);
       overflow: auto;
@@ -131,6 +129,16 @@
 
     .edge-label-bg {
       fill: rgba(6, 12, 24, 0.86);
+    }
+
+    .group-box {
+      opacity: 0.38;
+    }
+
+    .group-label {
+      fill: #cfe5f7;
+      font-size: 12px;
+      font-weight: 700;
     }
 
     .node-title {
@@ -176,7 +184,7 @@
     .card {
       background: var(--card-bg);
       border: 1px solid rgba(106, 159, 211, 0.18);
-      border-radius: 18px;
+      border-radius: 8px;
       padding: 16px;
     }
 
@@ -199,6 +207,21 @@
       font-size: 12px;
       text-align: center;
     }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 16px;
+      }
+
+      .hero {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      h1 {
+        font-size: 30px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -214,13 +237,13 @@
 
     <section class="panel">
       <div class="canvas-scroll">
-        <svg width="1480" height="760" viewBox="0 0 1480 760" role="img" aria-label="Workflow Core Detail"><defs><marker id="arrowhead" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#7dd3fc" /></marker><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#15304b" stroke-width="0.8" opacity="0.55" /></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" /><line class="edge edge-0" x1="244.0" y1="327.0" x2="314.0" y2="327.0" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrowhead)" />
-<line class="edge edge-1" x1="474.0" y1="327.0" x2="544.0" y2="327.0" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrowhead)" />
-<line class="edge edge-2" x1="712.0" y1="327.0" x2="794.0" y2="327.0" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrowhead)" />
-<line class="edge edge-3" x1="809.3" y1="272.0" x2="697.7" y2="184.0" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrowhead)" />
-<line class="edge edge-4" x1="628.0" y1="184.0" x2="628.0" y2="272.0" stroke="#7dd3fc" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#arrowhead)" />
-<line class="edge edge-5" x1="628.0" y1="382.0" x2="628.0" y2="540.0" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrowhead)" />
-<line class="edge edge-6" x1="964.0" y1="327.0" x2="1056.0" y2="327.0" stroke="#7dd3fc" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#arrowhead)" /><g class="node-body " data-node-id="brain">
+        <svg xmlns="http://www.w3.org/2000/svg" width="1480" height="760" viewBox="0 0 1480 760" role="img" aria-label="Workflow Core Detail"><defs><marker id="arrow-7dd3fc" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#7dd3fc" /></marker><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#15304b" stroke-width="0.8" opacity="0.55" /></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" /><path class="edge edge-0" d="M 244.0,327.0 L 314.0,327.0" fill="none" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrow-7dd3fc)" />
+<path class="edge edge-1" d="M 474.0,327.0 L 544.0,327.0" fill="none" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrow-7dd3fc)" />
+<path class="edge edge-2" d="M 712.0,327.0 L 794.0,327.0" fill="none" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrow-7dd3fc)" />
+<path class="edge edge-3" d="M 794.0,303.2 L 765.0,303.2 L 765.0,152.8 L 736.0,152.8" fill="none" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrow-7dd3fc)" />
+<path class="edge edge-4" d="M 628.0,184.0 L 628.0,272.0" fill="none" stroke="#7dd3fc" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#arrow-7dd3fc)" />
+<path class="edge edge-5" d="M 628.0,382.0 L 628.0,540.0" fill="none" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrow-7dd3fc)" />
+<path class="edge edge-6" d="M 964.0,327.0 L 1056.0,327.0" fill="none" stroke="#7dd3fc" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#arrow-7dd3fc)" /><g class="node-body " data-node-id="brain">
 <rect x="84.0" y="272.0" width="160.0" height="110.0" rx="14" fill="#09111f" />
 <rect x="84.0" y="272.0" width="160.0" height="110.0" rx="14" fill="rgba(8, 51, 68, 0.40)" stroke="#22d3ee" stroke-width="1.6" />
 <text class="node-title" x="164.0" y="298.0" text-anchor="middle">/brain</text>
@@ -274,13 +297,13 @@
 <text class="node-title" x="1130.0" y="298.0" text-anchor="middle">Repo Facts</text>
 <text class="node-line" x="1130.0" y="321.0" text-anchor="middle">files + git</text>
 <text class="node-line" x="1130.0" y="338.0" text-anchor="middle">fresh evidence</text>
-</g><g class="edge-label-group"><rect class="edge-label-bg" x="242.8" y="231.0" width="72.4" height="24.0" rx="9" /><text class="edge-label" x="279.0" y="247.0" text-anchor="middle">converge</text></g>
-<g class="edge-label-group"><rect class="edge-label-bg" x="476.2" y="231.0" width="65.6" height="24.0" rx="9" /><text class="edge-label" x="509.0" y="247.0" text-anchor="middle">execute</text></g>
-<g class="edge-label-group"><rect class="edge-label-bg" x="723.6" y="287.0" width="58.8" height="24.0" rx="9" /><text class="edge-label" x="753.0" y="303.0" text-anchor="middle">verify</text></g>
-<g class="edge-label-group"><rect class="edge-label-bg" x="719.4" y="230.1" width="46.0" height="24.0" rx="9" /><text class="edge-label" x="742.4" y="246.1" text-anchor="middle">sync</text></g>
-<g class="edge-label-group"><rect class="edge-label-bg" x="620.0" y="216.0" width="52.0" height="24.0" rx="9" /><text class="edge-label" x="646.0" y="232.0" text-anchor="middle">guide</text></g>
-<g class="edge-label-group"><rect class="edge-label-bg" x="616.6" y="449.0" width="58.8" height="24.0" rx="9" /><text class="edge-label" x="646.0" y="465.0" text-anchor="middle">update</text></g>
-<g class="edge-label-group"><rect class="edge-label-bg" x="977.2" y="287.0" width="65.6" height="24.0" rx="9" /><text class="edge-label" x="1010.0" y="303.0" text-anchor="middle">inspect</text></g></svg>
+</g><g class="edge-label-group"><rect class="edge-label-bg" x="242.8" y="399.0" width="72.4" height="24.0" rx="9" /><text class="edge-label" x="279.0" y="415.0" text-anchor="middle">converge</text></g>
+<g class="edge-label-group"><rect class="edge-label-bg" x="476.2" y="399.0" width="65.6" height="24.0" rx="9" /><text class="edge-label" x="509.0" y="415.0" text-anchor="middle">execute</text></g>
+<g class="edge-label-group"><rect class="edge-label-bg" x="723.6" y="343.0" width="58.8" height="24.0" rx="9" /><text class="edge-label" x="753.0" y="359.0" text-anchor="middle">verify</text></g>
+<g class="edge-label-group"><rect class="edge-label-bg" x="724.0" y="216.0" width="46.0" height="24.0" rx="9" /><text class="edge-label" x="747.0" y="232.0" text-anchor="middle">sync</text></g>
+<g class="edge-label-group"><rect class="edge-label-bg" x="584.0" y="216.0" width="52.0" height="24.0" rx="9" /><text class="edge-label" x="610.0" y="232.0" text-anchor="middle">guide</text></g>
+<g class="edge-label-group"><rect class="edge-label-bg" x="580.6" y="449.0" width="58.8" height="24.0" rx="9" /><text class="edge-label" x="610.0" y="465.0" text-anchor="middle">update</text></g>
+<g class="edge-label-group"><rect class="edge-label-bg" x="977.2" y="343.0" width="65.6" height="24.0" rx="9" /><text class="edge-label" x="1010.0" y="359.0" text-anchor="middle">inspect</text></g></svg>
       </div>
     </section>
 

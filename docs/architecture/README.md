@@ -14,5 +14,5 @@
 
 ## 渲染方式
 ```bash
-python3 .shared/scripts/architecture-render.py docs/architecture --recursive
+python3 .shared/scripts/arch-render.py docs/architecture --recursive
 ```

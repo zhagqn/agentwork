@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parent
 TOOLS_ROOT = ROOT / '.agentwork' / 'tools'
 REGISTRY = TOOLS_ROOT / 'registry.json'
 COMMANDS = {'install', 'uninstall', 'list'}
+COPY_IGNORE = shutil.ignore_patterns('__pycache__', '*.pyc', '*.pyo')
 
 
 def load_registry() -> dict:
@@ -56,11 +57,13 @@ def copy_entry(src: Path, dst: Path) -> str:
     if src.is_dir():
         if dst.exists():
             if dst.is_symlink() or dst.is_file():
-                dst.unlink()
+                raise SystemExit(f'target path is a file, expected directory: {dst}')
             else:
                 shutil.rmtree(dst)
-        shutil.copytree(src, dst)
+        shutil.copytree(src, dst, ignore=COPY_IGNORE)
         return 'dir'
+    if dst.exists() and dst.is_dir():
+        raise SystemExit(f'target path is a directory, expected file: {dst}')
     shutil.copy2(src, dst)
     return 'file'
 

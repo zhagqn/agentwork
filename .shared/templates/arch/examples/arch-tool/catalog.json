@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "site": {
+    "id": "arch-tool",
+    "title": "Arch Tool",
+    "summary": "Static architecture portal generated from catalog.json and per-diagram sources."
+  },
+  "diagrams": [
+    {
+      "id": "arch-tool-overview",
+      "title": "Arch Tool Overview",
+      "type": "overview",
+      "view": "arch-html",
+      "href": "diagrams/arch-tool-overview/index.html",
+      "summary": "Language-driven catalog, source, render, and static output workflow.",
+      "order": 10,
+      "status": "draft",
+      "tags": [
+        "main-path"
+      ]
+    },
+    {
+      "id": "renderer-runtime",
+      "parent_id": "arch-tool-overview",
+      "title": "Renderer Runtime Detail",
+      "type": "flow",
+      "view": "arch-html",
+      "href": "diagrams/renderer-runtime/index.html",
+      "summary": "Catalog validation, diagram source rendering, and static portal output.",
+      "order": 20,
+      "status": "draft",
+      "tags": [
+        "runtime"
+      ]
+    }
+  ]
+}

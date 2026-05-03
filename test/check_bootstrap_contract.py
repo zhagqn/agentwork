@@ -53,6 +53,11 @@ TMP_GITIGNORE_PATTERNS = {
     '/.tmp/',
     '/.tmp/*',
 }
+CACHE_ARTIFACT_SUFFIXES = {'.pyc', '.pyo'}
+
+
+def is_python_cache_artifact(path: Path) -> bool:
+    return '__pycache__' in path.parts or path.suffix in CACHE_ARTIFACT_SUFFIXES
 
 
 def optional_tool_targets() -> list[str]:
@@ -71,6 +76,8 @@ def iter_text_files(root: Path):
         if not path.is_file():
             continue
         if any(part in SKIP_DIRS for part in path.parts):
+            continue
+        if is_python_cache_artifact(path.relative_to(root)):
             continue
         yield path
 
@@ -131,6 +138,15 @@ def main() -> int:
     for rel in optional_tool_targets():
         if (root / rel).exists():
             failures.append(f'optional_tool_leak:{rel}')
+
+    for path in sorted(root.rglob('*')):
+        if not path.is_file():
+            continue
+        if any(part in SKIP_DIRS for part in path.parts):
+            continue
+        rel = path.relative_to(root)
+        if is_python_cache_artifact(rel):
+            failures.append(f'cache_artifact_leak:{rel}')
 
     for path in iter_text_files(root):
         try:

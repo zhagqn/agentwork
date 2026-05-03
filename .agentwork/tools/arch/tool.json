@@ -1,0 +1,49 @@
+{
+  "name": "arch",
+  "kind": [
+    "command"
+  ],
+  "description": "Arch documentation tool pack with catalog navigation, structured diagram sources, Mermaid reference support, semantic auto-layout, static HTML rendering, validation checks, and cross-AI wrappers.",
+  "entries": [
+    {
+      "surface": "shared",
+      "from": "shared/commands/arch.md",
+      "to": ".shared/commands/arch.md"
+    },
+    {
+      "surface": "shared",
+      "from": "shared/scripts/arch-render.py",
+      "to": ".shared/scripts/arch-render.py"
+    },
+    {
+      "surface": "shared",
+      "from": "shared/templates/arch",
+      "to": ".shared/templates/arch"
+    },
+    {
+      "surface": "codex",
+      "from": "codex/skills/arch/SKILL.md",
+      "to": ".codex/skills/arch/SKILL.md"
+    },
+    {
+      "surface": "claude",
+      "from": "claude/commands/arch.md",
+      "to": ".claude/commands/arch.md"
+    },
+    {
+      "surface": "agent",
+      "from": "agent/workflows/arch.md",
+      "to": ".agent/workflows/arch.md"
+    },
+    {
+      "surface": "cursor",
+      "from": "cursor/rules/arch.mdc",
+      "to": ".cursor/rules/arch.mdc"
+    },
+    {
+      "surface": "copilot",
+      "from": "copilot/prompts/arch.instructions.md",
+      "to": ".github/prompts/arch.instructions.md"
+    }
+  ]
+}

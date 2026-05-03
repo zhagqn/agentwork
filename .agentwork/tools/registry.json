@@ -32,8 +32,8 @@
       ]
     },
     {
-      "name": "architecture",
-      "dir": "architecture",
+      "name": "arch",
+      "dir": "arch",
       "kind": [
         "command"
       ]

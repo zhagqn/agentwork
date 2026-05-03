@@ -142,7 +142,7 @@ def main() -> int:
     )
 
     figma_targets = tool_targets('figma')
-    architecture_targets = tool_targets('architecture')
+    arch_targets = tool_targets('arch')
 
     tool_seeded_source = REPOS / 'tool-seeded-source'
     shutil.copytree(ROOT, tool_seeded_source, ignore=SELF_SOURCE_COPY_IGNORE)
@@ -242,33 +242,57 @@ def main() -> int:
         )
     )
 
-    architecture_smoke = REPOS / 'architecture-smoke'
-    ensure_git_repo(architecture_smoke)
-    architecture_bootstrap = run(['python3', str(ROOT / 'install-bootstrap.py'), '-p', str(architecture_smoke)])
-    write_process_logs('architecture-smoke-bootstrap', architecture_bootstrap)
-    architecture_install = run(['python3', str(ROOT / 'install-tool.py'), '-i', 'architecture', '-p', str(architecture_smoke)])
-    write_process_logs('architecture-smoke-install', architecture_install)
-    architecture_installed = all((architecture_smoke / rel).exists() for rel in architecture_targets)
-    example_src = architecture_smoke / '.shared/templates/architecture/examples/architecture-tool'
-    example_dst = architecture_smoke / 'docs/architecture'
+    arch_smoke = REPOS / 'arch-smoke'
+    ensure_git_repo(arch_smoke)
+    arch_bootstrap = run(['python3', str(ROOT / 'install-bootstrap.py'), '-p', str(arch_smoke)])
+    write_process_logs('arch-smoke-bootstrap', arch_bootstrap)
+    arch_install = run(['python3', str(ROOT / 'install-tool.py'), '-i', 'arch', '-p', str(arch_smoke)])
+    write_process_logs('arch-smoke-install', arch_install)
+    arch_installed = all((arch_smoke / rel).exists() for rel in arch_targets)
+    example_src = arch_smoke / '.shared/templates/arch/examples/arch-tool'
+    example_dst = arch_smoke / 'docs/architecture'
     shutil.copytree(example_src, example_dst)
-    architecture_render = run(
+    arch_check = run(
         [
             'python3',
-            str(architecture_smoke / '.shared/scripts/architecture-render.py'),
+            str(arch_smoke / '.shared/scripts/arch-render.py'),
+            str(example_dst),
+            '--recursive',
+            '--check',
+        ],
+        cwd=arch_smoke,
+    )
+    write_process_logs('arch-smoke-check', arch_check)
+    arch_render = run(
+        [
+            'python3',
+            str(arch_smoke / '.shared/scripts/arch-render.py'),
             str(example_dst),
             '--recursive',
         ],
-        cwd=architecture_smoke,
+        cwd=arch_smoke,
     )
-    write_process_logs('architecture-smoke-render', architecture_render)
+    write_process_logs('arch-smoke-render', arch_render)
     root_html = example_dst / 'index.html'
-    child_html = example_dst / 'nodes/renderer-runtime/index.html'
+    overview_html = example_dst / 'diagrams/arch-tool-overview/index.html'
+    child_html = example_dst / 'diagrams/renderer-runtime/index.html'
     root_html_text = root_html.read_text(encoding='utf-8') if root_html.exists() else ''
+    overview_html_text = overview_html.read_text(encoding='utf-8') if overview_html.exists() else ''
     child_html_text = child_html.read_text(encoding='utf-8') if child_html.exists() else ''
-    root_html_ok = root_html.exists() and 'nodes/renderer-runtime/index.html' in root_html_text and 'Architecture Tool Overview' in root_html_text
+    root_html_ok = (
+        root_html.exists()
+        and 'Architecture Portal' in root_html_text
+        and 'diagrams/arch-tool-overview/index.html' in root_html_text
+        and 'diagrams/renderer-runtime/index.html' in root_html_text
+    )
+    overview_html_ok = (
+        overview_html.exists()
+        and '../renderer-runtime/index.html' in overview_html_text
+        and '../../index.html' in overview_html_text
+        and 'Arch Tool Overview' in overview_html_text
+    )
     child_html_ok = child_html.exists() and '../../index.html' in child_html_text and 'Renderer Runtime Detail' in child_html_text
-    auto_canvas = architecture_smoke / 'docs/architecture-auto'
+    auto_canvas = arch_smoke / 'docs/architecture-auto'
     auto_canvas.mkdir(parents=True, exist_ok=True)
     (auto_canvas / 'diagram.arch.json').write_text(
         json.dumps(
@@ -303,46 +327,246 @@ def main() -> int:
     auto_canvas_render = run(
         [
             'python3',
-            str(architecture_smoke / '.shared/scripts/architecture-render.py'),
+            str(arch_smoke / '.shared/scripts/arch-render.py'),
             str(auto_canvas),
         ],
-        cwd=architecture_smoke,
+        cwd=arch_smoke,
     )
-    write_process_logs('architecture-auto-canvas-render', auto_canvas_render)
+    write_process_logs('arch-auto-canvas-render', auto_canvas_render)
     auto_canvas_html = auto_canvas / 'index.html'
     auto_canvas_text = auto_canvas_html.read_text(encoding='utf-8') if auto_canvas_html.exists() else ''
     auto_canvas_ok = (
         auto_canvas_render.returncode == 0
         and auto_canvas_html.exists()
-        and '<svg width="730" height="360"' in auto_canvas_text
+        and 'width="730" height="360"' in auto_canvas_text
+    )
+    semantic_canvas = arch_smoke / 'docs/architecture-semantic'
+    semantic_canvas.mkdir(parents=True, exist_ok=True)
+    (semantic_canvas / 'diagram.arch.json').write_text(
+        json.dumps(
+            {
+                'id': 'semantic-layout',
+                'title': 'Semantic Layout',
+                'summary': 'nodes can omit x/y when layout.mode=auto',
+                'layout': {
+                    'mode': 'auto',
+                    'direction': 'lr',
+                },
+                'groups': [
+                    {
+                        'id': 'entry',
+                        'label': 'Entry',
+                        'kind': 'actor',
+                        'node_ids': ['developer'],
+                    },
+                    {
+                        'id': 'runtime',
+                        'label': 'Runtime',
+                        'kind': 'backend',
+                        'node_ids': ['renderer', 'html'],
+                    },
+                ],
+                'nodes': [
+                    {
+                        'id': 'developer',
+                        'label': 'Developer',
+                        'kind': 'actor',
+                        'lines': ['describes structure'],
+                    },
+                    {
+                        'id': 'renderer',
+                        'label': 'Renderer',
+                        'kind': 'backend',
+                        'lines': ['assigns positions'],
+                    },
+                    {
+                        'id': 'html',
+                        'label': 'HTML',
+                        'kind': 'cloud',
+                        'lines': ['static output'],
+                    },
+                ],
+                'edges': [
+                    {
+                        'from': 'developer',
+                        'to': 'renderer',
+                        'label': 'source',
+                        'flow': 'data',
+                    },
+                    {
+                        'from': 'renderer',
+                        'to': 'html',
+                        'label': 'build',
+                        'flow': 'write',
+                    },
+                ],
+                'cards': [],
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding='utf-8',
+    )
+    semantic_canvas_render = run(
+        [
+            'python3',
+            str(arch_smoke / '.shared/scripts/arch-render.py'),
+            str(semantic_canvas),
+        ],
+        cwd=arch_smoke,
+    )
+    write_process_logs('arch-semantic-layout-render', semantic_canvas_render)
+    semantic_canvas_check = run(
+        [
+            'python3',
+            str(arch_smoke / '.shared/scripts/arch-render.py'),
+            str(semantic_canvas),
+            '--check',
+        ],
+        cwd=arch_smoke,
+    )
+    write_process_logs('arch-semantic-layout-check', semantic_canvas_check)
+    semantic_canvas_html = semantic_canvas / 'index.html'
+    semantic_canvas_text = semantic_canvas_html.read_text(encoding='utf-8') if semantic_canvas_html.exists() else ''
+    semantic_canvas_ok = (
+        semantic_canvas_render.returncode == 0
+        and semantic_canvas_check.returncode == 0
+        and semantic_canvas_html.exists()
+        and 'Semantic Layout' in semantic_canvas_text
+        and 'class="group-box"' in semantic_canvas_text
+        and '<path class="edge edge-0"' in semantic_canvas_text
+        and 'fill="none" stroke="#38bdf8"' in semantic_canvas_text
+        and 'fill="none" stroke="#34d399"' in semantic_canvas_text
+        and 'marker-end="url(#arrow-38bdf8)"' in semantic_canvas_text
+    )
+    mermaid_canvas = arch_smoke / 'docs/architecture-mermaid'
+    mermaid_diagram = mermaid_canvas / 'diagrams/runtime-flow'
+    mermaid_diagram.mkdir(parents=True, exist_ok=True)
+    (mermaid_canvas / 'catalog.json').write_text(
+        json.dumps(
+            {
+                'version': 1,
+                'site': {
+                    'id': 'mermaid-reference',
+                    'title': 'Mermaid Reference',
+                    'summary': 'Mermaid source can be registered as a static reference diagram.',
+                },
+                'diagrams': [
+                    {
+                        'id': 'runtime-flow',
+                        'title': 'Runtime Flow',
+                        'type': 'flow',
+                        'view': 'mermaid-flowchart',
+                        'href': 'diagrams/runtime-flow/index.html',
+                        'summary': 'Reference flowchart backed by diagram.mmd.',
+                        'order': 10,
+                    }
+                ],
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding='utf-8',
+    )
+    (mermaid_diagram / 'diagram.mmd').write_text('flowchart LR\n  Agent --> Renderer\n  Renderer --> HTML\n', encoding='utf-8')
+    (mermaid_diagram / 'diagram.meta.json').write_text(
+        json.dumps(
+            {
+                'title': 'Runtime Flow',
+                'summary': 'Reference flowchart backed by Mermaid source.',
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding='utf-8',
+    )
+    mermaid_canvas_check = run(
+        [
+            'python3',
+            str(arch_smoke / '.shared/scripts/arch-render.py'),
+            str(mermaid_canvas),
+            '--recursive',
+            '--check',
+        ],
+        cwd=arch_smoke,
+    )
+    write_process_logs('arch-mermaid-reference-check', mermaid_canvas_check)
+    mermaid_canvas_render = run(
+        [
+            'python3',
+            str(arch_smoke / '.shared/scripts/arch-render.py'),
+            str(mermaid_canvas),
+            '--recursive',
+        ],
+        cwd=arch_smoke,
+    )
+    write_process_logs('arch-mermaid-reference-render', mermaid_canvas_render)
+    mermaid_root_html = mermaid_canvas / 'index.html'
+    mermaid_reference_html = mermaid_diagram / 'index.html'
+    mermaid_root_text = mermaid_root_html.read_text(encoding='utf-8') if mermaid_root_html.exists() else ''
+    mermaid_reference_text = mermaid_reference_html.read_text(encoding='utf-8') if mermaid_reference_html.exists() else ''
+    mermaid_canvas_ok = (
+        mermaid_canvas_check.returncode == 0
+        and mermaid_canvas_render.returncode == 0
+        and mermaid_root_html.exists()
+        and mermaid_reference_html.exists()
+        and 'diagrams/runtime-flow/index.html' in mermaid_root_text
+        and 'Mermaid Reference' in mermaid_reference_text
+        and 'flowchart LR' in mermaid_reference_text
+        and 'mermaid.initialize' in mermaid_reference_text
     )
     details = {
         'ok': (
-            architecture_bootstrap.returncode == 0
-            and architecture_install.returncode == 0
-            and architecture_render.returncode == 0
+            arch_bootstrap.returncode == 0
+            and arch_install.returncode == 0
+            and arch_check.returncode == 0
+            and arch_render.returncode == 0
             and auto_canvas_render.returncode == 0
-            and architecture_installed
+            and semantic_canvas_render.returncode == 0
+            and semantic_canvas_check.returncode == 0
+            and arch_installed
             and root_html_ok
+            and overview_html_ok
             and child_html_ok
             and auto_canvas_ok
+            and semantic_canvas_ok
+            and mermaid_canvas_ok
         ),
-        'architecture_installed': architecture_installed,
+        'arch_installed': arch_installed,
         'root_html_ok': root_html_ok,
+        'overview_html_ok': overview_html_ok,
         'child_html_ok': child_html_ok,
         'auto_canvas_ok': auto_canvas_ok,
-        'render_stdout': architecture_render.stdout.strip(),
-        'render_stderr': architecture_render.stderr.strip(),
+        'semantic_canvas_ok': semantic_canvas_ok,
+        'mermaid_canvas_ok': mermaid_canvas_ok,
+        'check_stdout': arch_check.stdout.strip(),
+        'check_stderr': arch_check.stderr.strip(),
+        'render_stdout': arch_render.stdout.strip(),
+        'render_stderr': arch_render.stderr.strip(),
         'auto_canvas_render_stdout': auto_canvas_render.stdout.strip(),
         'auto_canvas_render_stderr': auto_canvas_render.stderr.strip(),
+        'semantic_canvas_render_stdout': semantic_canvas_render.stdout.strip(),
+        'semantic_canvas_render_stderr': semantic_canvas_render.stderr.strip(),
+        'semantic_canvas_check_stdout': semantic_canvas_check.stdout.strip(),
+        'semantic_canvas_check_stderr': semantic_canvas_check.stderr.strip(),
+        'mermaid_canvas_check_stdout': mermaid_canvas_check.stdout.strip(),
+        'mermaid_canvas_check_stderr': mermaid_canvas_check.stderr.strip(),
+        'mermaid_canvas_render_stdout': mermaid_canvas_render.stdout.strip(),
+        'mermaid_canvas_render_stderr': mermaid_canvas_render.stderr.strip(),
     }
     results.append(
         scenario_result(
-            'architecture_render_smoke',
+            'arch_render_smoke',
             [
-                ('architecture-smoke-bootstrap', architecture_bootstrap),
-                ('architecture-smoke-install', architecture_install),
-                ('architecture-smoke-render', architecture_render),
+                ('arch-smoke-bootstrap', arch_bootstrap),
+                ('arch-smoke-install', arch_install),
+                ('arch-smoke-check', arch_check),
+                ('arch-smoke-render', arch_render),
+                ('arch-auto-canvas-render', auto_canvas_render),
+                ('arch-semantic-layout-render', semantic_canvas_render),
+                ('arch-semantic-layout-check', semantic_canvas_check),
+                ('arch-mermaid-reference-check', mermaid_canvas_check),
+                ('arch-mermaid-reference-render', mermaid_canvas_render),
             ],
             details,
         )
