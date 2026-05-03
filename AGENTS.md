@@ -5,9 +5,7 @@
 
 本仓库协作规范集中在 `.shared/`，此文件为启动时必读的引导规则。
 
-> 注意：这里只放**稳定的入口/约束**，不要写“当前任务的临时上下文”（临时上下文统一写入 `.shared/session/*.md` 并手动加载）。
-
-> 说明：`agentwork` 源仓库自身也按目标项目结构自测，但仓库根目录仍保留 source-repo 维护入口。
+> 启动入口仅承载稳定入口和长期约束；当前任务上下文写入 `.shared/session/*.md`，并且只在显式引用时加载。
 
 ## 核心安全约束（必须遵守）
 
@@ -19,9 +17,11 @@
 **自引入错误可直接修复**：语法错误、格式问题、编译错误。
 
 ## 启动必读
-1. `.shared/INDEX.md`
-2. `.shared/project/index.md`
-3. `.shared/constraints/coding-style.md`
+1. `.shared/constraints/coding-style.md`
+2. `.shared/constraints/destructive-operations.md`
+3. `.shared/constraints/placeholder-naming.md`
+4. `.shared/project/index.md`
+5. `.shared/INDEX.md`
 
 ## 基本规则
 - 默认使用简体中文沟通
@@ -32,6 +32,7 @@
 - 当第一次确定将读取或修改的目标路径后，必须立即对照 `.shared/project/index.md` 的读取映射；若命中条目，先读取对应 `project/*.md` 再继续工作；若目标路径扩大，重新对照一次
 - 临时工件统一写入 `.tmp/`
 - 可选工具默认不预装，按项目约定单独引入
+- Git index（staged 区）是用户的提交和 review 边界；未经明确要求，不改变 staged 区
 - 优先写项目级配置，避免污染全局配置
 - source repo 的安装入口：`install-bootstrap.py`、`install-tool.py`
 

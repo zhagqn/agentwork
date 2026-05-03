@@ -29,14 +29,35 @@
 - skills 或类似扩展机制的发现、优先级与冲突处理
 - 沙箱、审批、严格模式等默认值与权限边界
 - 多代理调度、工具路由与升级权限策略
+- 目标持续性、自动循环、定时轮询等 runtime-only 能力
+
+## 能力分工（推荐）
+
+- `.shared/commands/*`：跨平台共享的工作流语义、工件格式、回退路径
+- `--ralph`：跨平台可复用的持久执行策略，不假设任何单一平台的 hook / loop / goal 能力
+- Codex Goal：Codex 线程内的目标持续性、预算跟踪、完成审计
+- Claude `ralph-loop`：Claude-only 的自动迭代循环
+- 平台原生 loop：定时轮询外部状态或周期性重复 prompt
+
+## 平台能力优先级（建议）
+
+1. 先用平台原生 runtime 能力解决平台内问题
+2. 需要跨平台接力、共享工件或规避平台漂移时，再退回 `.shared/*`
+3. `--ralph` 只作为 `/exec` 的可选执行策略，不作为强制默认路径
+
+## 选择责任
+
+- 是否启用某个平台的 goal / loop / hook / plugin，属于平台层决策，不应由 `.shared/commands/exec.md` 隐式代替用户做选择
+- `.shared/*` 只定义共享语义、工件契约与回退路径；不承诺不同平台会以同样方式持续运行
+- 若同一任务在不同平台采用不同 runtime 机制，允许结果路径不同，但应尽量回收到一致的 session / plan / review / Ralph 工件
 
 ## 平台映射（建议）
 
-| 平台        | 入口文件                                                      | 平台差异（需官方确认）                          | 回退方式                                                |
-| ----------- | ------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------- |
-| Codex CLI   | `AGENTS.md`、`.codex/skills/*`、`.codex/agents/*`             | AGENTS 分层合并、审批与沙箱参数、生效优先级、custom agents 的发现与继承规则 | 直接执行 `.shared/commands/*` 文本流程                  |
-| Claude Code | `.claude/CLAUDE.md`、`.claude/commands/*`、`.claude/skills/*` | slash commands 与 skills 触发/优先级规则        | 以 `.shared/commands/*` 为主入口，commands 保持兼容     |
-| Antigravity | `.agent/rules/*`、`.agent/workflows/*`、`.agent/skills/*`     | rules/workflows/skills 触发语义、执行策略默认值 | 退回 `.shared/INDEX.md` + `.shared/commands/*` 手动流程 |
+| 平台 | 入口文件 | 平台差异（需官方确认） | 推荐优先能力 | 回退方式 |
+| --- | --- | --- | --- | --- |
+| Codex CLI | `AGENTS.md`、`.codex/skills/*`、`.codex/agents/*` | AGENTS 分层合并、审批与沙箱参数、生效优先级、custom agents 的发现与继承规则 | Goal + 原生多代理/工具能力；长任务优先 Goal，再配合 `/exec` | 直接执行 `.shared/commands/*` 文本流程，需要共享工件时再用 `--ralph` |
+| Claude Code | `.claude/CLAUDE.md`、`.claude/commands/*`、`.claude/skills/*` | slash commands 与 skills 触发/优先级规则 | 自动迭代优先官方 `ralph-loop`；定时轮询优先官方 loop | 以 `.shared/commands/*` 为主入口，需跨平台共享语义时使用 `--ralph` |
+| Antigravity | `.agent/rules/*`、`.agent/workflows/*`、`.agent/skills/*` | rules/workflows/skills 触发语义、执行策略默认值 | 以平台原生 workflow 能力为先 | 退回 `.shared/INDEX.md` + `.shared/commands/*` 手动流程 |
 
 ## Codex custom agent 边界
 

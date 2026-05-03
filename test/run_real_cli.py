@@ -46,16 +46,6 @@ def which_available(providers: list[str]) -> list[str]:
     return [provider for provider in providers if shutil.which(provider)]
 
 
-def run(cmd: list[str], cwd: Path, timeout_seconds: int) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        cmd,
-        cwd=str(cwd),
-        text=True,
-        capture_output=True,
-        timeout=timeout_seconds,
-    )
-
-
 def summarize_results(providers: list[str], case_dicts: list[dict], results: list[dict]) -> dict:
     expected_count = len(providers) * len(case_dicts)
     ok_count = sum(1 for result in results if result.get('ok'))

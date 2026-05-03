@@ -64,7 +64,7 @@
     {
       "type": "file-contains",
       "path_template": "{target_file}",
-      "value": "## 已确认结论（当前版本）"
+      "value": "## 已确认结论（工作快照）"
     },
     {
       "type": "file-contains",

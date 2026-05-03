@@ -23,6 +23,15 @@
 - `git rebase`（重写历史）
 - 任何重写历史的命令
 
+### Git index / staged 协作边界
+
+Git index（staged 区）是用户组织提交批次和 review 边界的工作区状态，不是助手可以自动整理的临时缓存。
+
+- 未经用户明确要求，不执行会改变 staged 区或暂存边界的命令，包括 `git add`、`git add -p`、`git restore --staged`、`git reset`、`git rm`、`git rm --cached`、`git mv`、`git update-index`、`git stash`、`git stash --staged`、`git commit` 等。
+- 普通执行任务时只修改 working tree；不要为了“整理状态”主动 stage、unstage 或清空 staged 区。
+- 如用户明确要求 stage / unstage / commit，先说明计划影响的路径和原因，再按用户确认的范围执行。
+- 允许使用只读命令观察状态，例如 `git status`、`git diff`、`git diff --cached`、`git ls-files`。
+
 ### 其他
 
 - 公共 API 变更

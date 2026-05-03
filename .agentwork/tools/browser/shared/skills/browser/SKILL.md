@@ -1,17 +1,22 @@
+---
+name: browser
+description: Browser automation workflow for agentwork's browser-run wrapper; use for web navigation, form interactions, screenshots, PDFs, downloads, snapshots, and project-local browser artifacts.
+---
+
 # browser（浏览器自动化）
 
-> 同步来源：`vercel-labs/agent-browser/skills/agent-browser/SKILL.md`（最近同步：2026-02-10；最近核对：2026-03-09）。
+> 同步来源：`vercel-labs/agent-browser/skills/agent-browser/SKILL.md`。
 >
-> 上游近况：2026-02-10 之后新增了 `diff`、`security`、`headed mode`、`native/browser engine` 等内容；当前环境已升级到 `agent-browser 0.17.0`，可以吸收大部分新增能力。
+> 命令能力以上游 references 和执行环境中的 `agent-browser --help` 为准；本文件只固化 agentwork 的默认入口、产物目录和保守边界。
 >
 > 优化策略：保持上游核心流程与用法，但优先收敛到本仓库的 `.tmp/browser`、`browser-run.sh` 和“分步执行”工作流；涉及用户目录持久化或实验特性时，默认保持保守。
 
-## Current Baseline
+## Capability Policy
 
-- 当前环境实测版本：`agent-browser 0.17.0`
-- 当前工作流已纳入：`cdp` / `--auto-connect`、`state save` + `--state`、`download <sel> <path>` + `--download-path`、`eval`、`record`、`trace`、`diff`、`auth`、`keyboard`、`screenshot --annotate`、`pdf`、`--color-scheme`
-- 上游已出现，但当前**不纳入默认工作流**：`--session-name` 用户目录持久化、`--native`、`--engine lightpanda`、项目外配置文件
-- 若后续升级 `agent-browser`，先复核 CLI 能力，再把新增命令收敛回本技能
+- 本技能不维护本机版本号；排查能力差异时先读取 `agent-browser --help`。
+- 默认工作流包含 CDP 接入、项目内状态文件、下载、截图、PDF、trace、diff、auth 与键盘输入等常用能力。
+- 用户目录持久化、native engine、Lightpanda engine、项目外配置文件不纳入默认工作流；使用前先确认项目需求和环境支持。
+- 升级 `agent-browser` 后，先复核 CLI 能力，再把稳定的新用法收敛回本技能。
 
 ## Workflow Convergence
 
@@ -29,7 +34,7 @@
 
 ## 临时产物目录约定（本仓库补充）
 
-为避免产物随机落在 `.agent/tmp`、`~/.agent-browser` 或系统 `/tmp`，本仓库先采用最简约定：
+为避免产物随机落在 `.agent/tmp`、`~/.agent-browser` 或系统 `/tmp`，本仓库采用统一目录约定：
 
 - 根目录：`.tmp/browser`
 - 统一入口：`.shared/skills/browser/scripts/browser-run.sh`
@@ -55,9 +60,9 @@
 - `BROWSER_CDP_TARGET`：覆盖默认 CDP 端口/地址（默认 `9222`）
 - `BROWSER_CDP_PREFER=0`：关闭“优先 CDP”策略
 
-> 暂不做细分目录，全部先收口在 `.tmp/browser`；需要再扩展时按场景细化。
+> 默认将 browser 产物收敛到 `.tmp/browser`；如需场景隔离，使用 `BROWSER_TMP_ROOT` 指定目录。
 >
-> 说明：下文若出现 `agent-browser ...` 原生命令示例，在本仓库执行时都等价替换为 `browser-run.sh` 入口。
+> 下文若出现 `agent-browser ...` 原生命令示例，在本仓库执行时都等价替换为 `browser-run.sh` 入口。
 
 ## CDP Mode（高频易错，先看这里）
 
@@ -92,7 +97,9 @@ agent-browser --cdp 9222 snapshot -i
 agent-browser --cdp 9222 open https://example.com
 ```
 
-### 方式 C：自动发现 Chrome（当前版本可用）
+### 方式 C：自动发现 Chrome（支持时可用）
+
+是否支持 `--auto-connect` 以 `agent-browser --help` 为准；不支持时回退到显式 `connect <port>` 或 `--cdp <port>`。
 
 ```bash
 agent-browser --auto-connect open https://example.com
@@ -213,7 +220,7 @@ agent-browser state save .tmp/browser/auth-state.json
 agent-browser --state .tmp/browser/auth-state.json open https://app.example.com/dashboard
 ```
 
-当前版本虽然存在 `state load` 子命令，但实际工作流以“启动浏览器时显式传 `--state`”为准；不要假设 `state load` 能在已运行浏览器里热加载。
+默认工作流以“启动浏览器时显式传 `--state`”为准；不要依赖 `state load` 在已运行浏览器里热加载。若确需使用 `state load`，先核对 `agent-browser --help` 与实际行为。
 
 ### Authentication with Auth Vault（按需启用）
 

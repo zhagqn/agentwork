@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Session 审查工具 - 对照 session 的“当前批次工作集”与工作区改动，并检查“产出批次”锚点
+# Session 审查工具 - 对照 session 的“当前批次工作集”范围与工作区改动，并检查“产出批次”锚点
 
 set -euo pipefail
 
@@ -66,6 +66,17 @@ extract_current_workset() {
     ' "$session_file")
 
     if [[ -n "$section" ]]; then
+        local range_entries
+        range_entries=$(echo "$section" | \
+            sed -nE 's/^.*范围:[[:space:]]*`([^`]+)`.*/\1/p' | \
+            sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | \
+            sed '/^$/d' || true)
+
+        if [[ -n "$range_entries" ]]; then
+            echo "$range_entries" | sort -u
+            return
+        fi
+
         echo "$section" | \
             grep -oE '`[^`]+`' | \
             tr -d '`' | \
@@ -111,13 +122,69 @@ extract_commit_hashes() {
     ' "$session_file")
     fi
 
-    # 仅解析“提交:”列的首个 token，过滤非 hash 值（如 "-"）
-    echo "$section" | \
-        sed -nE 's/^.*提交:[[:space:]]*`?([^`|]+)`?.*/\1/p' | \
-        awk '{print $1}' | \
-        grep -E '^[0-9a-fA-F]{7,40}$' | \
-        tr 'A-F' 'a-f' | \
-        sort -u
+    # 解析产出批次中的提交锚点；支持 “提交:” 明细与 “历史:” 摘要中的 hash。
+    {
+        echo "$section" | sed -nE 's/^.*提交:[[:space:]]*`?([0-9a-fA-F]{7,40}).*/\1/p'
+        echo "$section" | sed -nE '/历史:/ s/^.*范围:[[:space:]]*//p' | grep -oE '[0-9a-fA-F]{7,40}' || true
+    } | tr 'A-F' 'a-f' | sort -u
+}
+
+is_glob_scope() {
+    local scope="$1"
+    [[ "$scope" == *"*"* || "$scope" == *"?"* || "$scope" == *"["* ]]
+}
+
+path_matches_scope() {
+    local path="$1"
+    local scope="$2"
+
+    [[ -z "$path" || -z "$scope" ]] && return 1
+
+    if is_glob_scope "$scope"; then
+        [[ "$path" == $scope ]]
+        return
+    fi
+
+    if [[ "$scope" == */ ]]; then
+        [[ "$path" == "$scope"* ]]
+        return
+    fi
+
+    [[ "$path" == "$scope" ]]
+}
+
+path_covered_by_workset() {
+    local path="$1"
+    local workset="$2"
+    local scope
+
+    [[ -z "$workset" ]] && return 1
+
+    while IFS= read -r scope; do
+        [[ -z "$scope" ]] && continue
+        if path_matches_scope "$path" "$scope"; then
+            return 0
+        fi
+    done <<< "$workset"
+
+    return 1
+}
+
+workset_scope_has_changed_path() {
+    local scope="$1"
+    local changed="$2"
+    local path
+
+    [[ -z "$changed" ]] && return 1
+
+    while IFS= read -r path; do
+        [[ -z "$path" ]] && continue
+        if path_matches_scope "$path" "$scope"; then
+            return 0
+        fi
+    done <<< "$changed"
+
+    return 1
 }
 
 extract_git_changed_files() {
@@ -132,6 +199,22 @@ extract_git_changed_files() {
                 path = substr(path, arrow + 4)
             }
             print path
+        }
+    ' | sed '/^$/d' | sort -u
+}
+
+extract_git_status_paths() {
+    # 用于存在性检查：rename/copy 同时保留来源路径和目标路径。
+    git -c core.quotepath=false status --porcelain 2>/dev/null | awk '
+        {
+            path = substr($0, 4)
+            arrow = index(path, " -> ")
+            if (arrow > 0) {
+                print substr(path, 1, arrow - 1)
+                print substr(path, arrow + 4)
+            } else {
+                print path
+            }
         }
     ' | sed '/^$/d' | sort -u
 }
@@ -170,7 +253,7 @@ main() {
         workset_count=$(echo "$workset" | wc -l | tr -d ' ')
     fi
 
-    echo "当前批次工作集（优先从“## 当前批次工作集”解析；若不存在则回退 legacy 产出物）：$workset_count"
+    echo "当前批次工作集条目（可为精确路径、目录范围或 glob；若不存在则回退 legacy 产出物）：$workset_count"
 
     if [[ -n "$workset" ]]; then
         echo "$workset" | sed 's/.*/- `&`/'
@@ -208,6 +291,9 @@ main() {
     local changed
     changed="$(extract_git_changed_files || true)"
 
+    local status_paths
+    status_paths="$(extract_git_status_paths || true)"
+
     local changed_count=0
     if [[ -n "$changed" ]]; then
         changed_count=$(echo "$changed" | wc -l | tr -d ' ')
@@ -239,7 +325,8 @@ main() {
         echo ""
     fi
 
-    # 当前批次工作集缺失检查（相对 git root）
+    # 当前批次工作集缺失检查（相对 git root）。
+    # 删除或重命名来源路径会在 git status 中体现，即使路径已不存在，也不应误报为过期条目。
     local missing=()
     if [[ -n "$workset" ]]; then
         while IFS= read -r path; do
@@ -247,31 +334,40 @@ main() {
             if [[ "$path" == /* ]]; then
                 continue
             fi
+            if is_glob_scope "$path"; then
+                continue
+            fi
             if [[ ! -e "$root/$path" ]]; then
+                if workset_scope_has_changed_path "$path" "$status_paths"; then
+                    continue
+                fi
+                if [[ -n "$status_paths" ]] && grep -qxF "$path" <<< "$status_paths"; then
+                    continue
+                fi
                 missing+=("$path")
             fi
         done <<< "$workset"
     fi
 
     if [[ ${#missing[@]} -gt 0 ]]; then
-        echo "缺失/疑似过期的当前批次工作集条目（路径不存在）："
+        echo "缺失/疑似过期的当前批次工作集条目（路径不存在，且未在 git status 中体现）："
         printf '%s\n' "${missing[@]}" | sort -u | sed 's/.*/- `&`/'
         echo ""
     fi
 
-    # 工作区改动但未记录到当前批次工作集（简单精确匹配）
+    # 工作区改动但未被当前批次工作集覆盖
     local changed_not_listed=()
     if [[ -n "$changed" ]]; then
         while IFS= read -r f; do
             [[ -z "$f" ]] && continue
-            if [[ -z "$workset" ]] || ! grep -qxF "$f" <<< "$workset"; then
+            if ! path_covered_by_workset "$f" "$workset"; then
                 changed_not_listed+=("$f")
             fi
         done <<< "$changed"
     fi
 
     if [[ ${#changed_not_listed[@]} -gt 0 ]]; then
-        echo "工作区有改动但未记录到“当前批次工作集”："
+        echo "工作区有改动但未被“当前批次工作集”覆盖："
         printf '%s\n' "${changed_not_listed[@]}" | sort -u | sed 's/.*/- `&`/'
         echo ""
     fi
@@ -281,7 +377,7 @@ main() {
     if [[ -n "$workset" ]]; then
         while IFS= read -r f; do
             [[ -z "$f" ]] && continue
-            if [[ -z "$changed" ]] || ! grep -qxF "$f" <<< "$changed"; then
+            if ! workset_scope_has_changed_path "$f" "$changed"; then
                 listed_but_not_changed+=("$f")
             fi
         done <<< "$workset"

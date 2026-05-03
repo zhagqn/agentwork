@@ -26,9 +26,9 @@ def render_memory(kind: str) -> str:
     out: list[str] = [AUTO, v['title'], '']
     if v['intro']:
         out += [v['intro'], '']
-    out += [COMMON['repo_intro'], '', f"> 注意：{COMMON['warning']}"]
+    out += [COMMON['repo_intro'], '', f"> {COMMON['warning']}"]
     if v['note']:
-        out += ['', f"> 说明：{v['note']}"]
+        out += ['', f"> {v['note']}"]
     out += [
         '', COMMON['safety_title'], '', COMMON['danger_intro'], '', bullet(COMMON['danger_items']), '', COMMON['self_fix'],
         '', COMMON['startup_title'], number(COMMON['startup_items']),
@@ -56,18 +56,20 @@ def render_copilot() -> str:
         '',
         v['intro'],
         '',
-        '- 开始工作前先阅读 `.shared/INDEX.md`。',
+        '- 启动硬约束：先阅读 `.shared/constraints/coding-style.md`、`.shared/constraints/destructive-operations.md`、`.shared/constraints/placeholder-naming.md`。',
+        '- 需要命令、模板或工作流入口时阅读 `.shared/INDEX.md`。',
         '- 需要仓库长期事实时阅读 `.shared/project/index.md`。',
         '- 若任务涉及具体项目或目录，先根据 `.shared/project/index.md` 读取对应的轻量 project 文档。',
         '- 当第一次确定将读取或修改的目标路径后，立即对照 `.shared/project/index.md` 的读取映射；若命中条目，先读取对应 `project/*.md`，若目标路径扩大则重新对照一次。',
         '- 遵循 `.shared/constraints/coding-style.md` 中的代码与文档风格。',
         '- 对破坏性或不可逆操作必须先确认。',
+        '- Git index（staged 区）是用户的提交和 review 边界；未经明确要求，不改变 staged 区。',
         '- 不自动加载 `.shared/session/*`；只有显式引用时才使用。',
         '- 临时工件统一写入 `.tmp/`。',
         '- 工作流默认顺序：`/brain` → `/plan` → `/exec` → `/review` → `/commit`。',
         '- 可选工具默认不预装，按项目约定单独引入。',
         '',
-        f"> 说明：{v['note']}",
+        f"> {v['note']}",
     ]
     return "\n".join(lines).rstrip() + "\n"
 
@@ -82,7 +84,7 @@ def render_cursor() -> str:
         '',
         COMMON['repo_intro'],
         '',
-        f"> 说明：{v['note']}",
+        f"> {v['note']}",
         '',
         COMMON['basic_title'],
         bullet(COMMON['basic_items']),
@@ -165,6 +167,9 @@ def sync_root_shared_data():
 
 
 def main() -> int:
+    (BOOTSTRAP / 'root').mkdir(parents=True, exist_ok=True)
+    (BOOTSTRAP / 'claude' / 'commands').mkdir(parents=True, exist_ok=True)
+    (BOOTSTRAP / 'agent' / 'workflows').mkdir(parents=True, exist_ok=True)
     (ROOT / 'AGENTS.md').write_text(render_memory('source_root'), encoding='utf-8')
     sync_root_shared_data()
     (BOOTSTRAP / 'root' / 'AGENTS.md').write_text(render_memory('target_root'), encoding='utf-8')

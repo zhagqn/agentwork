@@ -37,11 +37,18 @@ TMP_GITIGNORE_PATTERNS = {
     '/.tmp/',
     '/.tmp/*',
 }
+COPY_IGNORE = shutil.ignore_patterns('__pycache__', '*.pyc', '*.pyo')
+
+
+def is_python_cache_artifact(rel: Path) -> bool:
+    return '__pycache__' in rel.parts or rel.suffix in {'.pyc', '.pyo'}
 
 
 def copy_file(src: Path, dst: Path) -> None:
     if src.resolve() == dst.resolve():
         return
+    if dst.exists() and dst.is_dir():
+        raise SystemExit(f'target path is a directory, expected file: {dst}')
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src, dst)
 
@@ -50,8 +57,10 @@ def copy_tree(src: Path, dst: Path) -> None:
     if src.resolve() == dst.resolve():
         return
     if dst.exists():
+        if dst.is_symlink() or dst.is_file():
+            raise SystemExit(f'target path is a file, expected directory: {dst}')
         shutil.rmtree(dst)
-    shutil.copytree(src, dst)
+    shutil.copytree(src, dst, ignore=COPY_IGNORE)
 
 
 def refresh_generated_bootstrap() -> None:
@@ -86,6 +95,8 @@ def collect_core_shared_writes(target: Path):
     optional_shared_relpaths = collect_optional_shared_relpaths()
     for src in sorted(x for x in SHARED_ROOT.rglob('*') if x.is_file()):
         rel = src.relative_to(SHARED_ROOT)
+        if is_python_cache_artifact(rel):
+            continue
         if rel.parts and rel.parts[0] in {'project', 'session'}:
             continue
         if is_optional_shared_relpath(rel, optional_shared_relpaths):

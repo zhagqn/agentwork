@@ -14,5 +14,11 @@
 .shared/scripts/session-review.sh <path/to.md>  # 审查指定文件路径
 ```
 
+## Source Repo 说明
+当前 source repo 可能因为已安装可选工具而额外出现脚本，例如 `arch-render.py`。
+
+这些脚本不代表“核心 `.shared` 契约”回涨；它们的归属仍然是对应的 optional tool，应以工具安装入口和工具文档为准。
+
 ## 可选工具脚本
-可选工具脚本不属于核心 `.shared` 层；应通过项目自己的工具安装流程按需引入。
+- 可选工具脚本不属于核心 `.shared` 层；应通过项目自己的工具安装流程按需引入
+- 若某个脚本来自 optional tool，它可以物理存在于 `.shared/scripts/`，但语义上仍不属于核心工作流脚本

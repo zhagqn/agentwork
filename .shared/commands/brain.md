@@ -14,7 +14,7 @@
 ### Session mode
 - 已有当前 session，或正在执行 `/session brain`
 - 在当前回复中先明确“澄清结果 + 方案对比 + 推荐决策”
-- 最终只把已确认结论写回当前 session 的“已确认结论（当前版本）”
+- 最终只把已确认结论写回当前 session 的“已确认结论（工作快照）”
 - 如需保留推演过程，可额外落一份 `.tmp/agentwork/brain/*.md`
 
 ### Standalone mode

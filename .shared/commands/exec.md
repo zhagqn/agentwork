@@ -21,7 +21,7 @@
 - 一轮后停下来，等待下一次 `/exec` 或 `/review`
 
 ### Ralph mode (`--ralph`)
-- 让 `/exec` 进入尽可能持久运行的执行策略
+- 让 `/exec` 进入可选的持久执行策略，而不是默认主路径
 - 每轮执行后自动进入 review / fix / verify 循环
 - 尽量使用 **subagent** 承担独立实现、局部分析、局部 review，减少主上下文消耗
 - 主上下文只保留目标、phase、进度摘要、blocker

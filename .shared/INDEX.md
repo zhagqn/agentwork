@@ -2,11 +2,11 @@
 
 > 目标：保留 agentwork 的核心工作流层，使其可读、可同步、可在新项目中直接复用。
 
-## 0) 最小必读（所有助手）
-1. 约束（Hard constraints）
-   - `.shared/constraints/coding-style.md`
-   - `.shared/constraints/placeholder-naming.md`
-   - `.shared/constraints/destructive-operations.md`
+## 0) 约束
+
+- `.shared/constraints/coding-style.md`
+- `.shared/constraints/destructive-operations.md`
+- `.shared/constraints/placeholder-naming.md`
 
 ## 1) 核心工作流
 - Session 命令：`.shared/commands/session.md`
@@ -36,10 +36,10 @@
 - `.tmp/agentwork/review/*.md`
 - `.tmp/agentwork/ralph/{slug}/*`
 
-## 4) Optional Tools (source-managed)
+## 4) Optional Tools
 - 可选工具默认不预装
-- 需要时通过项目自己的安装流程按需引入
-- 当前已初始化：`figma`、`browser`、`android`、`godot`
+- 需要时通过项目安装入口按需引入
+- `.shared` 不枚举可选工具清单；可用工具以安装入口或工具注册表的实际输出为准
 
 ## 5) Project（长期复用）
 - 位置：`.shared/project/`
