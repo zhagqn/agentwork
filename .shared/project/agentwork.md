@@ -14,8 +14,8 @@
 
 ### Build / Test
 - 原地刷新核心工作流：`python3 install-bootstrap.py -p .`
-- 回归验证：`python3 test/run_deterministic.py`
-- 若修改 bootstrap 生成契约，优先同步 `.agentwork/bootstrap/*` 与 deterministic harness
+- 集成诊断入口（人工触发）：`python3 test/run.py`
+- 若修改 bootstrap 生成契约，优先同步 `.agentwork/bootstrap/*` 与 integrated harness
 
 ### 代码与目录约定
 - `.shared/`：项目可同步的核心工作流契约
@@ -31,7 +31,7 @@
 - `.tmp/*` 默认不纳入提交，除非明确保留证据
 - source repo 自身也按目标项目结构自承载 bootstrap；相同路径的核心 `.shared` 文件应跳过复制，只刷新根目录适配层与 managed block
 - `install-bootstrap.py` 只同步核心工作流；已安装的可选工具文件不会随着 bootstrap 自动扩散到目标项目
-- source repo 根目录适配层产物属于正式版本基线：`AGENTS.md`、`.claude/`、`.agent/`、`.cursor/`、`.github/`、`.codex/skills/*` 应与 `.agentwork/bootstrap/*` 保持一致，并通过 deterministic harness 回归
+- source repo 根目录适配层产物属于正式版本基线：`AGENTS.md`、`.claude/`、`.agent/`、`.cursor/`、`.github/`、`.codex/skills/*` 应与 `.agentwork/bootstrap/*` 保持一致，并通过 integrated harness 回归
 
 ## 关键入口
 - `.agentwork/bootstrap/`
@@ -42,4 +42,4 @@
 
 ## 更新记录
 - 创建: 2026-04-15
-- 最近更新: 2026-04-15
+- 最近更新: 2026-05-04

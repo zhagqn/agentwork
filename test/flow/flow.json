@@ -1,0 +1,48 @@
+{
+  "independent_commands": [
+    {
+      "name": "command-brain",
+      "input": "independent-brain.txt",
+      "required_key": "created_files",
+      "timeout": 420
+    },
+    {
+      "name": "command-plan",
+      "input": "independent-plan.txt",
+      "required_key": "created_files",
+      "timeout": 420
+    },
+    {
+      "name": "command-exec",
+      "input": "independent-exec.txt",
+      "required_key": "changed_files",
+      "timeout": 720
+    },
+    {
+      "name": "command-review",
+      "input": "independent-review.txt",
+      "required_key": "created_files",
+      "timeout": 420
+    }
+  ],
+  "turborepo_iteration_flow": [
+    {
+      "name": "session-brain",
+      "input": "turborepo-session-brain.txt",
+      "required_key": "touched_files",
+      "timeout": 420
+    },
+    {
+      "name": "session-load-exec",
+      "input": "turborepo-session-load-exec.txt",
+      "required_key": "touched_files",
+      "timeout": 600
+    },
+    {
+      "name": "session-load-review",
+      "input": "turborepo-session-load-review.txt",
+      "required_key": "touched_files",
+      "timeout": 420
+    }
+  ]
+}
