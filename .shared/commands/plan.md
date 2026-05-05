@@ -8,6 +8,7 @@
 ### Session mode
 - 来源：当前 session
 - 输出：更新 session 的任务列表与计划摘要
+- 不默认写 `.tmp/agentwork/plan/*.md`；只有用户明确要求导出 standalone plan 时才额外写入
 
 ### Standalone mode
 - 来源优先级：
