@@ -9,6 +9,7 @@
 - [x] 收敛 workflow/session 规则：`/session` 只做任务快照与流程串联，`/brain`、`/plan`、`/exec`、`/review` 支持 standalone 模式。
 - [x] 补强 `/brain` 的“澄清结果 + 方案对比 + 推荐决策”约束，并避免 session mode 与 standalone mode 定义漂移。
 - [x] 明确根目录 bootstrap 产物属于 source repo 正式基线：`AGENTS.md`、`.claude/`、`.agent/`、`.cursor/`、`.github/`、`.codex/skills/*` 以 `.agentwork/bootstrap/*` 与 deterministic harness 为事实源。
+- [x] 复核并收敛 workflow 语义：按实际约束区分必做流程、执行顺序、关键纪律和检查清单，统一 session-ref、计划摘要、当前批次工作集、产出批次、风险 / 阻塞等核心术语。
 - [ ] 若后续要把 source repo 自测扩到可选工具层，再补充 tool self-install / real-cli 回归策略。
 - [ ] 若后续仍发现 `/brain` 会绕过澄清或方案对比，再补 checklist 或 review 侧结构化校验。
 
@@ -25,7 +26,7 @@
 - `agentwork` 必须保持 runtime-agnostic，不再绑定 OMX 作为前提。
 - `.shared/` 只承载项目内直接可用的核心工作流契约；可选工具保留在 `.agentwork/tools/*`。
 - Session 是手动任务快照，不是 runtime state，不自动加载旧 session。
-- session 不设置固定阶段字段；推进状态以任务列表、已确认结论、当前批次工作集与审查记录表达。
+- session 不设置固定阶段字段；推进状态以任务列表、已确认结论、计划摘要、当前批次工作集、产出批次、风险与审查记录表达。
 - `/brain` 必须先显式产出“澄清结果 + 方案对比 + 推荐决策”，不能直接跳到“已选方案”或 `/plan`。
 - `/brain`、`/plan`、`/exec`、`/review` 必须支持 standalone 模式，临时工件统一落到 `.tmp/agentwork/*`。
 - Ralph 只作为 `/exec --ralph` / `/session exec --ralph` 的执行策略存在，不单独扩成平行主工作流。
@@ -62,23 +63,40 @@
 - 提交: `3fec736 docs(brain): 收敛 brain 流程约束` | 范围: `/brain` 澄清 / 方案对比 / 推荐决策约束、session/workflow 引用收敛
 - 提交: `0629327 feat(arch): 将 architecture optional tool 收敛为 arch` | 范围: `architecture` -> `arch` optional tool 主体、安装态 wrapper、renderer、模板、样例、安装入口与 deterministic smoke
 - 提交: `55d1cbb docs(workflow): 收敛工作流与 session 维护规则` | 范围: workflow/session 规则、bootstrap 入口、browser shared skill、project/session 目录约定、`session-review.sh`
-- 提交: `-` | 范围: `.shared/commands/review.md`, `.shared/session/20260415-0049-agentwork-self-host-baseline.md`（本次 session review 规范与快照收敛提交；不再追加提交回填自身 hash）
+- 提交: `2d4f371 docs(workflow): 收敛工作流语义与契约检查` | 范围: `.shared/commands/*`, `.shared/patterns/*`, `.shared/constraints/placeholder-naming.md`, `.shared/project/*`, `.shared/session/README.md`, `.shared/scripts/*`, `.shared/templates/*`, `.agentwork/bootstrap/*`, `test/*`, `.shared/session/20260415-0049-agentwork-self-host-baseline.md`（当前 workflow 语义一致性收敛；已提交）
 
 ## 当前批次工作集（可选）
-- 范围: `.shared/commands/review.md` | 主题: 补充 session review 收敛维护最佳实践
-- 范围: `.shared/session/20260415-0049-agentwork-self-host-baseline.md` | 主题: 删除过期信息和过渡讨论内容，保留可恢复任务的长期快照
+- 范围: `.shared/commands/` | 主题: 核对 brain / plan / exec / review / session 的阶段边界、输入来源、session 同步字段和术语
+- 范围: `.shared/patterns/session-workflow.md` | 主题: 对齐 session mode 与 standalone mode 的执行路径和阶段裁剪语义
+- 范围: `.shared/patterns/platform-adapter.md` | 主题: 补齐平台映射语义，保持 AGENTS 引用范围一致
+- 范围: `.shared/constraints/placeholder-naming.md` | 主题: 统一 `<session-ref>` / `[session-ref]` / `[review-source]` 占位符语义
+- 范围: `.shared/project/` | 主题: 补齐 `.shared/` source repo 映射和 `.tmp` 分层边界
+- 范围: `.shared/session/README.md` | 主题: 同步 session 状态字段
+- 范围: `.agentwork/bootstrap/data/session-readme.block.md` | 主题: 同步 session README managed block 源
+- 范围: `.agentwork/bootstrap/README.md` | 主题: 澄清 bootstrap 输出一致性和 Codex skills 刷新范围
+- 范围: `.shared/scripts/` | 主题: 将 session-review 输入说明从 session-id 收敛为 session-ref
+- 范围: `.shared/templates/` | 主题: 对齐 plan / session 模板中的计划摘要和阻塞表述
+- 范围: `test/` | 主题: 对齐 session 标准检查、bootstrap contract 和脚本假设
+- 范围: `.shared/INDEX.md` | 主题: 补充 session 与 scripts 入口，保持核心 workflow 导航完整
+- 范围: `.shared/session/20260415-0049-agentwork-self-host-baseline.md` | 主题: 同步本轮 workflow 语义复核快照
 
 ## 风险 / 阻塞
 - `arch` 若过早把 schema、命令面或交互做大，会偏离“简约、自用、语言驱动”的当前边界。
 - `arch` 当前允许 source 自带坐标且不内置字体 assets，首轮图面质量会更依赖 prompt 与样例，而不是自动布局或视觉素材。
 - optional tools 已 source-managed，但 source repo 场景下的 tool self-install 目前只有人工 smoke / 手动审查，没有纳入 deterministic 自动评分。
-- 当前 `/brain` 约束已压回 live docs 与模板，但还没有脚本级 checklist 或 review 侧结构化校验；若 agent 行为仍不稳定，需要再补自动检查。
+- 当前 `/brain` 约束已压回 live docs 与模板，但还没有脚本级检查清单或 review 侧结构化校验；若 agent 行为仍不稳定，需要再补自动检查。
+- 本轮 workflow 语义复核已运行 bootstrap 自刷新、`git diff --check` 和完整 integrated harness；run `20260506-093721` 已通过 install、standalone commands 与 session flow。
 
 ## 审查记录
 ### 2026-05-04 session review
 - 变更：删除过期提交边界、reset 过程、临时讨论和命令流水；将审查记录压缩为阶段摘要，并把“清理过渡过程、保留长期快照、不追加提交回填 session 自身 hash”的规则补入 `/review` 规范。
 - 验证：已运行 `.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md` 与 `git diff --check`；提交前再运行 `git diff --cached --check`。
 - review 结论：当前 session 不再承担过渡讨论存档，只作为 source repo 自承载基线的恢复快照；本次提交后不再为了回填自身锚点追加提交。
+
+### 2026-05-06 workflow 语义复核
+- 变更：吸收 `.tmp/agentwork/review` 中可服务当前工作流的建议，补强 `/plan` 与 `/exec` 约束；随后按实际约束收敛术语，将强制步骤统一为“必做流程”，保留 `/exec` 的“关键纪律”和 `/commit` 的“执行顺序”；统一 session-ref、review-source、计划摘要、当前批次工作集、产出批次、风险 / 阻塞等核心语义。
+- 验证：已运行 `python3 install-bootstrap.py -p .`、`python3 test/run.py`、`python3 test/check_session_standard.py .shared/session/20260415-0049-agentwork-self-host-baseline.md`、`.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md` 与 `git diff --check`；integrated harness run `20260506-093721` 全阶段 PASS。
+- 风险/待办：本轮仍是文档契约收敛；若后续 agent 行为仍出现 `/session brain` 与 `/plan` 边界混淆，再补 deterministic prompt 检查或 review 侧结构化校验。
 
 ### 阶段摘要
 - 2026-04-09 - 2026-04-15：完成 research 结论到 live docs 的落地，确认 session 是当前任务快照而非 runtime state；完成 runtime-agnostic/source-repo refactor、source repo 原地 bootstrap、自承载基线、session 轻量产出格式、session load 取证规则与 session 自身锚点规则。
