@@ -10,8 +10,7 @@
 
 ```bash
 .shared/scripts/session-review.sh                # 审查最新 session
-.shared/scripts/session-review.sh <session-id>  # 审查指定 session（不含 .md）
-.shared/scripts/session-review.sh <path/to.md>  # 审查指定文件路径
+.shared/scripts/session-review.sh <session-ref> # 审查指定 session id 或文件路径
 ```
 
 ## Source Repo 说明

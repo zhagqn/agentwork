@@ -43,6 +43,13 @@ TEMPLATE_PLACEHOLDERS = [
     '{name}',
     '{YYYY-MM-DD HH:MM}',
     '{desc}',
+    '{brain-topic-summary}',
+    '{session-desc}',
+    '{plan-source}',
+    '{review-source}',
+    '{exec-source}',
+    '{session-or-plan-ref}',
+    '{brain-note-or-other-source}',
     '{下一步要做的事}',
     '{当前任务目标}',
     '{本轮纳入范围}',
@@ -99,7 +106,7 @@ def check_session(path: Path, strict_flow: bool) -> list[str]:
             failures.append(f'missing_text:{item}')
 
     for heading in BANNED_STANDALONE_HEADINGS:
-        if re.search(rf'^{re.escape(heading)}\s*$', text, flags=re.MULTILINE):
+        if re.search(rf'^{re.escape(heading)}(?:\s|[（(/]|$)', text, flags=re.MULTILINE):
             failures.append(f'standalone_heading_leak:{heading}')
 
     for placeholder in TEMPLATE_PLACEHOLDERS:
@@ -120,7 +127,7 @@ def check_session(path: Path, strict_flow: bool) -> list[str]:
     if strict_flow and not deliverable_lines:
         failures.append('missing_deliverable_entries')
     for line in deliverable_lines:
-        if not re.match(r'^- (提交|历史): .+', line):
+        if not re.match(r'^- 提交: `[^`]+` \| 范围: .+', line) and not re.match(r'^- 历史: `[^`]+` \| 范围: .+', line):
             failures.append(f'bad_deliverable_entry:{line}')
 
     return failures
@@ -129,7 +136,7 @@ def check_session(path: Path, strict_flow: bool) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description='Check whether a session file still follows the standard session shape.')
     parser.add_argument('session_file')
-    parser.add_argument('--strict-flow', action='store_true', help='require plan/workset/deliverable sections for full-flow tests')
+    parser.add_argument('--strict-flow', action='store_true', help='require plan/workset/deliverable sections for full-flow tests, including sections marked optional in the template')
     args = parser.parse_args()
 
     failures = check_session(Path(args.session_file), args.strict_flow)

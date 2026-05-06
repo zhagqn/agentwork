@@ -17,11 +17,13 @@
 - Commit 流程：`.shared/commands/commit.md`
 - Session 工作流：`.shared/patterns/session-workflow.md`
 - Session 模板：`.shared/templates/session.md`
+- Session 目录说明：`.shared/session/README.md`
 - Brain / Plan / Review 模板：`.shared/templates/brain.md`、`.shared/templates/plan.md`、`.shared/templates/review.md`
 - Ralph 辅助模板：`.shared/templates/ralph-context.md`、`.shared/templates/ralph-progress.json.example`
 - Project 管理：`.shared/patterns/project-management.md`
 - Project 索引：`.shared/project/index.md`
 - 平台适配：`.shared/patterns/platform-adapter.md`
+- 核心脚本说明：`.shared/scripts/README.md`
 
 ## 2) 命令栈
 - `/brain`：设计收敛（可 standalone）
@@ -35,6 +37,7 @@
 - `.tmp/agentwork/plan/*.md`
 - `.tmp/agentwork/review/*.md`
 - `.tmp/agentwork/ralph/{slug}/*`
+- 上述是核心 workflow 的 standalone 工件；可选工具或上游镜像可使用各自 `.tmp/<domain>/`，默认不纳入提交
 
 ## 4) Optional Tools
 - 可选工具默认不预装

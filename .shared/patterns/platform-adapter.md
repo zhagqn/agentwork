@@ -1,11 +1,11 @@
-# 平台适配层说明（Codex / Claude / Antigravity）
+# 平台适配层说明（Codex / Claude / Antigravity / Cursor / VS Code Copilot）
 
 > 目的：在保留 `.shared/` 统一规则的前提下，明确“平台能力边界 + 触发差异 + 回退策略”，确保跨平台协作的一致性。
 
 ## 适用范围
 
-- 目录：`AGENTS.md`、`.claude/*`、`.agent/*`、`.shared/*`
-- 对象：Codex CLI、Claude Code、Antigravity（及同类代理平台）
+- 目录：`AGENTS.md`、`.claude/*`、`.agent/*`、`.codex/*`、`.cursor/*`、`.github/*`、`.shared/*`
+- 对象：Codex CLI、Claude Code、Antigravity、Cursor、VS Code Copilot（及同类代理平台）
 
 ## 核心原则（最佳实践）
 
@@ -21,7 +21,7 @@
 - 规则入口与长期约束（`.shared/INDEX.md`、`.shared/project/*`）
 - 命令正文与占位符规范（`.shared/commands/*`、`.shared/constraints/*`）
 - session 工作流与固定检查脚本（`.shared/patterns/*`、`.shared/scripts/*`）
-- Codex custom agent 的编写规范（`.shared/patterns/agent-authoring.md`）
+- Codex custom agent 边界（见本文“Codex custom agent 边界”小节）
 
 平台运行时提供（需官方确认）：
 
@@ -58,6 +58,8 @@
 | Codex CLI | `AGENTS.md`、`.codex/skills/*`、`.codex/agents/*` | AGENTS 分层合并、审批与沙箱参数、生效优先级、custom agents 的发现与继承规则 | Goal + 原生多代理/工具能力；长任务优先 Goal，再配合 `/exec` | 直接执行 `.shared/commands/*` 文本流程，需要共享工件时再用 `--ralph` |
 | Claude Code | `.claude/CLAUDE.md`、`.claude/commands/*`、`.claude/skills/*` | slash commands 与 skills 触发/优先级规则 | 自动迭代优先官方 `ralph-loop`；定时轮询优先官方 loop | 以 `.shared/commands/*` 为主入口，需跨平台共享语义时使用 `--ralph` |
 | Antigravity | `.agent/rules/*`、`.agent/workflows/*`、`.agent/skills/*` | rules/workflows/skills 触发语义、执行策略默认值 | 以平台原生 workflow 能力为先 | 退回 `.shared/INDEX.md` + `.shared/commands/*` 手动流程 |
+| Cursor | `.cursor/rules/*` | rules 的触发范围、上下文注入时机和工具权限需按项目验证 | 优先使用 Cursor 原生编辑、检索与诊断能力 | 退回 `AGENTS.md` + `.shared/commands/*`，需要接力时写入 session |
+| VS Code Copilot | `.github/copilot-instructions.md` | instructions 注入范围、chat / agent mode 能力边界和命令触发语义需按官方文档确认 | 优先使用 VS Code / Copilot 原生 workspace 能力 | 退回 `AGENTS.md` + `.shared/commands/*`，需要接力时写入 session |
 
 ## Codex custom agent 边界
 

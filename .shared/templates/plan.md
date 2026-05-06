@@ -1,7 +1,7 @@
 # Plan: {name}
 
 > 创建: {YYYY-MM-DD HH:MM}
-> 来源: {brain-note-or-other-source}
+> 来源: {plan-source}
 
 ## Goal
 - {一句话目标}
@@ -25,7 +25,7 @@
 - {达到什么状态才算完成这一轮}
 
 ## Blockers / Risks
-- {当前 blocker 或风险}
+- {当前阻塞或风险}
 
 ## 执行记录（可选）
 - {执行时可补充简短状态}

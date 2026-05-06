@@ -2,7 +2,7 @@
 
 ## 适用范围
 - 涉及 `agentwork` source repo 自身维护时使用
-- 常见命中目录/入口：`.agentwork/`、`install-bootstrap.py`、`install-tool.py`、`test/`
+- 常见命中目录/入口：`.shared/`、`.agentwork/`、`install-bootstrap.py`、`install-tool.py`、`test/`
 
 ## TL;DR
 - 本仓库是 `agentwork` 的 source repo，不是直接业务项目模板
@@ -22,7 +22,7 @@
 - `.agentwork/bootstrap/`：迁移到其他 AI 助手的基础文件源
 - `.agentwork/tools/`：可选工具源（figma/browser/android/godot/...）
 - `.agentwork/upstreams/`：外部工作流/方法论基座映射
-- `.tmp/`：上游镜像与 standalone 临时工件
+- `.tmp/`：上游镜像、核心 workflow standalone 临时工件和可选工具临时工件；核心 workflow 默认使用 `.tmp/agentwork/*`
 - 外部上游的更新命令直接写在 `.agentwork/upstreams/*.md` 中
 
 ### 兼容性 / 运行时红线
@@ -31,11 +31,12 @@
 - `.tmp/*` 默认不纳入提交，除非明确保留证据
 - source repo 自身也按目标项目结构自承载 bootstrap；相同路径的核心 `.shared` 文件应跳过复制，只刷新根目录适配层与 managed block
 - `install-bootstrap.py` 只同步核心工作流；已安装的可选工具文件不会随着 bootstrap 自动扩散到目标项目
-- source repo 根目录适配层产物属于正式版本基线：`AGENTS.md`、`.claude/`、`.agent/`、`.cursor/`、`.github/`、`.codex/skills/*` 应与 `.agentwork/bootstrap/*` 保持一致，并通过 integrated harness 回归
+- source repo 根目录适配层产物属于正式版本基线：bootstrap 生成的 `AGENTS.md`、`.claude/`、`.agent/`、`.cursor/`、`.github/`、`.codex/skills/*` 核心 wrapper 应与 `.agentwork/bootstrap/*` 保持一致，并通过 integrated harness 回归；可选工具安装态允许额外存在，不视为 bootstrap 漂移
 
 ## 关键入口
 - `.agentwork/bootstrap/`
 - `.agentwork/tools/`
+- `.shared/`
 - `install-bootstrap.py`
 - `install-tool.py`
 - `test/`

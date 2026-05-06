@@ -1,7 +1,7 @@
 # Ralph Context: {name}
 
 > 创建: {YYYY-MM-DD HH:MM}
-> 来源: {session-or-plan-ref}
+> 来源: {exec-source}
 
 ## Task Statement
 - {当前任务是什么}

@@ -1,7 +1,7 @@
 # Review: {name}
 
 > 创建: {YYYY-MM-DD HH:MM}
-> 审查对象: {session-or-plan-ref}
+> 审查对象: {review-source}
 
 ## Review Basis
 - 目标 / 范围

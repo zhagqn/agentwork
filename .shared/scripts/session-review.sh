@@ -9,8 +9,7 @@ usage() {
     cat >&2 << 'EOF'
 用法:
   .shared/scripts/session-review.sh                # 审查最新 session
-  .shared/scripts/session-review.sh <session-id>  # 审查指定 session（不含 .md）
-  .shared/scripts/session-review.sh <path/to.md>  # 审查指定文件路径
+  .shared/scripts/session-review.sh <session-ref> # 审查指定 session id 或文件路径
 EOF
 }
 
@@ -68,7 +67,9 @@ extract_current_workset() {
     if [[ -n "$section" ]]; then
         local range_entries
         range_entries=$(echo "$section" | \
-            sed -nE 's/^.*范围:[[:space:]]*`([^`]+)`.*/\1/p' | \
+            sed -nE '/^- 范围:/ { s/^.*范围:[[:space:]]*//; s/[[:space:]]*\|[[:space:]]*主题:.*$//; p; }' | \
+            grep -oE '`[^`]+`' | \
+            tr -d '`' | \
             sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | \
             sed '/^$/d' || true)
 

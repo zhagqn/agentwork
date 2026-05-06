@@ -28,7 +28,7 @@
 - `stages/`：按 install、independent、session 拆分的阶段入口。
 - `harness.py`：共享 harness 能力、provider 调用、日志、断言和底层 stage 实现。
 - `check_bootstrap_contract.py`：bootstrap 安装契约检查器，由 integrated run 调用。
-- `check_session_standard.py`：session 标准结构检查器，由 integrated run 调用；`--strict-flow` 用于完整 session flow。
+- `check_session_standard.py`：session 标准结构检查器，由 integrated run 调用；`--strict-flow` 用于完整 session flow，在该模式下模板中标注“可选”的计划摘要、当前批次工作集和产出批次小节也必须保留。
 
 ## 场景资产
 - `test/flow/flow.json`：定义 integrated harness 中 provider 调用顺序、command input 文件、schema key 和 timeout。

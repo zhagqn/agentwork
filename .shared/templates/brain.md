@@ -1,7 +1,7 @@
 # Brain Note: {name}
 
 > 创建: {YYYY-MM-DD HH:MM}
-> 简述: {desc}
+> 简述: {brain-topic-summary}
 
 ## 目标
 - {当前任务目标}

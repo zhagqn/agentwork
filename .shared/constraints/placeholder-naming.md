@@ -17,6 +17,7 @@
 | `<brain-topic>` | 头脑风暴主题 | `用户登录功能` |
 | `<session-id>` | session 文件名（不含 `.md`） | `20260120-1030-xxx` |
 | `<session-ref>` | session 标识（可为 `<session-id>` 或文件路径） | `20260120-1030-xxx` / `.shared/session/20260120-1030-xxx.md` |
+| `[session-ref]` | 可选 session 标识；省略时使用当前 session | `20260120-1030-xxx` / `.shared/session/20260120-1030-xxx.md` |
 | `[plan-source]` | plan 命令的输入来源 / 引用对象（可为 session、brain note、任意文本路径） | `.shared/session/20260120-1030-xxx.md` / `.tmp/agentwork/brain/foo.md` |
 | `[exec-source]` | exec 命令的输入来源 / 引用对象（通常为 session 或 plan 文件） | `.shared/session/20260120-1030-xxx.md` / `.tmp/agentwork/plan/foo.md` |
 | `[review-source]` | review 命令的审查来源 / 引用对象（通常为 session 或 plan 文件） | `.shared/session/20260120-1030-xxx.md` / `.tmp/agentwork/plan/foo.md` |
