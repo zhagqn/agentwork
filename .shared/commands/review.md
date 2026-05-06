@@ -20,6 +20,8 @@
 5. 压缩历史记录：把过程流水合并为阶段摘要，只保留最近 3-5 条仍有追踪价值的审查记录。
 6. 完成前自检：确认 session 仍是可恢复任务快照，而不是命令日志、长篇过程记录或仅追加的 review note。
 
+若本轮 review 计划或用户要求使用 subagent 做局部复核，先参考 `.shared/patterns/subagent-workflow.md`，再拆分审查范围、指定输出格式和验收方式。
+
 #### Session 收敛维护检查清单
 - 任务列表：完成状态只写在 checkbox；仍未完成的后续项必须保留。
 - 已确认结论 / 计划摘要：必须反映当前真实决策；删除或改写已失效方案、旧路径、旧入口和旧目标。
@@ -48,3 +50,4 @@
 - 还应同步更新 `.tmp/agentwork/ralph/{slug}/progress.json`
 - 保持目标、phase、进度摘要和阻塞可恢复，与 `/exec --ralph` 的主上下文约束一致
 - 把本轮结论压缩成高信号摘要，避免把完整过程回灌进主上下文
+- 若使用 subagent 做局部复核，仍按 `.shared/patterns/subagent-workflow.md` 约束委派契约、输出格式和验收责任

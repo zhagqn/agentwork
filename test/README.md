@@ -21,6 +21,7 @@
 - HTTP fixture server 必须支持由 harness 指定端口，兼容 `--port <port>` 或 `PORT=<port>`；`GET /ok` 必须返回根字段 `status: "ok"` 和 `version`，`GET /bad-contract` 必须无法通过同一契约。
 - integrated run 包含一个简化 Mini Dinner Flow 迭代场景：`apps/api`、`apps/admin`、`apps/h5`、`packages/shared`，参考 NestJS 分层、Drizzle/SQLite 数据建模和前后端共享类型方向，但只实现测试所需最小骨架。
 - Turborepo 场景必须通过 session mode 分次推进 `$session brain`、`$session load` + `$session exec`、`$session load` + `$session review`，每一步都是独立 provider 调用，并最终用 session 标准检查器确认没有漂移。
+- Bootstrap contract 检查 subagent pattern 是否安装到目标项目，并确认 `/exec`、`/review` 与 session workflow 的 subagent 引用入口和核心章节没有漂移。
 - Harness 不判断业务实现细节；独立命令场景只检查 HTTP probe 的 CLI、文档、fixture server 和可运行验收；Turborepo 场景只检查共享类型、后端 menu/orders 边界、README、session 不漂移和文件范围受控。
 
 ## 当前脚本
@@ -50,6 +51,6 @@
 
 ## 边界
 - 当前测试验证 workflow 工件契约、安装结果、真实 provider 执行结果和 drift 检查。
-- 当前测试不证明 provider 原生 subagent 是否真的启动。
+- 当前测试不证明 provider 原生 subagent 是否真的启动；只验证 subagent 共享规范的安装、入口引用和核心章节。
 - 当前测试不做完整 Mini Dinner Flow 业务实现；Turborepo 场景只保留足以验证后端分层、共享类型和前后端 workspace 迭代的最小结构。
 - 当前测试不要求完整 NestJS / Drizzle / SQLite 可运行应用，避免把脚手架细节误判为 workflow 标准。

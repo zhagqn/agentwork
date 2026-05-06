@@ -21,6 +21,7 @@ REQUIRED_FILES = [
     '.shared/commands/commit.md',
     '.shared/constraints/placeholder-naming.md',
     '.shared/patterns/session-workflow.md',
+    '.shared/patterns/subagent-workflow.md',
     '.shared/scripts/session-review.sh',
     '.shared/templates/brain.md',
     '.shared/templates/plan.md',
@@ -69,6 +70,34 @@ TMP_GITIGNORE_PATTERNS = {
 }
 CACHE_ARTIFACT_SUFFIXES = {'.pyc', '.pyo'}
 
+REQUIRED_TEXT = {
+    '.shared/INDEX.md': [
+        '.shared/patterns/subagent-workflow.md',
+    ],
+    '.shared/commands/exec.md': [
+        '本轮计划或用户要求使用 subagent',
+        '.shared/patterns/subagent-workflow.md',
+    ],
+    '.shared/commands/review.md': [
+        '本轮 review 计划或用户要求使用 subagent',
+        '.shared/patterns/subagent-workflow.md',
+    ],
+    '.shared/patterns/session-workflow.md': [
+        '明确采用 subagent 分工或局部复核',
+        '.shared/patterns/subagent-workflow.md',
+    ],
+    '.shared/patterns/subagent-workflow.md': [
+        '.shared/commands/exec.md',
+        '.shared/commands/review.md',
+        '.shared/patterns/session-workflow.md',
+        '## 基本边界',
+        '## 委派契约',
+        '## 推荐输出格式',
+        '## 模型约定',
+        '## 主 Agent 责任',
+    ],
+}
+
 
 def is_python_cache_artifact(path: Path) -> bool:
     return '__pycache__' in path.parts or path.suffix in CACHE_ARTIFACT_SUFFIXES
@@ -100,6 +129,18 @@ def has_tmp_gitignore_rule(text: str) -> bool:
     return any(line.strip() in TMP_GITIGNORE_PATTERNS for line in text.splitlines())
 
 
+def check_text_contracts(root: Path, failures: list[str]) -> None:
+    for rel, required_items in REQUIRED_TEXT.items():
+        path = root / rel
+        if not path.exists():
+            failures.append(f'missing:{rel}')
+            continue
+        text = path.read_text(encoding='utf-8')
+        for item in required_items:
+            if item not in text:
+                failures.append(f'missing_text:{rel}:{item}')
+
+
 def main() -> int:
     if len(sys.argv) != 2:
         print('usage: check_bootstrap_contract.py <repo>', file=sys.stderr)
@@ -111,6 +152,8 @@ def main() -> int:
     for rel in REQUIRED_FILES:
         if not (root / rel).exists():
             failures.append(f'missing:{rel}')
+
+    check_text_contracts(root, failures)
 
     for rel in CODEX_SKILLS:
         path = root / rel

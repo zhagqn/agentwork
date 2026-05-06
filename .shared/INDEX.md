@@ -16,6 +16,7 @@
 - Review 命令：`.shared/commands/review.md`
 - Commit 流程：`.shared/commands/commit.md`
 - Session 工作流：`.shared/patterns/session-workflow.md`
+- Subagent 协作：`.shared/patterns/subagent-workflow.md`
 - Session 模板：`.shared/templates/session.md`
 - Session 目录说明：`.shared/session/README.md`
 - Brain / Plan / Review 模板：`.shared/templates/brain.md`、`.shared/templates/plan.md`、`.shared/templates/review.md`

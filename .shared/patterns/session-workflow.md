@@ -36,6 +36,7 @@ Session 是 agentwork 的**任务快照与工作流外壳**：
 - 默认路径：`/brain` → `/plan` → `/exec` → `/review`
 - Session 模式下，`/session brain` 会把 `/plan` 的核心语义写入 session；因此典型路径可直接进入 `/session exec`
 - 需要多轮持续推进、共享执行摘要或辅助工件时，显式使用 `/exec --ralph`
+- 当用户或计划明确采用 subagent 分工或局部复核时，任务拆解、输出契约与验收责任参考 `.shared/patterns/subagent-workflow.md`
 - 平台原生 goal / loop / hook 的选择责任见 `.shared/patterns/platform-adapter.md`
 
 ## 阶段裁剪
