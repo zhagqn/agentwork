@@ -10,6 +10,7 @@
 - [x] 补强 `/brain` 的“澄清结果 + 方案对比 + 推荐决策”约束，并避免 session mode 与 standalone mode 定义漂移。
 - [x] 明确根目录 bootstrap 产物属于 source repo 正式基线：`AGENTS.md`、`.claude/`、`.agent/`、`.cursor/`、`.github/`、`.codex/skills/*` 以 `.agentwork/bootstrap/*` 与 deterministic harness 为事实源。
 - [x] 复核并收敛 workflow 语义：按实际约束区分必做流程、执行顺序、关键纪律和检查清单，统一 session-ref、计划摘要、当前批次工作集、产出批次、风险 / 阻塞等核心术语。
+- [x] 固化 subagent 协作规范：作为可选执行 pattern，明确委派契约、简洁输出格式、模型默认继承和主 agent 验收责任，不并入 `/exec` 或 `/review` 必做流程。
 - [ ] 若后续要把 source repo 自测扩到可选工具层，再补充 tool self-install / real-cli 回归策略。
 - [ ] 若后续仍发现 `/brain` 会绕过澄清或方案对比，再补 checklist 或 review 侧结构化校验。
 
@@ -30,6 +31,7 @@
 - `/brain` 必须先显式产出“澄清结果 + 方案对比 + 推荐决策”，不能直接跳到“已选方案”或 `/plan`。
 - `/brain`、`/plan`、`/exec`、`/review` 必须支持 standalone 模式，临时工件统一落到 `.tmp/agentwork/*`。
 - Ralph 只作为 `/exec --ralph` / `/session exec --ralph` 的执行策略存在，不单独扩成平行主工作流。
+- Subagent 是可选协作机制，不改变 `/exec` 或 `/review` 的核心语义；读取触发由 `/exec`、`/review` 和 session workflow 规定，委派契约、输出格式和验收责任由 `.shared/patterns/subagent-workflow.md` 规定。
 - source repo 原地 bootstrap 时必须跳过与 source 同路径的核心 `.shared` 文件，只刷新根目录适配层与 managed block。
 
 ### 已选方案
@@ -63,29 +65,29 @@
 - 提交: `3fec736 docs(brain): 收敛 brain 流程约束` | 范围: `/brain` 澄清 / 方案对比 / 推荐决策约束、session/workflow 引用收敛
 - 提交: `0629327 feat(arch): 将 architecture optional tool 收敛为 arch` | 范围: `architecture` -> `arch` optional tool 主体、安装态 wrapper、renderer、模板、样例、安装入口与 deterministic smoke
 - 提交: `55d1cbb docs(workflow): 收敛工作流与 session 维护规则` | 范围: workflow/session 规则、bootstrap 入口、browser shared skill、project/session 目录约定、`session-review.sh`
-- 提交: `2d4f371 docs(workflow): 收敛工作流语义与契约检查` | 范围: `.shared/commands/*`, `.shared/patterns/*`, `.shared/constraints/placeholder-naming.md`, `.shared/project/*`, `.shared/session/README.md`, `.shared/scripts/*`, `.shared/templates/*`, `.agentwork/bootstrap/*`, `test/*`, `.shared/session/20260415-0049-agentwork-self-host-baseline.md`（当前 workflow 语义一致性收敛；已提交）
+- 提交: `2d4f371 docs(workflow): 收敛工作流语义与契约检查` | 范围: `.shared/commands/*`, `.shared/patterns/*`, `.shared/constraints/placeholder-naming.md`, `.shared/project/*`, `.shared/session/README.md`, `.shared/scripts/*`, `.shared/templates/*`, `.agentwork/bootstrap/*`, `test/*`（当前 workflow 语义一致性收敛；已提交）
+- 提交: `299ceaa docs(session): 回填 workflow 语义复核锚点` | 范围: `.shared/session/20260415-0049-agentwork-self-host-baseline.md`
+- 提交: `419d387 docs(workflow): 固化 subagent 协作和回归契约` | 范围: `.shared/patterns/subagent-workflow.md`, `.shared/patterns/session-workflow.md`, `.shared/commands/exec.md`, `.shared/commands/review.md`, `.shared/INDEX.md`, `test/check_bootstrap_contract.py`, `test/README.md`（subagent 协作规范固化；已提交）
+- 提交: `-` | 范围: `.shared/session/20260415-0049-agentwork-self-host-baseline.md`（回填 subagent 规范锚点；仅用于 session 文件自身这一笔）
 
 ## 当前批次工作集（可选）
-- 范围: `.shared/commands/` | 主题: 核对 brain / plan / exec / review / session 的阶段边界、输入来源、session 同步字段和术语
-- 范围: `.shared/patterns/session-workflow.md` | 主题: 对齐 session mode 与 standalone mode 的执行路径和阶段裁剪语义
-- 范围: `.shared/patterns/platform-adapter.md` | 主题: 补齐平台映射语义，保持 AGENTS 引用范围一致
-- 范围: `.shared/constraints/placeholder-naming.md` | 主题: 统一 `<session-ref>` / `[session-ref]` / `[review-source]` 占位符语义
-- 范围: `.shared/project/` | 主题: 补齐 `.shared/` source repo 映射和 `.tmp` 分层边界
-- 范围: `.shared/session/README.md` | 主题: 同步 session 状态字段
-- 范围: `.agentwork/bootstrap/data/session-readme.block.md` | 主题: 同步 session README managed block 源
-- 范围: `.agentwork/bootstrap/README.md` | 主题: 澄清 bootstrap 输出一致性和 Codex skills 刷新范围
-- 范围: `.shared/scripts/` | 主题: 将 session-review 输入说明从 session-id 收敛为 session-ref
-- 范围: `.shared/templates/` | 主题: 对齐 plan / session 模板中的计划摘要和阻塞表述
-- 范围: `test/` | 主题: 对齐 session 标准检查、bootstrap contract 和脚本假设
-- 范围: `.shared/INDEX.md` | 主题: 补充 session 与 scripts 入口，保持核心 workflow 导航完整
-- 范围: `.shared/session/20260415-0049-agentwork-self-host-baseline.md` | 主题: 同步本轮 workflow 语义复核快照
+- 范围: `.shared/patterns/subagent-workflow.md` | 主题: 固化 subagent 作为可选执行 pattern 的基本边界、委派契约、简洁输出格式、模型默认继承和主 agent 验收责任
+- 范围: `.shared/patterns/session-workflow.md` | 主题: 明确用户或计划采用 subagent 分工或局部复核时读取 subagent workflow pattern
+- 范围: `.shared/commands/exec.md` | 主题: 明确 Standard / Ralph 执行策略下采用 subagent 时的 pattern 读取入口
+- 范围: `.shared/commands/review.md` | 主题: 明确 session review / Ralph review 采用 subagent 做局部复核时的 pattern 读取入口
+- 范围: `.shared/INDEX.md` | 主题: 增加 subagent 协作 pattern 入口，保持可发现但不并入 `/exec` 必做流程
+- 范围: `test/check_bootstrap_contract.py` | 主题: 将 subagent pattern 安装、入口引用和核心契约纳入 bootstrap contract 检查
+- 范围: `test/README.md` | 主题: 记录 subagent 回归只覆盖共享规范安装、入口引用和核心章节，不验证 provider 原生 subagent 启动
+- 范围: `.shared/session/20260415-0049-agentwork-self-host-baseline.md` | 主题: 同步 subagent 规范固化快照，并校正上一轮 session 锚点范围
 
 ## 风险 / 阻塞
 - `arch` 若过早把 schema、命令面或交互做大，会偏离“简约、自用、语言驱动”的当前边界。
 - `arch` 当前允许 source 自带坐标且不内置字体 assets，首轮图面质量会更依赖 prompt 与样例，而不是自动布局或视觉素材。
 - optional tools 已 source-managed，但 source repo 场景下的 tool self-install 目前只有人工 smoke / 手动审查，没有纳入 deterministic 自动评分。
 - 当前 `/brain` 约束已压回 live docs 与模板，但还没有脚本级检查清单或 review 侧结构化校验；若 agent 行为仍不稳定，需要再补自动检查。
-- 本轮 workflow 语义复核已运行 bootstrap 自刷新、`git diff --check` 和完整 integrated harness；run `20260506-093721` 已通过 install、standalone commands 与 session flow。
+- Subagent 规范当前只作为可选 pattern 固化；若后续需要平台级 custom agent prompt 或 deterministic 行为检查，应另行维护，不反向污染 `/exec` 主规范。
+- `.shared/session/20260429-1302-browser-use-vs-browser.md` 仍是未跟踪文件，不属于当前 subagent 规范批次；提交前继续排除，除非用户单独确认。
+- 本轮按用户要求未运行 test / harness；`test/check_bootstrap_contract.py` 与 `test/README.md` 的实际验证由用户执行。
 
 ## 审查记录
 ### 2026-05-04 session review
@@ -97,6 +99,11 @@
 - 变更：吸收 `.tmp/agentwork/review` 中可服务当前工作流的建议，补强 `/plan` 与 `/exec` 约束；随后按实际约束收敛术语，将强制步骤统一为“必做流程”，保留 `/exec` 的“关键纪律”和 `/commit` 的“执行顺序”；统一 session-ref、review-source、计划摘要、当前批次工作集、产出批次、风险 / 阻塞等核心语义。
 - 验证：已运行 `python3 install-bootstrap.py -p .`、`python3 test/run.py`、`python3 test/check_session_standard.py .shared/session/20260415-0049-agentwork-self-host-baseline.md`、`.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md` 与 `git diff --check`；integrated harness run `20260506-093721` 全阶段 PASS。
 - 风险/待办：本轮仍是文档契约收敛；若后续 agent 行为仍出现 `/session brain` 与 `/plan` 边界混淆，再补 deterministic prompt 检查或 review 侧结构化校验。
+
+### 2026-05-06 subagent 规范 review
+- 变更：将 subagent 协作规范收敛为可选 pattern，并把读取入口扩展到 `/exec`、`/review` 和 session workflow；bootstrap contract 只检查安装、入口引用和核心章节，不验证 provider 原生 subagent 启动。
+- 验证：按用户要求未运行 test / harness；本轮仅做 `git status`、staged / unstaged diff 取证，并运行 `.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md` 辅助检查当前批次覆盖。
+- 风险/待办：`.shared/session/20260429-1302-browser-use-vs-browser.md` 仍不属于当前 subagent 规范批次；后续如需提交，应作为独立 session 回填批次确认。
 
 ### 阶段摘要
 - 2026-04-09 - 2026-04-15：完成 research 结论到 live docs 的落地，确认 session 是当前任务快照而非 runtime state；完成 runtime-agnostic/source-repo refactor、source repo 原地 bootstrap、自承载基线、session 轻量产出格式、session load 取证规则与 session 自身锚点规则。
