@@ -48,7 +48,7 @@ They do not belong in `.shared`, which is for project-consumable workflow contra
 
 ## Recommended agentwork target shape
 ### `.shared`
-- no standalone `/ralph` in first pass
+- no separate `/ralph` command in first pass
 - import Ralph as execution policy on `/exec` and `/session exec`
 - keep reusable Ralph semantics in command docs/templates rather than a parallel workflow tree
 

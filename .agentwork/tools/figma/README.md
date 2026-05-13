@@ -7,7 +7,7 @@
 ## 内容
 - shared command definition
 - figma MCP health-check script
-- Codex / Claude / Agent 薄封装入口
+- Codex / Claude / Agent 平台入口
 - per-tool MCP config reference
 
 ## 何时物化

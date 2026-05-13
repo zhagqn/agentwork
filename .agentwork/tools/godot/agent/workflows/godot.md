@@ -4,7 +4,7 @@ description: Godot 联调命令 init + 口语化任务
 
 # /godot [subcommand] [args]
 
-Godot 联调命令（兼容入口，薄封装）。
+Godot 联调命令（命令入口，读取共享规则）。
 
 ## 执行前必读
 

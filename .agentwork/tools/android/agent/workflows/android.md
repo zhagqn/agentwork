@@ -4,7 +4,7 @@ description: Android ADB + MCP 命令 init + 口语化任务
 
 # /android [subcommand] [args]
 
-Android ADB + MCP 命令（兼容入口，薄封装）。
+Android ADB + MCP 命令（命令入口，读取共享规则）。
 
 ## 执行前必读
 

@@ -2,12 +2,12 @@
 name: browser
 description: Automates browser interactions for web testing, form filling, screenshots, and data extraction.
 metadata:
-  short-description: 浏览器自动化（薄封装）
+  short-description: 浏览器自动化（平台入口）
 ---
 
 # browser
 
-浏览器自动化技能（兼容入口，薄封装）。
+浏览器自动化技能（命令入口，读取共享规则）。
 
 ## 执行前必读
 

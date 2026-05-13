@@ -7,7 +7,7 @@ metadata:
 
 # /figma [subcommand] [args]
 
-Figma 设计读取与分析命令（兼容入口，薄封装）。
+Figma 设计读取与分析命令（命令入口，读取共享规则）。
 
 ## 执行前必读
 

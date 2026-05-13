@@ -7,7 +7,7 @@
 ## 内容
 - shared command definition
 - fallback evidence script
-- Codex / Claude / Agent 薄封装入口
+- Codex / Claude / Agent 平台入口
 
 ## 何时安装
 - 项目需要 Android 设备/模拟器验证
