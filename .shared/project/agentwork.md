@@ -16,7 +16,7 @@
 - 原地刷新核心工作流：`python3 install-bootstrap.py -p .`
 - 命令内建 harness 自检：`python3 .shared/scripts/agentwork-check.py self-test`
 - 真实 provider E2E 只作为人工 smoke / 兼容性调查，不作为默认回归或合并 gate
-- `test/` 目录不再作为主要验证入口；后续 workflow 检查优先沉淀到 `.shared/scripts/`
+- 核心 workflow 检查优先沉淀到 `.shared/scripts/`；历史集成诊断只保留专题语境
 - 若修改 bootstrap 生成契约，优先同步 `.agentwork/bootstrap/*` 与命令内建 harness
 
 ### 代码与目录约定
@@ -44,4 +44,4 @@
 
 ## 更新记录
 - 创建: 2026-04-15
-- 最近更新: 2026-05-04
+- 最近更新: 2026-05-13

@@ -1,123 +1,86 @@
 # Session: integrated test standard
 
 > 创建: 2026-05-04 11:03
-> 简述: 收敛 agentwork 测试体系；当前结论是完整 provider integrated harness 保留为人工触发的集成诊断入口，不作为每轮固定测试流程。
+> 简述: 记录旧集成诊断退场，以及核心 workflow 回归已收敛到命令内建自检脚本后的最终快照。
 
 ## 任务列表（按优先级）
-- [x] 将旧分散小 case 收敛为单个 integrated harness 方向，并验证安装、独立命令、session flow 和 drift 检查可以在同一个临时项目中串联。
-- [x] 将真实命令输入从脚本主体拆出，按 `$brain` / `$plan` / `$exec` / `$review` 和 `$session load` 的实际使用方式分次调用。
-- [x] 将测试目录重构为 `test/run.py`、`test/harness.py`、`test/checks.py`、`test/stages/`、`test/flow/`，删除旧入口和旧场景目录。
-- [x] 根据连续 provider run 的成本和不稳定性，将完整 integrated harness 降级为人工触发的集成诊断入口。
-- [x] 将 `/review` 的 session mode 规则从原则描述优化为必做流程、收敛 checklist 和禁止项。
-- [ ] 后续如需稳定固定测试，另行设计无 provider 或低 provider 依赖的本地确定性检查。
+- [x] 确认旧集成诊断已不再作为核心 workflow 的主要验证入口，相关资产退出当前主线。
+- [x] 将 core workflow 的回归与工件形态检查收敛到 `.shared/scripts/agentwork-check.py` 与 `.shared/scripts/session-review.sh`。
+- [x] 在 `/brain`、`/plan`、`/exec`、`/review`、`/session` 文档中固化工件边界、自检要求和 session 收敛规则。
+- [x] 将本 session 从长篇 run 历史压缩为可恢复的历史专题快照。
+- [x] 清理当前活跃文档、session 与架构图中的旧集成诊断历史引用，避免把旧入口误读为现役事实。
 
 ## 已确认结论（工作快照）
 ### 目标
-- 当前不再继续把完整 provider integrated harness 稳定化为每轮固定测试。
-- `python3 test/run.py` 保留为人工触发的集成诊断入口，用于必要时验证真实 provider + workflow 的组合行为。
-- 固定测试的后续方向应是更小、更确定、低 token 或无 token 的本地检查。
+- 为后续阅读保留一份可恢复快照：解释旧集成诊断为什么退出核心 workflow，以及现在应该看哪些入口。
 
 ### 边界
-- In Scope: `test/` 测试入口、阶段拆分、flow 输入、断言工具、临时 run 目录模型、session drift 检查。
-- In Scope: `install-bootstrap.py`、`install-tool.py` 在临时目标项目中的安装行为验证。
-- Out of Scope: 将完整 provider integrated harness 作为 CI 或每轮固定回归命令。
-- Out of Scope: 证明 provider 原生 subagent 是否真的启动；只能验证工件契约和流程记录。
-- Out of Scope: 真实业务完整性、发布流程、远程仓库操作和跨机器持久化测试结果。
+- In Scope: `.shared/scripts/agentwork-check.py`、`.shared/scripts/session-review.sh`、`.shared/scripts/README.md`、`.shared/commands/*`、`.shared/project/agentwork.md`、本 session 的历史收敛。
+- Out of Scope: 恢复旧集成诊断目录、重新引入 provider integrated run 作为固定回归、清理其他专题或 optional tool 改动。
 
 ### 约束
-- 临时项目和结果统一写入 `.tmp/integrated-harness/runs/{run-id}/`。
-- 单个 run 内只创建一个目标项目 `project/`，先安装 agentwork，再在同一项目内执行后续诊断。
-- 完整 provider 集成测试只能人工触发；文档和 project 入口不能把它描述为稳定固定回归。
-- session flow 中 `$session exec` 与 `$session review` 前必须显式 `$session load <session-id>`；独立 provider 进程里 load 与后续命令放在同一次输入中。
-- 测试命令输入和调用顺序属于 `test/flow/` 资产，入口脚本只负责调度、resume 和结果汇总。
+- 当前默认本地回归入口是 `python3 .shared/scripts/agentwork-check.py self-test`。
+- `/brain`、`/plan` 只落 `.tmp/agentwork/*`；写 session 必须显式经过 `/session plan`；`/review` / `/session review` 需结合 `session-review.sh` 与 session strict-flow 自检。
+- 真实 provider E2E 只保留人工 smoke / 兼容性调查价值，不再作为默认 gate。
+- 旧集成诊断目录已删除；历史 run 结果只作为取证，不应继续占据顶部快照。
 
 ### 已选方案
-- `test/run.py`: 集成诊断入口，负责新建 run、resume、阶段选择和报告刷新。
-- `test/stages/`: install / independent / session 三个薄阶段入口。
-- `test/harness.py`: 共享执行、provider 调用、日志、阶段主体和 run 结果写入。
-- `test/checks.py`: 文本与产物断言工具。
-- `test/flow/`: provider 调用顺序和真实命令输入。
-- `test/check_bootstrap_contract.py`: bootstrap 安装契约检查器。
-- `test/check_session_standard.py`: session 结构和 drift 检查器。
-- `.shared/commands/review.md`: session review 的可执行化收敛规则。
-- 已删除旧入口和旧场景资产：`test/run_integrated.py`、`test/run_real_cli.py`、`test/run_deterministic.py`、`test/cases/`、`test/scenarios/integrated/`。
+- 用 `.shared/scripts/agentwork-check.py` 承担 `brain` / `plan` / `exec` / `review` / `session` / `latest` / `self-test` 的确定性工件检查。
+- 用 `.shared/scripts/session-review.sh` 负责 session 工作集与工作区事实取证。
+- 全局稳定事实收敛到 `.shared/project/agentwork.md` 与 `.shared/session/20260415-0049-agentwork-self-host-baseline.md`；本 session 仅保留旧集成诊断退场专题的结论与最小历史摘要。
+
+### 核心定义 / 流程（可选）
+- 当前主线 workflow 是 `/brain -> /plan -> /session plan -> /session exec -> /session review`。
 
 ## 计划摘要（可选）
 ### 关键文件 / 边界
-- `test/README.md` | 测试目录说明、入口、flow 资产和输出目录。
-- `test/run.py` | 诊断入口与 resume / stage 调度。
-- `test/harness.py` | 底层执行、provider 适配、实时日志、阶段主体。
-- `test/checks.py` | 断言辅助。
-- `test/stages/` | 阶段入口。
-- `test/flow/` | 命令输入。
-- `.shared/commands/review.md` | session mode review 的必做流程、checklist 和禁止项。
-- `.shared/project/agentwork.md` | source repo 长期入口说明。
-- `.shared/session/20260504-1103-integrated-test-standard.md` | 当前任务快照。
+- `.shared/scripts/agentwork-check.py` | 命令内建 harness 事实源。
+- `.shared/scripts/session-review.sh`、`.shared/scripts/README.md` | session 取证与脚本文档。
+- `.shared/commands/brain.md`、`.shared/commands/plan.md`、`.shared/commands/exec.md`、`.shared/commands/review.md`、`.shared/commands/session.md` | 工件边界、自检要求和 session 收敛规则。
+- `.shared/project/agentwork.md`、`.shared/session/20260415-0049-agentwork-self-host-baseline.md` | 当前稳定入口和全局基线说明。
+- `.shared/session/20260504-1103-integrated-test-standard.md` | 本专题的历史快照。
 
 ### 执行批次 / 优先级
-- 已完成：测试目录重构、旧入口删除、run-level 隔离、三阶段诊断入口和 session 记录收敛。
-- 暂停推进：不继续把完整 provider integrated harness 稳定化为固定测试。
-- 后续可选：设计无 provider 或少 provider 的本地确定性检查。
+- 已完成：旧集成诊断退居历史专题，主回归切换到 `agentwork-check.py self-test`。
+- 已完成：命令文档、自检脚本和 bootstrap wrapper 文案对齐“命令入口，读取共享规则”。
+- 已完成：本 session 与相关活跃文档中的旧入口引用已清理为当前事实口径。
 
 ### 执行策略（可选）
 - standard
 
 ### 验证策略
-- 常规本地验证：`py_compile`、`python3 -m json.tool test/flow/flow.json`、`check_session_standard.py --strict-flow`、`git diff --check`。
-- 入口轻量验证：`python3 test/run.py --help`。
-- 不消耗 provider 的诊断验证：`python3 test/run.py --stage install`。
-- 完整 provider integrated harness 仅在人工需要诊断时运行。
+- `bash .shared/scripts/session-review.sh .shared/session/20260504-1103-integrated-test-standard.md`
+- `python3 .shared/scripts/agentwork-check.py session .shared/session/20260504-1103-integrated-test-standard.md --strict-flow`
+- `python3 .shared/scripts/agentwork-check.py self-test`
+- `git diff --check -- .shared/session/20260504-1103-integrated-test-standard.md`
 
 ### 完成标准（可选）
-- 测试目录入口清晰，旧分散 case 和旧 harness 不再是理解测试体系的主路径。
-- `test/run.py` 可人工触发并生成可复盘的 `.tmp/integrated-harness/runs/{run-id}/results/`。
-- session 和 project 文档明确：完整 provider integrated harness 暂不作为稳定固定测试流程。
+- 顶部工作快照不再把旧集成诊断入口写成现役事实。
+- 本 session 只保留旧集成诊断退场后的稳定结论、当前入口和最小历史摘要。
+- session strict-flow 自检通过。
 
 ## 关联工件（可选）
-- `.tmp/integrated-harness/runs/20260505-231612/results/summary.json` | 最近一次完整 provider 诊断失败样例，install 与 independent 通过，session 阶段失败于文本断言。
+- `.shared/session/20260415-0049-agentwork-self-host-baseline.md`
 
 ## 当前批次工作集（可选）
-- 范围: `.shared/session/20260504-1103-integrated-test-standard.md` | 主题: 压缩为当前可恢复任务快照
-- 范围: `.shared/commands/review.md` | 主题: 将 session review 收敛维护规则改为可执行 checklist
-- 范围: `.shared/project/agentwork.md` | 主题: 将 `test/run.py` 标记为人工触发的集成诊断入口
-- 范围: `test/` | 主题: 保留重构后的诊断入口、阶段拆分、flow 输入和本地检查器
+- 范围: `.shared/session/20260504-1103-integrated-test-standard.md` | 主题: 将旧集成诊断专题压缩为历史快照，并同步本轮清理结果
 
 ## 产出批次（提交锚点）
-- 提交: `-` | 范围: `.shared/session/20260504-1103-integrated-test-standard.md`（当前 session 快照与审查记录压缩）
-- 提交: `1169209 docs(commands): 收敛 session 命令边界` | 范围: `.shared/commands/review.md`（session mode review 必做流程与收敛 checklist）
-- 提交: `3873ce6 test: 重构集成诊断入口` | 范围: `.shared/project/agentwork.md`（集成诊断入口说明）
-- 提交: `3873ce6 test: 重构集成诊断入口` | 范围: `test/run.py`, `test/harness.py`, `test/checks.py`, `test/stages/`, `test/flow/`, `test/README.md`（测试目录重构和诊断入口收敛）
+- 历史: `2026-05-04 至 2026-05-10 旧集成诊断试验与回撤` | 范围: 历史集成诊断目录、provider split-process 诊断探索（现已退场）
+- 提交: `-` | 范围: `.shared/session/20260504-1103-integrated-test-standard.md`
 
 ## 风险 / 阻塞
-- 完整 provider integrated harness 成本高、稳定性不足，当前不适合作为每轮固定测试。
-- 当前 `test/run.py` 仍可用于人工诊断，但不应被文档或 CI 误读为稳定回归命令。
-- 后续固定测试需要重新设计为更小、更确定、低 token 或无 token 的本地检查。
+- 本 session 只收敛旧集成诊断退场专题；若后续继续整理其他 session 或 optional tool 文档，应在对应专题中单独续作。
 
 ## 审查记录
-### 阶段摘要：2026-05-04 至 2026-05-05 21:44
-- 变更：从旧小 case 迁移到 integrated harness；经历真实 provider 分步调用、HTTP JSON probe 场景、Mini Dinner Flow session 场景、实时日志、模型参数、fast mode、provider 失败分类和多轮断言收窄。
-- 验证：多次真实 run 证明 install 和独立命令链路可以跑通；session flow 也能在强模型配置下推进，但最终产物断言和 provider 稳定性反复造成高成本失败。
-- 结论：完整 provider 端到端测试有诊断价值，但不适合继续扩张为固定回归标准。
+### 2026-05-13 session review
+- 变更：按当前仓库事实重写本 session 顶部快照，并继续清理活跃文档、session 与架构图里会误导续作的旧集成诊断入口表述，改为 `agentwork-check.py self-test` + `session-review.sh` 的当前回归模型。
+- 验证：旧集成诊断目录已删除；当前 workflow 入口与自检要求已在 `.shared/scripts/agentwork-check.py`、`.shared/scripts/README.md`、`.shared/commands/*`、`.shared/project/agentwork.md`、self-host baseline session 与 `docs/architecture` 中对齐。
+- 风险/待办：若后续还要进一步压缩历史术语，只需继续整理更早审查记录或历史专题说明，不影响当前主线理解。
 
-### 2026-05-05 23:45
-- 变更：将 `test/run_integrated.py` 方向收敛为新结构：`test/run.py`、`test/harness.py`、`test/checks.py`、`test/stages/`、`test/flow/`。
-- 观察：run `20260505-231612` 中 `install_standard` 与 `independent_commands` 均通过，`turborepo_iteration_flow` 失败于 `shared_types` 文本断言。
-- 结论：长链路 provider 输出、断言边界和模型稳定性仍会让固定回归成本过高。
-
-### 2026-05-05 23:56
-- 发现：`.shared/project/agentwork.md` 曾把 `python3 test/run.py` 描述为普通回归验证，与当前“人工触发诊断入口”的定位不一致。
-- 修正：已将 project 文档改为“集成诊断入口（人工触发）：`python3 test/run.py`”。
-- 风险/待办：当前测试重构未再跑完整 provider integrated harness，符合“暂停稳定化、降低 token 消耗”的决策。
-
-### 2026-05-06 00:05
-- 发现：前一次 `$session review` 只追加审查记录，没有严格执行 session 收敛维护；旧目标、旧路径和长篇历史流水仍留在 session 中。
-- 修正：已压缩任务、结论、计划摘要、当前批次工作集、产出批次、风险和审查记录；历史过程流水合并为阶段摘要，只保留最近仍有追踪价值的审查项。
-- 验证：已运行 session 标准检查、Python 编译检查和 diff whitespace 检查。
-
-### 2026-05-06 00:12
-- 变更：优化 `.shared/commands/review.md`，把 session mode 从原则性说明改为必做流程、Session 收敛维护 checklist 和禁止结果。
-- 结论：后续 `/session review` 不应只追加审查记录；必须同步维护任务、结论、计划摘要、当前批次工作集、产出批次、风险和审查记录。
-- 验证：已对 `.shared/commands/review.md` 运行 diff whitespace 检查。
+### 阶段摘要
+- 2026-05-04 至 2026-05-10：围绕旧集成诊断做过多轮实验，先后收敛过阶段边界差分、真实产物断言、provider split-process 桥接与 session strict-flow 检查，最终确认整套 provider integrated run 成本高且不稳定，不适合作为默认回归主线。
+- 2026-05-11 至 2026-05-13：core workflow 的确定性回归收敛到 `.shared/scripts/agentwork-check.py` 与命令文档内建自检；旧集成诊断退出核心理解入口，本 session 退为历史专题快照。
 
 ## 建议摘录到 Project（可选）
-- 当前集成诊断入口为 `python3 test/run.py`；完整 provider integrated harness 暂定位为人工触发的诊断/实验回归，不作为稳定固定测试流程。
+- 无；稳定结论已同步到 `.shared/project/agentwork.md` 与 `.shared/session/20260415-0049-agentwork-self-host-baseline.md`。
