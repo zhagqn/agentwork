@@ -6,19 +6,20 @@
 
 > `review-source` 指的是**要审查的工件引用**，通常是 session 或 plan 文件路径，不是自然语言任务描述。
 
-## 两种工作模式
-### Session mode
+## 输入来源
+### 当前 session
 - 来源：当前 session 或显式 session ref
 - 结果：更新 session 的任务、结论、计划摘要、当前批次工作集、产出批次、风险 / 阻塞、审查记录
-- 不默认写 `.tmp/agentwork/review/*.md`；只有用户明确要求导出 standalone review 时才额外写入
+- 不默认写 `.tmp/agentwork/review/*.md`；只有用户明确要求导出 review note 时才额外写入
 
-#### Session mode 必做流程
+#### 当前 session 必做流程
 1. 读取当前 session：优先看任务列表、已确认结论、计划摘要、当前批次工作集、产出批次、风险 / 阻塞、最近审查记录。
 2. 取证当前事实：至少检查 `git status --short`，按当前批次工作集和用户问题读取相关 diff / 文件；需要时运行 `.shared/scripts/session-review.sh <session-ref>` 辅助发现过期路径和未覆盖改动。
 3. 审查工作产物：先列真实问题，再列无问题结论；不要只审查 session 文本，也要对照当前工作区事实。
 4. 收敛 session 快照：更新任务状态、已确认结论、计划摘要、当前批次工作集、产出批次、风险 / 阻塞。
 5. 压缩历史记录：把过程流水合并为阶段摘要，只保留最近 3-5 条仍有追踪价值的审查记录。
 6. 完成前自检：确认 session 仍是可恢复任务快照，而不是命令日志、长篇过程记录或仅追加的 review note。
+7. 运行命令自检：在 `.shared/scripts/session-review.sh <session-ref>` 取证后，运行 `.shared/scripts/agentwork-check.py session <session-ref> --strict-flow` 校验 session 形态。
 
 若本轮 review 计划或用户要求使用 subagent 做局部复核，先参考 `.shared/patterns/subagent-workflow.md`，再拆分审查范围、指定输出格式和验收方式。
 
@@ -37,14 +38,15 @@
 - 只追加一条审查记录，但不更新任务、结论、计划摘要、工作集、产出批次和风险。
 - 让旧目标、旧入口、旧目录或已废弃方案留在顶部工作快照。
 - 把长篇历史命令流水、逐次 run 结果、临时分析和重复验证长期堆在审查记录中。
-- 把 `check_session_standard.py` 通过当作语义收敛完成；结构通过只代表格式合格，不代表快照已压缩。
+- 把 `agentwork-check.py session` 或其他结构检查通过当作语义收敛完成；结构通过只代表格式合格，不代表快照已压缩。
 
-### Standalone mode
+### Plan / Review 工件
 - 来源优先级：
   1. 显式传入的 `review-source`
   2. 最新的 `.tmp/agentwork/plan/*.md`
 - 结果：写入 `.tmp/agentwork/review/{YYYYMMDD-HHMM-slug}.md`
 - 使用模板：`.shared/templates/review.md`
+- 写入后运行 `.shared/scripts/agentwork-check.py review <review-note>`；若该 review 要作为“无阻塞问题”的完成 gate，再运行 `.shared/scripts/agentwork-check.py review <review-note> --fail-on-major`
 
 ### 若当前执行策略是 `--ralph`
 - 还应同步更新 `.tmp/agentwork/ralph/{slug}/progress.json`

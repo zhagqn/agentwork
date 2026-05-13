@@ -103,7 +103,7 @@ def render_cursor() -> str:
 def render_claude_command(title: str, target: str) -> str:
     return (
         f"{AUTO}\n# {title}\n\n"
-        "兼容入口，薄封装。\n\n"
+        "命令入口，读取共享规则。\n\n"
         "## 执行前必读\n"
         f"- 主定义：`{target}`\n"
         "- 占位符规范：`.shared/constraints/placeholder-naming.md`\n"
@@ -112,9 +112,9 @@ def render_claude_command(title: str, target: str) -> str:
 
 def render_agent_workflow(title: str, target: str) -> str:
     return (
-        f"{AUTO}\n---\ndescription: {title} 兼容入口\n---\n\n"
+        f"{AUTO}\n---\ndescription: {title} 命令入口\n---\n\n"
         f"# {title}\n\n"
-        "兼容入口，薄封装。\n\n"
+        "命令入口，读取共享规则。\n\n"
         "## 执行前必读\n"
         f"- 主定义：`{target}`\n"
         "- 占位符规范：`.shared/constraints/placeholder-naming.md`\n"
@@ -123,10 +123,10 @@ def render_agent_workflow(title: str, target: str) -> str:
 
 def render_codex_skill(name: str, title: str, target: str) -> str:
     return (
-        f"---\nname: {name}\ndescription: {title} 兼容入口\n---\n\n"
+        f"---\nname: {name}\ndescription: {title} 命令入口\n---\n\n"
         f"{AUTO}\n"
         f"# {title}\n\n"
-        "兼容入口，薄封装。\n\n"
+        "命令入口，读取共享规则。\n\n"
         "## 执行前必读\n"
         f"- 主定义：`{target}`\n"
         "- 占位符规范：`.shared/constraints/placeholder-naming.md`\n"

@@ -7,7 +7,7 @@ Bootstrap 是新项目复用 agentwork 核心工作流时的启动层源。
 它负责提供：
 - 轻量 `AGENTS.md`
 - `.shared/` 核心工作流层
-- Claude / Antigravity / Cursor / Codex / VS Code Copilot 的薄封装入口（默认全部安装）
+- Claude / Antigravity / Cursor / Codex / VS Code Copilot 的平台入口（默认全部安装）
 
 安装入口：根目录 `install-bootstrap.py`
 

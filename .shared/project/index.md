@@ -25,6 +25,6 @@
 <!-- AGENTWORK:PROJECT-INDEX:END -->
 
 ## 读取映射
-- 命中：`.shared/`、`.agentwork/`、`install-bootstrap.py`、`install-tool.py`、`test/`
+- 命中：`.shared/`、`.agentwork/`、`install-bootstrap.py`、`install-tool.py`
 - 读取：`.shared/project/agentwork.md`
-- 用途：source repo / core workflow / bootstrap / install / test harness / 自承载规则
+- 用途：source repo / core workflow / bootstrap / install / 自承载规则

@@ -1,3 +1,0 @@
-$brain 这个临时项目需要设计一个常用的 Node.js 小轮子：HTTP JSON probe CLI，用于本地开发或 CI 中快速检查一个 JSON API 是否满足简单契约。希望工具名围绕 `http-json-probe`，不引入 npm 依赖，只使用 Node.js 内置能力；典型使用方式是 `node {probe_script} <url> --expect status=ok --require version`。
-
-方案需要为后续 plan/exec 明确最小验收契约：CLI、一个本地 fixture server、简短 README。fixture server 必须能由外部指定端口，支持 `--port <port>` 或 `PORT=<port>`；`GET /ok` 必须返回根字段 `status: "ok"` 和 `version`，可直接通过上面的典型命令；`GET /bad-contract` 必须无法通过同一契约。方案中也需要明确第一轮范围不包含验收脚本、测试 runner、复杂 header/method 支持或额外服务框架。

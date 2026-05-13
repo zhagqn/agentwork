@@ -1,3 +1,0 @@
-$session load {session_file}
-
-$session review

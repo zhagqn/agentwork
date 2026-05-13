@@ -5,6 +5,19 @@
 可选工具（如 figma、browser、android、godot）需要的脚本，不再默认驻留在 `.shared/scripts/`；需要时应通过项目自己的工具安装流程按需引入。
 
 ## 当前核心脚本
+### agentwork-check.py
+用途：检查 brain / plan / exec / review / session 工件是否满足核心 workflow 形态约束，辅助各命令在落盘后立即自检。
+
+```bash
+.shared/scripts/agentwork-check.py brain [brain-note]
+.shared/scripts/agentwork-check.py plan [plan-file]
+.shared/scripts/agentwork-check.py exec [plan-file]
+.shared/scripts/agentwork-check.py review [review-note] [--fail-on-major]
+.shared/scripts/agentwork-check.py session [session-ref] [--strict-flow]
+.shared/scripts/agentwork-check.py latest brain|plan|review|session
+.shared/scripts/agentwork-check.py self-test
+```
+
 ### session-review.sh
 用途：对照 session 的“当前批次工作集”与当前工作区实际改动，并检查“产出批次（提交锚点）”，辅助执行 `/review` 或 `/session review`
 

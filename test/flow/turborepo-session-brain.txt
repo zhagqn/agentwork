@@ -1,1 +1,0 @@
-$session brain 这个临时 Turborepo 要做一个 Mini Dinner Flow 的最小工程骨架。技术方向参考：NestJS 后端分层、Drizzle / SQLite 数据建模、`packages/shared` 共享类型、前后端最小联动。请先收敛测试级最小方案，并把第一轮执行控制为基础框架实践：共享类型合同、API 分层边界骨架、H5 调用边界占位、README / docs 说明和可验证验收标准。第一轮不要求安装依赖、启动服务、真实 SQLite 连接或完整前后端联调。
