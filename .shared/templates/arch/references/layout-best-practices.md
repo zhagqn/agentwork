@@ -4,7 +4,7 @@
 
 ## Skill / Tool 组织
 
-- 入口保持短：薄封装只说明何时触发、读取哪个主定义、运行哪个脚本。
+- 入口保持短：入口说明只说明何时触发、读取哪个主定义、运行哪个脚本。
 - 详细规则下沉：schema、布局、连线、审查清单放在 template / references 文档中，避免多个入口重复定义。
 - 示例要可执行：样例必须包含 `diagram.arch.json`，并能通过 renderer 生成 `index.html`。
 - 脚本要可验证：renderer 不只生成文件，也要提供不写文件的检查入口，供 review / CI / deterministic harness 使用。

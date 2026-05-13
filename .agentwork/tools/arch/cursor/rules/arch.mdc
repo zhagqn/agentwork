@@ -10,7 +10,7 @@ alwaysApply: false
 当任务需要生成或调整架构图时：
 - 先读取 `.shared/commands/arch.md`
 - 默认维护 `catalog.json`、根导航页和 `diagrams/<slug>/` 下的图表 source
-- 若已有 `catalog.json`，新图必须按实际父子关系或 standalone 规则合并进导航
+- 若已有 `catalog.json`，新图必须按实际父子关系或未归组规则合并进导航
 - 新图优先用 `layout.mode=auto`，通过 `groups` / `rank` / 连线拓扑表达布局
 - 架构 / 流程主路径优先使用 `overview`、`topology`、`flow`；其他 Mermaid 类型仅作为参考图
 - 调整后优先运行 renderer `--recursive --check`，必要时读取 `.shared/templates/arch/references/layout-best-practices.md` 和 `portal-workflow.md`

@@ -49,7 +49,7 @@
       "lines": [
         "/brain /plan",
         "/exec /review",
-        "standalone + session"
+        "tmp artifacts + session"
       ]
     },
     {
@@ -95,16 +95,16 @@
       ]
     },
     {
-      "id": "test-harness",
-      "label": "test/",
+      "id": "command-checks",
+      "label": "Checks",
       "kind": "message",
       "x": 1218,
       "y": 312,
-      "w": 130,
+      "w": 150,
       "h": 96,
       "lines": [
-        "deterministic",
-        "real-cli"
+        "agentwork-check.py",
+        "session-review.sh"
       ]
     }
   ],
@@ -136,14 +136,14 @@
     },
     {
       "from": "source-maintenance",
-      "to": "test-harness",
-      "label": "verify",
+      "to": "command-checks",
+      "label": "self-test",
       "style": "dashed"
     },
     {
       "from": "shared-contract",
-      "to": "test-harness",
-      "label": "contract check",
+      "to": "command-checks",
+      "label": "shape check",
       "style": "dashed"
     }
   ],
@@ -159,7 +159,7 @@
       "title": "Core Workflow",
       "items": [
         "/brain /plan /exec /review 是核心动作",
-        "既支持 session mode，也支持 standalone"
+        "可直接用临时工件，也可写入 session"
       ]
     },
     {
@@ -172,8 +172,8 @@
     {
       "title": "Validation",
       "items": [
-        "test/run_deterministic.py 做硬校验",
-        "工具真实可用性仍保留人工审查"
+        "agentwork-check.py self-test 做硬校验",
+        "session-review.sh + strict-flow 做取证"
       ]
     }
   ],

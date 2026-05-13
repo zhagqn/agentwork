@@ -7,7 +7,7 @@ metadata:
 
 # /arch [arch-root] <arch-task-desc>
 
-架构图生成与调整命令（薄封装入口）。
+架构图生成与调整命令（平台入口）。
 
 ## 执行前必读
 

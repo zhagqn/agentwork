@@ -265,7 +265,7 @@
 <text class="node-title" x="682.0" y="158.0" text-anchor="middle">Workflow Core</text>
 <text class="node-line" x="682.0" y="181.0" text-anchor="middle">/brain /plan</text>
 <text class="node-line" x="682.0" y="198.0" text-anchor="middle">/exec /review</text>
-<text class="node-line" x="682.0" y="215.0" text-anchor="middle">standalone + session</text>
+<text class="node-line" x="682.0" y="215.0" text-anchor="middle">tmp artifacts + session</text>
 <text class="node-badge" x="682.0" y="274.0" text-anchor="middle">Open child</text>
 </g></a>
 <g class="node-body " data-node-id="shared-contract">
@@ -292,19 +292,19 @@
 <text class="node-line" x="1012.0" y="626.0" text-anchor="middle">install-tool.py</text>
 <text class="node-line" x="1012.0" y="643.0" text-anchor="middle">project-local install</text>
 </g>
-<g class="node-body " data-node-id="test-harness">
-<rect x="1218.0" y="312.0" width="130.0" height="96.0" rx="14" fill="#09111f" />
-<rect x="1218.0" y="312.0" width="130.0" height="96.0" rx="14" fill="rgba(251, 146, 60, 0.30)" stroke="#fb923c" stroke-width="1.6" />
-<text class="node-title" x="1283.0" y="338.0" text-anchor="middle">test/</text>
-<text class="node-line" x="1283.0" y="361.0" text-anchor="middle">deterministic</text>
-<text class="node-line" x="1283.0" y="378.0" text-anchor="middle">real-cli</text>
+<g class="node-body " data-node-id="command-checks">
+<rect x="1218.0" y="312.0" width="150.0" height="96.0" rx="14" fill="#09111f" />
+<rect x="1218.0" y="312.0" width="150.0" height="96.0" rx="14" fill="rgba(251, 146, 60, 0.30)" stroke="#fb923c" stroke-width="1.6" />
+<text class="node-title" x="1293.0" y="338.0" text-anchor="middle">Checks</text>
+<text class="node-line" x="1293.0" y="361.0" text-anchor="middle">agentwork-check.py</text>
+<text class="node-line" x="1293.0" y="378.0" text-anchor="middle">session-review.sh</text>
 </g><g class="edge-label-group"><rect class="edge-label-bg" x="202.4" y="446.0" width="113.2" height="24.0" rx="9" /><text class="edge-label" x="259.0" y="462.0" text-anchor="middle">manual context</text></g>
 <g class="edge-label-group"><rect class="edge-label-bg" x="452.6" y="272.5" width="92.8" height="24.0" rx="9" /><text class="edge-label" x="499.0" y="288.5" text-anchor="middle">orchestrate</text></g>
 <g class="edge-label-group"><rect class="edge-label-bg" x="610.8" y="411.0" width="106.4" height="24.0" rx="9" /><text class="edge-label" x="664.0" y="427.0" text-anchor="middle">read / update</text></g>
 <g class="edge-label-group"><rect class="edge-label-bg" x="930.6" y="411.0" width="126.8" height="24.0" rx="9" /><text class="edge-label" x="994.0" y="427.0" text-anchor="middle">render / install</text></g>
 <g class="edge-label-group"><rect class="edge-label-bg" x="802.4" y="652.5" width="79.2" height="24.0" rx="9" /><text class="edge-label" x="842.0" y="668.5" text-anchor="middle">sync core</text></g>
-<g class="edge-label-group"><rect class="edge-label-bg" x="1163.6" y="272.5" width="58.8" height="24.0" rx="9" /><text class="edge-label" x="1193.0" y="288.5" text-anchor="middle">verify</text></g>
-<g class="edge-label-group"><rect class="edge-label-bg" x="930.4" y="483.9" width="113.2" height="24.0" rx="9" /><text class="edge-label" x="987.0" y="499.9" text-anchor="middle">contract check</text></g></svg>
+<g class="edge-label-group"><rect class="edge-label-bg" x="1153.4" y="272.5" width="79.2" height="24.0" rx="9" /><text class="edge-label" x="1193.0" y="288.5" text-anchor="middle">self-test</text></g>
+<g class="edge-label-group"><rect class="edge-label-bg" x="940.6" y="483.9" width="92.8" height="24.0" rx="9" /><text class="edge-label" x="987.0" y="499.9" text-anchor="middle">shape check</text></g></svg>
       </div>
     </section>
 
@@ -312,11 +312,11 @@
       <section class="card"><h3>Task Snapshot</h3><ul><li>session 负责任务快照与流程串联</li>
 <li>当前任务上下文通过显式 load 管理</li></ul></section>
 <section class="card"><h3>Core Workflow</h3><ul><li>/brain /plan /exec /review 是核心动作</li>
-<li>既支持 session mode，也支持 standalone</li></ul></section>
+<li>可直接用临时工件，也可写入 session</li></ul></section>
 <section class="card"><h3>Source Repo</h3><ul><li>.agentwork/ 维护 source</li>
 <li>install-* 负责向目标项目物化</li></ul></section>
-<section class="card"><h3>Validation</h3><ul><li>test/run_deterministic.py 做硬校验</li>
-<li>工具真实可用性仍保留人工审查</li></ul></section>
+<section class="card"><h3>Validation</h3><ul><li>agentwork-check.py self-test 做硬校验</li>
+<li>session-review.sh + strict-flow 做取证</li></ul></section>
     </section>
 
     <p class="footer">2026-04-16</p>

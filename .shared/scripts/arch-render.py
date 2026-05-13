@@ -1112,7 +1112,7 @@ def render_portal_cards(items: list[dict], items_by_id: dict[str, dict]) -> str:
         summary = str(item.get("summary", "")).strip()
         summary_html = f'<p>{escape(summary)}</p>' if summary else ""
         parts.append(
-            '<article class="standalone-card">'
+            '<article class="ungrouped-card">'
             f'<a class="diagram-title" href="{escape(str(item["href"]))}">{escape(str(item.get("title", diagram_id)))}</a>'
             f'<div class="diagram-meta">{render_item_chips(item)}</div>'
             f'{summary_html}'
@@ -1135,12 +1135,12 @@ def render_portal(catalog_path: Path) -> Path:
 
     roots = [item for item in diagrams if not str(item.get("parent_id", "")).strip()]
     tree_roots = [item for item in roots if catalog_id(item) in children_by_parent]
-    standalone = [item for item in roots if catalog_id(item) not in children_by_parent]
+    ungrouped = [item for item in roots if catalog_id(item) not in children_by_parent]
     tree_html = "".join(
         render_portal_tree_item(item, children_by_parent, items_by_id, 0)
         for item in sorted(tree_roots, key=catalog_order)
     )
-    standalone_html = render_portal_cards(standalone, items_by_id)
+    ungrouped_html = render_portal_cards(ungrouped, items_by_id)
 
     site = catalog.get("site", {}) if isinstance(catalog.get("site", {}), dict) else {}
     title = str(site.get("title", "Project Architecture"))
@@ -1149,7 +1149,7 @@ def render_portal(catalog_path: Path) -> Path:
     top_level_count = len(roots)
     child_count = diagram_count - top_level_count
     empty_tree = '<p class="empty">No related diagram groups yet.</p>' if not tree_html else f'<ol class="diagram-tree">{tree_html}</ol>'
-    empty_standalone = '<p class="empty">No standalone diagrams yet.</p>' if not standalone_html else f'<div class="standalone-grid">{standalone_html}</div>'
+    empty_ungrouped = '<p class="empty">No ungrouped diagrams yet.</p>' if not ungrouped_html else f'<div class="ungrouped-grid">{ungrouped_html}</div>'
     html = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -1279,7 +1279,7 @@ def render_portal(catalog_path: Path) -> Path:
     }}
 
     .diagram-card,
-    .standalone-card {{
+    .ungrouped-card {{
       border: 1px solid rgba(106, 159, 211, 0.18);
       border-radius: 8px;
       background: var(--card-bg);
@@ -1326,7 +1326,7 @@ def render_portal(catalog_path: Path) -> Path:
     }}
 
     .diagram-card p,
-    .standalone-card p,
+    .ungrouped-card p,
     .empty {{
       margin: 10px 0 0;
       color: var(--muted);
@@ -1334,7 +1334,7 @@ def render_portal(catalog_path: Path) -> Path:
       line-height: 1.65;
     }}
 
-    .standalone-grid {{
+    .ungrouped-grid {{
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 12px;
@@ -1405,8 +1405,8 @@ def render_portal(catalog_path: Path) -> Path:
     </section>
 
     <section class="section">
-      <h2>Standalone Diagrams</h2>
-      {empty_standalone}
+      <h2>Ungrouped Diagrams</h2>
+      {empty_ungrouped}
     </section>
 
     <p class="footer">{escape(str(catalog_path.relative_to(Path.cwd()))) if catalog_path.is_relative_to(Path.cwd()) else escape(str(catalog_path))}</p>

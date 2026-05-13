@@ -27,7 +27,7 @@
 
 - `/arch 生成当前项目的总览架构图，并为 renderer 节点补一层子图`
 - `/arch 生成 renderer runtime 流程图，挂到 system-overview 下`
-- `/arch 生成一个独立的数据模型图，放到导航页 standalone 区域`
+- `/arch 生成一个独立的数据模型图，放到导航页未归组区域`
 - `/arch .tmp/architecture 先画一个临时草图，并生成导航页`
 
 ## 默认执行流程
@@ -80,7 +80,7 @@ docs/architecture/
 
 - `catalog.json` 是导航事实源，根目录 `index.html` 是导航 render output。
 - `parent_id` 表示父子关系；有父图的图表按 `order` 出现在父图下。
-- 无 `parent_id` 且没有子图的图表作为 standalone 平铺在导航页。
+- 无 `parent_id` 且没有子图的图表作为未归组图表平铺在导航页。
 - `links` 只表示交叉引用，不影响层级和排序。
 - `order` 使用稀疏数字，默认按 `10`、`20`、`30` 预留插入空间。
 - 新图生成时必须 upsert catalog；不得手改导航页来表达结构事实。
@@ -231,7 +231,7 @@ C4 / Structurizr / ZenUML 不作为默认主路径输入；需要时先作为 `.
 - 子图链接是否闭环
 - 文字是否溢出
 - `catalog.json` 中的 `id`、`parent_id`、`href`、`order` 是否有效
-- 导航页是否由 catalog 生成，相关图和 standalone 图是否归位
+- 导航页是否由 catalog 生成，相关图和未归组图表是否归位
 - `diagram.arch.json` 与 `index.html` 是否明显失配
 - renderer `--check` 是否通过
 

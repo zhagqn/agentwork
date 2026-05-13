@@ -89,7 +89,7 @@ docs/architecture/
 
 - 有 `parent_id` 的图表展示为父图下的关联子图。
 - 关联子图按 `order` 升序排列，order 相同再按 `title`。
-- 无 `parent_id` 且没有子图的图表展示为 standalone 卡片。
+- 无 `parent_id` 且没有子图的图表展示为未归组卡片。
 - 有 `links` 的图表可展示交叉引用，但不进入对方子树。
 
 ## 图表类型边界
@@ -109,7 +109,7 @@ docs/architecture/
 - 每个 `parent_id` 都存在。
 - 不存在 parent cycle。
 - 每个 `href` 都存在，且不跳出 arch root。
-- standalone 集合符合“无 parent 且无 children”规则。
+- 未归组图表符合“无 parent 且无 children”规则。
 - 相关图排序稳定。
 - 导航页由 catalog 生成，不手写结构事实。
 

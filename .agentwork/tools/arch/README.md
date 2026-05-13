@@ -10,7 +10,7 @@
 - 正交连线、语义箭头配色与 `--check` 验证入口
 - 样例模板（导航页 + 总览图 + 关联子图）
 - references 布局实践与 portal workflow 文档
-- Codex / Claude / Agent / Cursor / Copilot 薄封装入口
+- Codex / Claude / Agent / Cursor / Copilot 平台入口
 
 ## 何时物化
 - 项目需要通过自然语言生成或调整架构图
