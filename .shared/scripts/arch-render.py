@@ -95,7 +95,7 @@ pre {
 }
 
 .arch-shell {
-  width: min(1100px, calc(100vw - 32px));
+  width: min(1200px, calc(100vw - 32px));
   margin: 0 auto;
   padding: 24px 0 44px;
 }
