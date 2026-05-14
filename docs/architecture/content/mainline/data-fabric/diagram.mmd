@@ -1,0 +1,46 @@
+flowchart LR
+    subgraph source["采集入口"]
+        direction LR
+        A[埋点采集] --> B[事件流]
+    end
+
+    subgraph process["加工与策略"]
+        direction LR
+        C[清洗层] --> D[策略路由]
+    end
+
+    subgraph storage["承载层"]
+        direction TB
+        E[实时缓存]
+        F[数仓]
+        I[模型评分]
+    end
+
+    subgraph consume["消费与动作"]
+        direction TB
+        G[推荐服务]
+        H[分析看板]
+        J[运营动作]
+    end
+
+    B --> C
+    D --> E
+    D --> F
+    C --> I
+    E --> G
+    F --> H
+    I --> J
+
+    classDef warm fill:#fff7ec,stroke:#aa6232,color:#1f2c2d,stroke-width:1.5px;
+    classDef teal fill:#ecf7f5,stroke:#0f766e,color:#1f2c2d,stroke-width:1.5px;
+    classDef neutral fill:#fffdfa,stroke:#8ea0a2,color:#1f2c2d,stroke-width:1.5px;
+    class A,F,J warm;
+    class C,E,G teal;
+    class B,D,H,I neutral;
+
+    style source fill:#fbf1e4,stroke:#ddcdb8,color:#6f5d4a;
+    style process fill:#eef7f4,stroke:#ddcdb8,color:#4f6662;
+    style storage fill:#f7f3eb,stroke:#ddcdb8,color:#6f5d4a;
+    style consume fill:#f2f7f6,stroke:#ddcdb8,color:#4f6662;
+
+    linkStyle default stroke:#8e6746,stroke-width:1.6px;

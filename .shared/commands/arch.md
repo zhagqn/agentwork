@@ -1,49 +1,46 @@
 # /arch [arch-root] <arch-task-desc>
 
-架构图生成与调整命令（手动触发）。
+架构文档生成与调整命令（手动触发）。
 
-> 定位：在项目内通过自然语言生成和维护可独立部署的静态架构文档。默认由 agent 根据生成描述判断图表类型，并产出 `catalog.json` + 导航页 + 图表静态 HTML。
+> 定位：在项目内通过自然语言生成和维护可独立部署的 source-first 静态架构站。事实源是 `catalog.json`、Markdown 说明和文本图源，发布默认展示静态 `diagram.svg`，`index.html` 与 `assets/arch.css` 由 renderer 生成。
 
 ## 第一性原则（必须遵守）
 
-1. 静态产物优先：工具只生成可独立部署的静态文件，不内置 server、live reload、搜索、权限或托管预览。
-2. 导航优先：正式产物默认维护 `catalog.json` 和导航页；已有导航时新图按实际关系合并进去。
-3. 首图即建站：目标根目录没有图表历史时，第一次生成图表必须同时初始化导航页和 `catalog.json`。
-4. source 优先：`diagram.arch.json` / `diagram.mmd` / `diagram.meta.json` 是事实源，`index.html` 是 render output。
-5. agent 判型优先：用户没有明确指定图表类型或显示维度时，由 agent 根据生成描述选择合适图表类型。
-6. 边界清晰：只把适合架构和流程的图表纳入主路径；其他 Mermaid 类型仅作为参考型静态图表。
+1. source-first：`catalog.json`、`content/<version>/<item>/index.md` 和 `diagram.<source>` 是事实源，`diagram.svg`、`index.html`、`assets/arch.css` 是产物。
+2. 静态部署优先：默认输出必须能被整个目录直接托管，不依赖 server、runtime 渲染、live reload、搜索、权限或托管预览。
+3. 导航统一：站点导航、版本、分组、顺序和交叉引用只由 `catalog.json` 表达，不手改 HTML 表达结构事实。
+4. SVG-first：线上默认展示 `diagram.svg`；客户端 Mermaid/JS 不作为默认主路径。
+5. 简单契约优先：页面路径、原始文件路径和样式路径由固定目录结构推导，不在 catalog 里重复维护派生字段。
 
 ## 输入规则
 
 - `[arch-root]` 可选；省略时默认使用：
-  - `docs/architecture/`，若用户明确要求临时草稿则使用 `.tmp/architecture/`
-- `<arch-task-desc>` 必填，建议包含：
-  - 目标：要生成还是要调整
-  - 范围：总览图、某个节点、某个子图、还是独立参考图
-  - 关系：是否挂到某个父图、是否独立平铺、是否只做交叉引用
-  - 约束：是否指定 Mermaid 类型、显示维度、输出方式、是否只改文案/连线
+  - `docs/architecture/`
+  - 若用户明确要求临时草稿，则使用 `.tmp/architecture/`
+- `<arch-task-desc>` 必填，建议至少包含：
+  - 目标：生成新图、补文档，还是调整已有内容
+  - 范围：总览、某个运行时流程、某个版本下的一组图，还是独立参考图
+  - 约束：版本、分组、图源类型、是否只改文案、是否补充交叉引用
+- 若没有更贴切的领域词，版本 id 推荐使用 `mainline` / `scenario`，页面展示标签可对应“主线” / “场景”。
 
 ## 推荐表达（口语化）
 
-- `/arch 生成当前项目的总览架构图，并为 renderer 节点补一层子图`
-- `/arch 生成 renderer runtime 流程图，挂到 system-overview 下`
-- `/arch 生成一个独立的数据模型图，放到导航页未归组区域`
-- `/arch .tmp/architecture 先画一个临时草图，并生成导航页`
+- `/arch 生成当前项目的总览架构站，并补两张关键流程图`
+- `/arch 生成 payment runtime 流程图，放到主线版本的支付分组`
+- `/arch .tmp/architecture 先画一个临时草图，输出可直接打开的静态目录`
+- `/arch 只补 inventory-overview 的文档说明和 SVG，不改 catalog 分组`
 
 ## 默认执行流程
 
 1. 确认目标根目录；若不存在，可直接初始化
-2. 检测导航状态：
-   - 有 `catalog.json`：读取并把新图合并到现有导航
-   - 无 `catalog.json` 且无图表历史：生成首图并初始化导航
-   - 有旧式根目录图表但无 `catalog.json`：不做兼容迁移；需要时重新生成到新结构
-3. 根据用户描述判断图表类型、source 类型和渲染方式
-4. 写入对应图表目录 `diagrams/<diagram-slug>/`
-5. 渲染该图表的 `index.html`
-6. upsert `catalog.json` 条目，维护 `parent_id` / `order` / `links`
-7. 重新生成根目录导航页 `index.html`
-8. 运行 source、catalog、href 与静态输出检查
-9. 输出改动文件、图表判型理由、导航合并结果与仍待确认的问题
+2. 检查或创建 `catalog.json`
+3. 根据任务描述确定版本、item id、分组和图源类型
+4. 写入或更新 `content/<version>/<item>/index.md`、`diagram.<source>`、`diagram.svg`
+5. upsert `catalog.json` 中对应 item 条目
+6. 若图源是 Mermaid，优先通过 `.shared/scripts/arch-export-mermaid.py` 刷新 `diagram.svg`
+7. 运行 renderer 生成根 `index.html`、item `index.html` 和 `assets/arch.css`
+8. 运行 `--check` 验证 catalog、source、SVG 和链接
+9. 输出改动文件、结构决策、仍待确认的问题
 
 ## 目录约定
 
@@ -51,188 +48,133 @@
 
 ```text
 docs/architecture/
-├── index.html
 ├── catalog.json
-└── diagrams/
-    └── <diagram-slug>/
-        ├── index.html
-        ├── diagram.arch.json
-        ├── diagram.mmd
-        └── diagram.meta.json
+├── index.html
+├── assets/
+│   └── arch.css
+└── content/
+    └── <version>/
+        └── <item>/
+            ├── index.md
+            ├── diagram.mmd | diagram.puml | diagram.dot
+            ├── diagram.svg
+            └── index.html
 ```
 
 ### 临时产物
 
 ```text
-.tmp/architecture/<arch-spike>/
-├── index.html
+.tmp/architecture/
 ├── catalog.json
-└── diagrams/
+├── index.html
+├── assets/
+└── content/
 ```
 
-每个图表目录只保留该图实际需要的 source 文件：
+每个 item 目录只保留该 item 必需的文件：
 
-- 架构 HTML 图：`diagram.arch.json` + `index.html`
-- Mermaid 原生参考图：`diagram.mmd` + `index.html`
-- Mermaid 结构源转架构图：`diagram.mmd` + `diagram.meta.json` + `diagram.arch.json` + `index.html`
+- `index.md`：说明事实源
+- `diagram.mmd` / `diagram.puml` / `diagram.dot`：文本图事实源，默认只保留一种
+- `diagram.svg`：发布展示产物
+- `index.html`：renderer 生成的 item 页面
 
-## 导航与 catalog 规则
+## Catalog 规则
 
-- `catalog.json` 是导航事实源，根目录 `index.html` 是导航 render output。
-- `parent_id` 表示父子关系；有父图的图表按 `order` 出现在父图下。
-- 无 `parent_id` 且没有子图的图表作为未归组图表平铺在导航页。
-- `links` 只表示交叉引用，不影响层级和排序。
-- `order` 使用稀疏数字，默认按 `10`、`20`、`30` 预留插入空间。
-- 新图生成时必须 upsert catalog；不得手改导航页来表达结构事实。
+- `catalog.json` 是站点事实源，页面路径由 `version + id` 推导。
+- item 页面固定为：`content/<version>/<id>/index.html`
+- 原始 Markdown 固定为：`content/<version>/<id>/index.md`
+- 图源固定为：`content/<version>/<id>/diagram.<source>`
+- SVG 固定为：`content/<version>/<id>/diagram.svg`
+- 分组使用 `group`；排序使用 `order`；交叉引用使用 `links`
+- `links` 使用 `version/id` 形式，避免跨版本歧义
 
 `catalog.json` 最小结构：
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "site": {
     "id": "project-architecture",
-    "title": "Project Architecture",
-    "summary": "Static architecture documentation."
+    "title": "项目架构站",
+    "summary": "基于 source-first 契约维护的静态架构文档。",
+    "default_version": "mainline"
   },
-  "diagrams": [
+  "versions": [
+    {
+      "id": "mainline",
+      "label": "主线",
+      "order": 10
+    }
+  ],
+  "items": [
     {
       "id": "system-overview",
-      "title": "System Overview",
-      "type": "overview",
-      "view": "arch-html",
-      "href": "diagrams/system-overview/index.html",
-      "summary": "System boundary and major components.",
+      "version": "mainline",
+      "title": "系统总览",
+      "group": "平台",
+      "summary": "展示系统边界和核心链路。",
       "order": 10,
-      "status": "draft"
+      "status": "草稿",
+      "tags": ["总览"],
+      "links": ["mainline/runtime-flow"],
+      "source_commit": "-"
     }
   ]
 }
 ```
 
-详细 workflow 见 `.shared/templates/arch/references/portal-workflow.md`。
+## 图源边界
 
-## 图表类型选择
+默认主路径只维护适合静态架构站的文本图源：
 
-默认由 agent 根据生成描述判型；用户明确指定图表类型、显示维度或输出方式时，以用户要求为准。
+- `diagram.mmd`：Mermaid
+- `diagram.puml`：PlantUML
+- `diagram.dot`：Graphviz DOT
 
-适合纳入 arch 主路径的类型：
+`/arch` 的 renderer 默认职责仍然是维护 source、SVG 与静态页面，不把文本图源转成 SVG 的逻辑塞进页面运行时。
 
-- `overview`：系统总览、模块关系、边界关系；source 使用 `diagram.arch.json`
-- `topology`：服务 / 资源 / 部署拓扑；Mermaid source 优先使用 `architecture-beta`
-- `flow`：流程、管线、依赖 DAG；Mermaid source 优先使用 `flowchart LR/TB`
+对 `diagram.mmd`，推荐用 Mermaid CLI 固定导出 `diagram.svg`：
 
-可作为静态参考图登记到导航，但不进入 arch renderer 主路径的 Mermaid 类型：
-
-- 行为 / schema 参考：`sequenceDiagram`、`stateDiagram-v2`、`erDiagram`、`classDiagram`、`requirementDiagram`、`treeView-beta`
-- 报告 / 规划 / 指标参考：`gantt`、`kanban`、`journey`、`timeline`、`pie`、`xychart`、`sankey`、`quadrantChart`、`mindmap`、`packet` 等
-
-C4 / Structurizr / ZenUML 不作为默认主路径输入；需要时先作为 `.tmp` 调研或项目自定义扩展。
-
-## `diagram.arch.json` 推荐结构
-
-默认使用语义自动布局：LLM 只维护结构事实，renderer 负责排版。
-
-```json
-{
-  "id": "overview",
-  "title": "Project Architecture",
-  "summary": "一句话摘要",
-  "layout": {
-    "mode": "auto",
-    "direction": "lr"
-  },
-  "groups": [
-    {
-      "id": "entry",
-      "label": "Entry",
-      "kind": "actor",
-      "node_ids": ["web"]
-    },
-    {
-      "id": "service",
-      "label": "Service",
-      "kind": "backend",
-      "node_ids": ["api"]
-    }
-  ],
-  "nodes": [
-    {
-      "id": "web",
-      "label": "Web",
-      "kind": "frontend",
-      "lines": ["用户入口"]
-    },
-    {
-      "id": "api",
-      "label": "API",
-      "kind": "backend",
-      "lines": ["FastAPI", "业务入口"]
-    }
-  ],
-  "edges": [
-    {
-      "from": "web",
-      "to": "api",
-      "label": "HTTPS"
-    }
-  ],
-  "cards": [
-    {
-      "title": "Runtime",
-      "items": ["FastAPI", "PostgreSQL"]
-    }
-  ],
-  "children": [
-    {
-      "node_id": "api",
-      "path": "../api-detail"
-    }
-  ]
-}
+```bash
+python3 .shared/scripts/arch-export-mermaid.py docs/architecture
 ```
 
-## 结构规范
+这样 Mermaid 预览与最终页面会共享同一份语义源，避免再靠手写 SVG 维持视觉。
 
-- `layout.mode`：
-  - `auto`：推荐默认；节点可省略 `x/y`，按 `groups`、`rank` 或连线拓扑自动排布
-  - `manual`：精修模式；每个节点必须同时提供 `x` 和 `y`
-- `layout.direction`：支持 `lr`（从左到右）和 `tb`（从上到下）
-- `groups[]`：推荐用于 LLM 和开发者共同阅读；每个分组用 `node_ids` 明确包含哪些节点
-- `nodes[].rank`：不想写 `groups` 时可用数字表达层级；适合线性流程或渲染器内部链路
-- `nodes[].group` / `layer` / `lane`：可作为轻量分组字段；有 `groups[]` 时优先跟随 `groups[].node_ids`
-- `edges[].flow`：可选，支持 `sync`、`data`、`read`、`write`、`control`、`async`、`event`、`dependency`，renderer 会给出稳定颜色 / 虚线风格
-- `children[].path` 推荐使用相对路径；在标准 `diagrams/<slug>/` 结构中，兄弟子图通常写成 `../<child-slug>`
+## 页面与导航规则
 
-## 布局实践
+- 根 `index.html` 展示站点摘要、版本分组、导航卡片和交叉引用入口
+- item `index.html` 展示说明文档、内嵌 SVG、原始文件链接和源码预览
+- `assets/arch.css` 为全站共享样式，由 renderer 统一生成
+- 所有链接必须为相对路径，保证整个目录可搬迁
 
-- 详细布局规则见 `.shared/templates/arch/references/layout-best-practices.md`
-- 导航、catalog 与静态部署规则见 `.shared/templates/arch/references/portal-workflow.md`
-- renderer 默认使用正交连线，连线从节点边中点附近进出，避免连接到角落
-- 连线标签带背景并尝试避开节点盒子；`edges[].flow` 会同步影响线条和箭头颜色
-- 分组、连线、节点、连线标签按固定层级渲染，避免箭头压住文字或标签被节点遮挡
-- 修改 source 后优先运行图表 source 检查和 catalog 检查
+## 文案约束
+
+- `index.md` 默认写业务事实：背景、职责、关键链路、边界、依赖、异常处理或运维关注点
+- 文案必须与 `diagram.<source>` 的节点和连线语义一致，不写脱离图源的补充故事
+- 不写“这张图用于演示”“观察页面效果”“验证滚动/样式/页面壳”这类自述式说明
+- renderer、导出方式、模板结构和样式行为属于工具说明，不进入业务正文
+- `mainline` 版本优先表达长期稳定结构；`scenario` 版本优先表达特定时段、角色、目标、指标和处置边界
+
+## Review 入口
+
+### `/arch review [diagram-ref]`
+
+用于在不改图的前提下，检查以下问题：
+
+- `catalog.json` 的版本、版本列表、item 列表和引用是否有效
+- `content/<version>/<item>/` 是否同时具备 `index.md`、文本图源和 `diagram.svg`
+- Markdown、SVG 和源码链接是否闭环
+- 根导航是否按 `version + group + order` 正确生成
+- item 页面是否由 source 渲染，而不是手写结构事实
+- 交叉引用是否指向有效的 `version/id`
+- renderer `--check` 是否通过
+
+`[diagram-ref]` 可为 arch root、`catalog.json`、item 目录或 item 目录内的 source 文件；省略时默认检查 `docs/architecture`。
 
 ## 边界约束
 
-- renderer 只负责从结构化 source 渲染静态 HTML，不把 `index.html` 作为事实源反向解析
-- `viewport.width` / `viewport.height` 视为最小画布值；内容超出时 renderer 自动扩张，页面容器通过滚动承载
-- 内容较少时优先收紧节点间距，不为“撑满宽度”硬拉画布
-- 默认使用系统字体栈，不依赖 Google Fonts，也不内置字体 assets
-- 只生成静态 HTML 文件；server、live reload、搜索、权限控制不纳入 `/arch` 范围
-- 旧产物不做自动兼容和迁移；旧产物需通过 `/arch` 重新生成到新结构
-
-## /arch review [diagram-ref]
-
-可选审查入口。用于在不改图的前提下，检查以下问题：
-
-- 节点命名是否清晰
-- 连线是否缺失或方向错误
-- 子图链接是否闭环
-- 文字是否溢出
-- `catalog.json` 中的 `id`、`parent_id`、`href`、`order` 是否有效
-- 导航页是否由 catalog 生成，相关图和未归组图表是否归位
-- `diagram.arch.json` 与 `index.html` 是否明显失配
-- renderer `--check` 是否通过
-
-`[diagram-ref]` 可为 arch root、图表目录或具体 source 文件；省略时默认检查 `docs/architecture`。
+- renderer 只负责校验和生成静态页面，不把 HTML 反向解析成事实源
+- 默认不生成或维护前端脚本；若项目需要额外 JS，视为项目自定义扩展
+- 默认不依赖任何特定 runtime；文本图源到 SVG 的生成由外部工具或人工流程负责
+- 输出应适合桌面和移动端阅读；常规尺寸图按容器缩放，超宽 SVG 自动切换为横向滚动

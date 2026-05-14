@@ -1,0 +1,43 @@
+flowchart LR
+    subgraph start["交易起点"]
+        direction LR
+        A[提交支付]
+        B[交易锁单]
+        C[支付授权]
+    end
+
+    subgraph decision["异常决策"]
+        direction TB
+        D{授权结果}
+        E[支付成功]
+        F[失败重试]
+        G[补单核对]
+        H[人工介入]
+    end
+
+    subgraph settle["状态回补"]
+        direction LR
+        I[订单确认]
+        J[消息通知]
+        K[账务落账]
+    end
+
+    A --> B --> C --> D
+    D -->|成功| E --> I --> J --> K
+    D -->|失败| F --> C
+    F -.超阈值.-> G --> H --> I
+    G -.回调补齐.-> J
+
+    classDef warm fill:#fff7ec,stroke:#aa6232,color:#1f2c2d,stroke-width:1.5px;
+    classDef teal fill:#ecf7f5,stroke:#0f766e,color:#1f2c2d,stroke-width:1.5px;
+    classDef neutral fill:#fffdfa,stroke:#8ea0a2,color:#1f2c2d,stroke-width:1.5px;
+    class A,B,E,I,K warm;
+    class C,D,F,G,J teal;
+    class H neutral;
+
+    style start fill:#fbf1e4,stroke:#ddcdb8,color:#6f5d4a;
+    style decision fill:#eef7f4,stroke:#ddcdb8,color:#4f6662;
+    style settle fill:#f7f3eb,stroke:#ddcdb8,color:#6f5d4a;
+
+    linkStyle default stroke:#8e6746,stroke-width:1.5px;
+    linkStyle 7,8 stroke:#8e6746,stroke-width:1.4px,stroke-dasharray:6 4;

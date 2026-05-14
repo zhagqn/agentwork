@@ -3,7 +3,7 @@
   "kind": [
     "command"
   ],
-  "description": "Arch documentation tool pack with catalog navigation, structured diagram sources, Mermaid reference support, semantic auto-layout, static HTML rendering, validation checks, and cross-AI wrappers.",
+  "description": "Source-first architecture site tool pack with catalog navigation, Markdown docs, text diagram sources, SVG artifacts, static HTML rendering, validation checks, and cross-AI wrappers.",
   "entries": [
     {
       "surface": "shared",

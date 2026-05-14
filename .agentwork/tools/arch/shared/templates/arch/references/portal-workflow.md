@@ -1,13 +1,13 @@
 # Architecture Portal Workflow
 
-本文件记录 `arch` tool 的导航页、catalog 和静态部署规则。目标是让多图表架构文档可以稳定生成、合并和独立部署。
+本文件记录 `arch` tool 的导航页、catalog 和静态部署规则。目标是让多版本、多分组的架构文档可以稳定生成、独立部署并保持可追溯。
 
 ## 产物边界
 
-- 工具只生成静态文件：`index.html`、`catalog.json`、`diagrams/*`。
-- 不内置 server、live reload、搜索、权限、托管预览。
-- 任何部署方式都由宿主项目负责，例如 GitHub Pages、nginx、S3、内部文档站。
-- 所有链接使用相对路径，保证整个 `docs/architecture/` 可整体搬迁。
+- 工具生成的静态产物只有：根 `index.html`、item `index.html` 和 `assets/arch.css`
+- 事实源是：`catalog.json`、`content/<version>/<item>/index.md`、`diagram.<source>`、`diagram.svg`
+- 不内置 server、live reload、搜索、权限、托管预览或客户端 Mermaid 默认渲染
+- 所有链接使用相对路径，保证整个站点目录可整体搬迁
 
 ## 根目录状态
 
@@ -15,107 +15,116 @@
 
 | 状态 | 判断方式 | 默认动作 |
 | --- | --- | --- |
-| 已有导航 | 存在 `catalog.json` | 读取 catalog，并把新图 upsert 到导航 |
-| 全新目录 | 无 `catalog.json`、无根 `diagram.arch.json`、无 `diagrams/*` | 生成首图，同时初始化 catalog 和导航页 |
-| 旧产物 | 存在根 `diagram.arch.json` 但无 `catalog.json` | 不做兼容迁移；旧产物需重新生成到新结构 |
-| 部分产物 | 有 `diagrams/*` 但无 `catalog.json` | 先生成或重建 catalog，再生成导航页 |
+| 已初始化站点 | 存在 `catalog.json` | 读取 catalog，更新 item source，并重新生成页面 |
+| 全新目录 | 无 `catalog.json` 且无 `content/` | 创建 catalog、content 目录和首批 item |
+| 部分内容目录 | 有 `content/` 但缺 `catalog.json` | 先补 catalog，再生成站点 |
 
 ## 目录结构
 
 ```text
 docs/architecture/
-├── index.html
 ├── catalog.json
-└── diagrams/
-    └── <diagram-slug>/
-        ├── index.html
-        ├── diagram.arch.json
-        ├── diagram.mmd
-        └── diagram.meta.json
+├── index.html
+├── assets/
+│   └── arch.css
+└── content/
+    └── <version>/
+        └── <item>/
+            ├── index.md
+            ├── diagram.mmd | diagram.puml | diagram.dot
+            ├── diagram.svg
+            └── index.html
 ```
 
-每个图表目录只放实际需要的 source：
+每个 item 目录只放实际需要的文件：
 
-- `diagram.arch.json`：结构化架构图 source
-- `diagram.mmd`：Mermaid source
-- `diagram.meta.json`：Mermaid 不能稳定表达的 renderer metadata
-- `index.html`：该图表静态输出
+- `index.md`：面向阅读和评审的说明文档
+- `diagram.<source>`：文本图源，默认保留一种
+- `diagram.svg`：稳定的展示产物
+- `index.html`：renderer 生成的阅读页
 
 ## Catalog 规则
 
-`catalog.json` 是导航事实源，根 `index.html` 只从 catalog 渲染。
+`catalog.json` 是站点事实源，页面和资源路径由固定目录结构推导。
 
 最小结构：
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "site": {
     "id": "project-architecture",
     "title": "Project Architecture",
-    "summary": "Static architecture documentation."
+    "summary": "Static architecture documentation.",
+    "default_version": "current"
   },
-  "diagrams": []
+  "versions": [],
+  "items": []
 }
 ```
 
-图表条目推荐字段：
+版本条目推荐字段：
+
+```json
+{
+  "id": "current",
+  "label": "当前版本",
+  "summary": "Working copy",
+  "order": 10
+}
+```
+
+item 条目推荐字段：
 
 ```json
 {
   "id": "renderer-runtime",
-  "parent_id": "system-overview",
+  "version": "current",
   "title": "Renderer Runtime",
-  "type": "flow",
-  "view": "flowchart + arch-html",
-  "href": "diagrams/renderer-runtime/index.html",
-  "summary": "Source validation, layout, SVG generation, and HTML output.",
+  "group": "Runtime",
+  "summary": "Catalog validation, page generation, and static output.",
   "order": 20,
   "status": "draft",
   "tags": ["runtime"],
-  "links": ["source-topology"]
+  "links": ["current/arch-tool-overview"],
+  "source_commit": "-"
 }
 ```
 
 字段约束：
 
-- `id` 必须唯一，推荐 kebab-case。
-- `href` 必须指向 arch root 内的相对路径。
-- `parent_id` 必须引用已存在的 diagram id。
-- `order` 使用稀疏数字，默认 `10`、`20`、`30`。
-- `links` 只表达交叉引用，不改变层级。
+- `version` 固定为 `2`
+- `versions[].id` 唯一，推荐 kebab-case
+- `items[].id` 在同一 `version` 下唯一
+- `items[].version` 必须引用存在的 version
+- `items[].links[]` 使用 `version/id` 形式
+- 页面路径、Markdown 路径、图源路径和 SVG 路径不写入 catalog，由目录结构推导
 
 ## 导航展示规则
 
-- 有 `parent_id` 的图表展示为父图下的关联子图。
-- 关联子图按 `order` 升序排列，order 相同再按 `title`。
-- 无 `parent_id` 且没有子图的图表展示为 未归组卡片。
-- 有 `links` 的图表可展示交叉引用，但不进入对方子树。
+- 根导航先按 version `order` 排序，再按 `group` 和 item `order` 排序
+- 未填写 `group` 的 item 归到 `Ungrouped`
+- 每个 item 卡片至少展示：标题、摘要、版本、图源类型、标签
+- `links` 用于展示相关 item，不改变主导航分组
 
-## 图表类型边界
+## 图源与 SVG 规则
 
-主路径只支持架构和流程类：
-
-- `overview`：系统总览，source 为 `diagram.arch.json`
-- `topology`：服务、资源、部署拓扑，Mermaid source 可用 `architecture-beta`
-- `flow`：流程、管线、依赖 DAG，Mermaid source 可用 `flowchart LR/TB`
-
-其他 Mermaid 类型仅作为静态参考图登记到 catalog，不作为 arch renderer 的结构化 source。
+- 每个 item 目录默认只有一种文本图源
+- `diagram.svg` 必须存在，且用于正式页面展示
+- 若需要重新生成 SVG，可由外部工具完成，再交给 renderer 统一生成页面
 
 ## 校验清单
 
-- `catalog.json` JSON 语法有效。
-- 每个 `id` 唯一。
-- 每个 `parent_id` 都存在。
-- 不存在 parent cycle。
-- 每个 `href` 都存在，且不跳出 arch root。
-- 未归组图表符合“无 parent 且无 children”规则。
-- 相关图排序稳定。
-- 导航页由 catalog 生成，不手写结构事实。
+- `catalog.json` JSON 语法有效
+- version 和 item 引用闭环
+- 每个 item 目录具备 `index.md`、一种文本图源、`diagram.svg`
+- 所有相关链接都在 arch root 内部
+- 根导航来自 catalog，而不是手写 HTML
+- item 页面来自 source，而不是手写结构事实
 
 推荐命令：
 
 ```bash
-python3 .shared/scripts/arch-render.py docs/architecture --recursive --check
-python3 .shared/scripts/arch-render.py docs/architecture --recursive
+python3 .shared/scripts/arch-render.py docs/architecture --check
+python3 .shared/scripts/arch-render.py docs/architecture
 ```

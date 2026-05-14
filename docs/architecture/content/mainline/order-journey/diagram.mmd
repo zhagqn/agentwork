@@ -1,0 +1,29 @@
+flowchart LR
+    subgraph stage1["下单触发"]
+        direction LR
+        A[购物车提交] --> B[结算校验]
+    end
+
+    subgraph stage2["交易确认"]
+        direction LR
+        C[支付授权] --> D[订单确认]
+    end
+
+    subgraph stage3["履约反馈"]
+        direction LR
+        E[仓配拆单] --> F[消息通知]
+    end
+
+    B --> C
+    D --> E
+
+    classDef warm fill:#fff7ec,stroke:#aa6232,color:#1f2c2d,stroke-width:1.5px;
+    classDef teal fill:#ecf7f5,stroke:#0f766e,color:#1f2c2d,stroke-width:1.5px;
+    class A,B,E,F warm;
+    class C,D teal;
+
+    style stage1 fill:#fbf1e4,stroke:#ddcdb8,color:#6f5d4a;
+    style stage2 fill:#eef7f4,stroke:#ddcdb8,color:#4f6662;
+    style stage3 fill:#f7f3eb,stroke:#ddcdb8,color:#6f5d4a;
+
+    linkStyle default stroke:#8e6746,stroke-width:1.6px;

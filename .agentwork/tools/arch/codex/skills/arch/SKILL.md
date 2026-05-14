@@ -2,12 +2,12 @@
 name: arch
 description: 架构图生成与调整命令
 metadata:
-  short-description: 静态架构文档（catalog + content + SVG -> HTML）
+  short-description: source-first 静态架构站（catalog + markdown + source + svg -> html）
 ---
 
 # /arch [arch-root] <arch-task-desc>
 
-架构图生成与调整命令（平台入口）。
+架构站生成与调整命令（平台入口）。
 
 ## 执行前必读
 

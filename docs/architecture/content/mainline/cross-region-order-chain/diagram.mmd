@@ -1,0 +1,62 @@
+%%{init: {'flowchart': {'nodeSpacing': 48, 'rankSpacing': 84}}}%%
+flowchart LR
+    subgraph reach["流量与下单"]
+        direction LR
+        A[活动会场]
+        B[商品详情]
+        C[购物车结算]
+    end
+
+    subgraph gate["校验与风控"]
+        direction LR
+        D[地址与优惠校验]
+        E[风控决策]
+        F[支付授权]
+    end
+
+    subgraph trade["交易与拆单"]
+        direction LR
+        G[订单主单]
+        H[库存锁定]
+        I[跨仓拆单]
+        J[履约编排]
+    end
+
+    subgraph delivery["履约与配送"]
+        direction LR
+        K[仓内拣配]
+        L[干线路由]
+        M[末端配送]
+    end
+
+    subgraph loop["反馈与经营"]
+        direction LR
+        N[签收回传]
+        O[消息触达]
+        P[评价回流]
+        Q[结算归档]
+    end
+
+    A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L --> M --> N --> O --> P --> Q
+    E -.异常单.-> R[人工审核]
+    R --> F
+    I -.缺货改配.-> S[替代仓建议]
+    S --> J
+    N -.逆向申请.-> T[售后入口]
+    T --> Q
+
+    classDef warm fill:#fff7ec,stroke:#aa6232,color:#1f2c2d,stroke-width:1.5px;
+    classDef teal fill:#ecf7f5,stroke:#0f766e,color:#1f2c2d,stroke-width:1.5px;
+    classDef neutral fill:#fffdfa,stroke:#8ea0a2,color:#1f2c2d,stroke-width:1.5px;
+    class A,B,C,N,O,Q warm;
+    class D,E,F,G,H,I,J,K,L,M,P teal;
+    class R,S,T neutral;
+
+    style reach fill:#fbf1e4,stroke:#ddcdb8,color:#6f5d4a;
+    style gate fill:#eef7f4,stroke:#ddcdb8,color:#4f6662;
+    style trade fill:#f7f3eb,stroke:#ddcdb8,color:#6f5d4a;
+    style delivery fill:#eef7f4,stroke:#ddcdb8,color:#4f6662;
+    style loop fill:#fbf1e4,stroke:#ddcdb8,color:#6f5d4a;
+
+    linkStyle default stroke:#8e6746,stroke-width:1.4px;
+    linkStyle 16,18,20 stroke:#8e6746,stroke-width:1.4px,stroke-dasharray:6 4;

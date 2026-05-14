@@ -1,0 +1,187 @@
+{
+  "version": 2,
+  "site": {
+    "id": "commerce-architecture",
+    "title": "电商业务架构站",
+    "summary": "围绕一套区域仓配电商系统，整理主线架构、关键链路、数据通路与大促值班场景。",
+    "default_version": "mainline"
+  },
+  "versions": [
+    {
+      "id": "mainline",
+      "label": "主线",
+      "summary": "长期有效的系统主线视图，覆盖总览、订单、数据与部署等核心结构。",
+      "order": 10
+    },
+    {
+      "id": "scenario",
+      "label": "场景",
+      "summary": "针对某个时段、角色或专题的聚焦视图，承载值班、排障和专项决策。",
+      "order": 20
+    }
+  ],
+  "items": [
+    {
+      "id": "commerce-overview",
+      "version": "mainline",
+      "title": "电商总览",
+      "group": "全景",
+      "summary": "展示用户入口、交易核心、库存履约、会员营销和外部合作面的总体关系。",
+      "order": 10,
+      "status": "精选",
+      "tags": [
+        "系统",
+        "总览"
+      ],
+      "links": [
+        "mainline/order-journey",
+        "mainline/data-fabric"
+      ],
+      "source_commit": "-"
+    },
+    {
+      "id": "order-journey",
+      "version": "mainline",
+      "title": "订单旅程",
+      "group": "交易流程",
+      "summary": "从下单、支付、拆单到履约通知的一条多阶段协同链路。",
+      "order": 20,
+      "status": "精选",
+      "tags": [
+        "订单",
+        "流程"
+      ],
+      "links": [
+        "mainline/commerce-overview",
+        "mainline/deployment-surface"
+      ],
+      "source_commit": "-"
+    },
+    {
+      "id": "cross-region-order-chain",
+      "version": "mainline",
+      "title": "跨域订单长链路",
+      "group": "交易流程",
+      "summary": "覆盖活动会场、风控校验、跨仓拆单、履约配送、消息回流与结算归档的订单主链路。",
+      "order": 25,
+      "status": "关键",
+      "tags": [
+        "流程",
+        "跨域"
+      ],
+      "links": [
+        "mainline/order-journey",
+        "mainline/deployment-surface"
+      ],
+      "source_commit": "-"
+    },
+    {
+      "id": "payment-exception-loop",
+      "version": "mainline",
+      "title": "支付异常回路",
+      "group": "交易流程",
+      "summary": "展示支付授权失败、补单重试、人工介入和状态回补之间的异常处理闭环。",
+      "order": 30,
+      "status": "关键",
+      "tags": [
+        "支付",
+        "异常"
+      ],
+      "links": [
+        "mainline/order-journey",
+        "mainline/cross-region-order-chain",
+        "mainline/deployment-surface"
+      ],
+      "source_commit": "-"
+    },
+    {
+      "id": "fulfillment-routing-board",
+      "version": "mainline",
+      "title": "履约分拨编排",
+      "group": "交易流程",
+      "summary": "把同城仓、区域中心仓和预售补货三种履约路径放到同一张分拨编排图里。",
+      "order": 35,
+      "status": "关键",
+      "tags": [
+        "履约",
+        "分拨"
+      ],
+      "links": [
+        "mainline/order-journey",
+        "mainline/cross-region-order-chain"
+      ],
+      "source_commit": "-"
+    },
+    {
+      "id": "refund-reversal-loop",
+      "version": "mainline",
+      "title": "售后逆向闭环",
+      "group": "交易流程",
+      "summary": "聚焦退款申请、审核、退货入库、质检复核和资金回退的逆向链路。",
+      "order": 40,
+      "status": "关键",
+      "tags": [
+        "售后",
+        "逆向"
+      ],
+      "links": [
+        "mainline/order-journey",
+        "mainline/fulfillment-routing-board",
+        "mainline/data-fabric"
+      ],
+      "source_commit": "-"
+    },
+    {
+      "id": "data-fabric",
+      "version": "mainline",
+      "title": "数据织网",
+      "group": "数据与智能",
+      "summary": "展示埋点、事件流、清洗、策略路由、分析和模型服务之间的密集管线。",
+      "order": 30,
+      "status": "精选",
+      "tags": [
+        "数据",
+        "分析"
+      ],
+      "links": [
+        "mainline/commerce-overview",
+        "scenario/double-11-watch"
+      ],
+      "source_commit": "-"
+    },
+    {
+      "id": "deployment-surface",
+      "version": "mainline",
+      "title": "部署分层",
+      "group": "交付与运行",
+      "summary": "对比发布入口、控制面、策略网格、运行单元和内部运维工具的层次关系。",
+      "order": 40,
+      "status": "精选",
+      "tags": [
+        "部署",
+        "运行时"
+      ],
+      "links": [
+        "mainline/order-journey"
+      ],
+      "source_commit": "-"
+    },
+    {
+      "id": "double-11-watch",
+      "version": "scenario",
+      "title": "双 11 值班视图",
+      "group": "运营场景",
+      "summary": "面向大促值班团队的聚焦视图，只保留发布门禁、库存热区、支付告警和回滚路径。",
+      "order": 10,
+      "status": "值班",
+      "tags": [
+        "运营",
+        "大促"
+      ],
+      "links": [
+        "mainline/data-fabric"
+      ],
+      "source_commit": "demo-double-11"
+    }
+  ]
+}

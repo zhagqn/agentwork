@@ -1,37 +1,72 @@
 {
-  "version": 1,
+  "version": 2,
   "site": {
     "id": "arch-tool",
     "title": "Arch Tool",
-    "summary": "Static architecture portal generated from catalog.json and per-diagram sources."
+    "summary": "Example architecture site generated from catalog, Markdown, source diagrams, and SVG artifacts.",
+    "default_version": "current"
   },
-  "diagrams": [
+  "versions": [
+    {
+      "id": "current",
+      "label": "Current",
+      "summary": "Working copy of the arch tool contract.",
+      "order": 10
+    },
+    {
+      "id": "v1",
+      "label": "V1 Snapshot",
+      "summary": "Frozen sample used to demonstrate version navigation.",
+      "order": 20
+    }
+  ],
+  "items": [
     {
       "id": "arch-tool-overview",
+      "version": "current",
       "title": "Arch Tool Overview",
-      "type": "overview",
-      "view": "arch-html",
-      "href": "diagrams/arch-tool-overview/index.html",
-      "summary": "Language-driven catalog, source, render, and static output workflow.",
+      "group": "Core Workflow",
+      "summary": "Natural-language contract, catalog governance, and source-first static output.",
       "order": 10,
       "status": "draft",
       "tags": [
+        "overview",
         "main-path"
-      ]
+      ],
+      "links": [
+        "current/renderer-runtime"
+      ],
+      "source_commit": "-"
     },
     {
       "id": "renderer-runtime",
-      "parent_id": "arch-tool-overview",
-      "title": "Renderer Runtime Detail",
-      "type": "flow",
-      "view": "arch-html",
-      "href": "diagrams/renderer-runtime/index.html",
-      "summary": "Catalog validation, diagram source rendering, and static portal output.",
+      "version": "current",
+      "title": "Renderer Runtime",
+      "group": "Runtime",
+      "summary": "Validation, page generation, and CSS output for the static site.",
       "order": 20,
       "status": "draft",
       "tags": [
         "runtime"
-      ]
+      ],
+      "links": [
+        "current/arch-tool-overview"
+      ],
+      "source_commit": "-"
+    },
+    {
+      "id": "arch-tool-overview",
+      "version": "v1",
+      "title": "Arch Tool Overview",
+      "group": "Snapshots",
+      "summary": "Frozen overview page kept as a compact historical reference.",
+      "order": 10,
+      "status": "frozen",
+      "tags": [
+        "snapshot"
+      ],
+      "links": [],
+      "source_commit": "v1-demo"
     }
   ]
 }

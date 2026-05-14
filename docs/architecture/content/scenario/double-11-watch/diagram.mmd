@@ -1,0 +1,16 @@
+flowchart LR
+    subgraph watch["值班关注链"]
+        direction LR
+        A[发布门禁] --> B[库存热区] --> C[支付告警] --> D[回滚路径]
+    end
+
+    classDef warm fill:#fff7ec,stroke:#aa6232,color:#1f2c2d,stroke-width:1.5px;
+    classDef teal fill:#ecf7f5,stroke:#0f766e,color:#1f2c2d,stroke-width:1.5px;
+    classDef neutral fill:#fffdfa,stroke:#8ea0a2,color:#1f2c2d,stroke-width:1.5px;
+    class A,D warm;
+    class B teal;
+    class C neutral;
+
+    style watch fill:#fbf1e4,stroke:#ddcdb8,color:#6f5d4a;
+
+    linkStyle default stroke:#8e6746,stroke-width:1.6px;

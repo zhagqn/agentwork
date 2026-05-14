@@ -1,0 +1,37 @@
+flowchart LR
+    subgraph exp["入口与体验"]
+        direction LR
+        A[用户入口] --> B[体验层]
+    end
+
+    subgraph core["交易核心"]
+        direction TB
+        C[交易编排核心]
+        D[库存与履约]
+        F[数据与智能]
+    end
+
+    subgraph eco["外部协同"]
+        direction TB
+        E[商家与渠道]
+        G[外部合作面]
+    end
+
+    B --> C
+    C --> D
+    C --> E
+    D --> F
+    E --> G
+
+    classDef warm fill:#fff7ec,stroke:#aa6232,color:#1f2c2d,stroke-width:1.5px;
+    classDef teal fill:#ecf7f5,stroke:#0f766e,color:#1f2c2d,stroke-width:1.5px;
+    classDef neutral fill:#fffdfa,stroke:#8ea0a2,color:#1f2c2d,stroke-width:1.5px;
+    class A,D,G warm;
+    class B,F teal;
+    class C,E neutral;
+
+    style exp fill:#fbf1e4,stroke:#ddcdb8,color:#6f5d4a;
+    style core fill:#f7f3eb,stroke:#ddcdb8,color:#6f5d4a;
+    style eco fill:#f2f7f6,stroke:#ddcdb8,color:#6f5d4a;
+
+    linkStyle default stroke:#8e6746,stroke-width:1.6px;

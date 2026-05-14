@@ -1,0 +1,36 @@
+flowchart LR
+    subgraph request["申请与审核"]
+        direction LR
+        A[提交售后] --> B[客服初审] --> C{仅退款?}
+    end
+
+    subgraph returnflow["退货处理"]
+        direction LR
+        D[生成退货单] --> E[逆向物流] --> F[仓内收货]
+    end
+
+    subgraph verify["质检与退款"]
+        direction LR
+        G[质检复核] --> H{通过?} --> I[财务退款] --> J[结果通知]
+    end
+
+    K[争议复审]
+
+    C -->|是| I
+    C -->|否| D
+    F --> G
+    H -->|通过| I
+    H -->|驳回| K --> J
+
+    classDef warm fill:#fff7ec,stroke:#aa6232,color:#1f2c2d,stroke-width:1.5px;
+    classDef teal fill:#ecf7f5,stroke:#0f766e,color:#1f2c2d,stroke-width:1.5px;
+    classDef neutral fill:#fffdfa,stroke:#8ea0a2,color:#1f2c2d,stroke-width:1.5px;
+    class A,B,I,J warm;
+    class C,D,E,F,G,H teal;
+    class K neutral;
+
+    style request fill:#fbf1e4,stroke:#ddcdb8,color:#6f5d4a;
+    style returnflow fill:#eef7f4,stroke:#ddcdb8,color:#4f6662;
+    style verify fill:#f7f3eb,stroke:#ddcdb8,color:#6f5d4a;
+
+    linkStyle default stroke:#8e6746,stroke-width:1.5px;

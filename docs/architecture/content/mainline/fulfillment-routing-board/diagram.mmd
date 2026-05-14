@@ -1,0 +1,42 @@
+flowchart TB
+    A[履约编排中心]
+    B{库存条件}
+
+    subgraph city["同城极速"]
+        direction LR
+        C[同城仓锁定] --> D[即时拣货] --> E[骑手配送]
+    end
+
+    subgraph regional["区域中心"]
+        direction LR
+        F[中心仓锁定] --> G[波次分拨] --> H[干线发运]
+    end
+
+    subgraph presale["预售补货"]
+        direction LR
+        I[预售池占位] --> J[补货入仓] --> K[二次出库]
+    end
+
+    L[签收回传]
+    M[用户通知]
+
+    A --> B
+    B -->|同城库存可用| C
+    B -->|区域库存可用| F
+    B -->|预售待补货| I
+    E --> L
+    H --> L
+    K --> L
+    L --> M
+
+    classDef warm fill:#fff7ec,stroke:#aa6232,color:#1f2c2d,stroke-width:1.5px;
+    classDef teal fill:#ecf7f5,stroke:#0f766e,color:#1f2c2d,stroke-width:1.5px;
+    classDef neutral fill:#fffdfa,stroke:#8ea0a2,color:#1f2c2d,stroke-width:1.5px;
+    class A,L,M warm;
+    class B,C,D,E,F,G,H,I,J,K teal;
+
+    style city fill:#fbf1e4,stroke:#ddcdb8,color:#6f5d4a;
+    style regional fill:#eef7f4,stroke:#ddcdb8,color:#4f6662;
+    style presale fill:#f7f3eb,stroke:#ddcdb8,color:#6f5d4a;
+
+    linkStyle default stroke:#8e6746,stroke-width:1.5px;

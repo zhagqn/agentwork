@@ -25,8 +25,8 @@
 | `<commit-subject>` | Git 提交标题（单行 subject） | `修复登录页焦点回退` |
 | `<lsp-location>` | LSP 位置（`path:line:column`，1-based） | `src/main.ts:18:7` |
 | `[arch-root]` | 架构图工具的目标根目录 | `docs/architecture` / `.tmp/architecture` |
-| `<arch-task-desc>` | 架构图工具的口语化任务描述 | `生成总览图并为 API 节点补子图` |
-| `[diagram-ref]` | 架构图目录或具体 `diagram.arch.json` 路径 | `docs/architecture` / `docs/architecture/diagram.arch.json` |
+| `<arch-task-desc>` | 架构站工具的口语化任务描述 | `生成当前版本总览页并补 payment-runtime 文档` |
+| `[diagram-ref]` | 架构站根目录、`catalog.json`、item 目录或 item source 路径 | `docs/architecture` / `docs/architecture/catalog.json` / `docs/architecture/content/current/system-overview` |
 
 > 维护规则：仅登记仓库已使用的占位符；命令或模板新增占位符时同步更新本表。
 

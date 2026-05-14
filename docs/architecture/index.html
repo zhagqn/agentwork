@@ -3,323 +3,104 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>agentwork Workflow Architecture</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #06101d;
-      --panel: rgba(9, 17, 31, 0.78);
-      --panel-border: rgba(76, 113, 149, 0.35);
-      --text: #e6edf7;
-      --muted: #8ea6c1;
-      --accent: #7dd3fc;
-      --card-bg: rgba(10, 18, 34, 0.72);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      margin: 0;
-      min-height: 100%;
-      background: linear-gradient(180deg, #08111e 0%, #040913 100%);
-      color: var(--text);
-      font-family: "SF Pro Text", "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", "Segoe UI", sans-serif;
-    }
-
-    body {
-      padding: 24px;
-    }
-
-    .page {
-      max-width: 1520px;
-      margin: 0 auto;
-    }
-
-    .hero {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-
-    .title-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--muted);
-      font-size: 13px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .eyebrow::before {
-      content: "";
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #38bdf8, #22d3ee);
-      box-shadow: 0 0 18px rgba(56, 189, 248, 0.55);
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 38px;
-      line-height: 1.1;
-    }
-
-    .subtitle {
-      margin: 0;
-      color: var(--muted);
-      max-width: 860px;
-      line-height: 1.6;
-      font-size: 15px;
-    }
-
-    .breadcrumb {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: rgba(7, 14, 25, 0.7);
-      border: 1px solid rgba(125, 211, 252, 0.18);
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .breadcrumb a {
-      color: var(--accent);
-      text-decoration: none;
-    }
-
-    .panel {
-      background: var(--panel);
-      border: 1px solid var(--panel-border);
-      border-radius: 10px;
-      padding: 0;
-      box-shadow: 0 24px 80px rgba(2, 8, 23, 0.35);
-      overflow: auto;
-      max-height: min(78vh, 980px);
-    }
-
-    .canvas-scroll {
-      width: max-content;
-      min-width: 100%;
-    }
-
-    svg {
-      display: block;
-    }
-
-    .edge-label {
-      fill: #d7e7fb;
-      font-size: 11px;
-      font-weight: 600;
-    }
-
-    .edge-label-bg {
-      fill: rgba(6, 12, 24, 0.86);
-    }
-
-    .group-box {
-      opacity: 0.38;
-    }
-
-    .group-label {
-      fill: #cfe5f7;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .node-title {
-      fill: #f8fbff;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .node-line {
-      fill: #9ab0c9;
-      font-size: 12px;
-    }
-
-    .node-badge {
-      fill: #7dd3fc;
-      font-size: 12px;
-      font-weight: 600;
-    }
-
-    .node-link {
-      text-decoration: none;
-      cursor: pointer;
-    }
-
-    .node-body {
-      transition: transform 140ms ease, filter 140ms ease;
-      transform-origin: center;
-    }
-
-    .node-link:hover .node-body,
-    .node-link:focus .node-body {
-      transform: translateY(-2px);
-      filter: drop-shadow(0 12px 18px rgba(34, 211, 238, 0.14));
-    }
-
-    .cards {
-      margin-top: 18px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid rgba(106, 159, 211, 0.18);
-      border-radius: 8px;
-      padding: 16px;
-    }
-
-    .card h3 {
-      margin: 0 0 10px;
-      font-size: 14px;
-    }
-
-    .card ul {
-      margin: 0;
-      padding-left: 18px;
-      color: var(--muted);
-      line-height: 1.7;
-      font-size: 13px;
-    }
-
-    .footer {
-      margin-top: 18px;
-      color: #6f86a2;
-      font-size: 12px;
-      text-align: center;
-    }
-
-    @media (max-width: 720px) {
-      body {
-        padding: 16px;
-      }
-
-      .hero {
-        align-items: flex-start;
-        flex-direction: column;
-      }
-
-      h1 {
-        font-size: 30px;
-      }
-    }
-  </style>
+  <title>电商业务架构站</title>
+  <link rel="stylesheet" href="assets/arch.css">
 </head>
-<body>
-  <main class="page">
-    <section class="hero">
-      <div class="title-wrap">
-        <div class="eyebrow">Architecture</div>
-        <h1>agentwork Workflow Architecture</h1>
-        <p class="subtitle">session shell + core workflow + source-maintenance layers</p>
-      </div>
-      <nav class="breadcrumb"><span>Overview</span><span>/</span><span>agentwork Workflow Architecture</span></nav>
-    </section>
-
-    <section class="panel">
-      <div class="canvas-scroll">
-        <svg xmlns="http://www.w3.org/2000/svg" width="1480" height="860" viewBox="0 0 1480 860" role="img" aria-label="agentwork Workflow Architecture"><defs><marker id="arrow-7dd3fc" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#7dd3fc" /></marker><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#15304b" stroke-width="0.8" opacity="0.55" /></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" /><path class="edge edge-0" d="M 226.0,360.0 L 292.0,360.0" fill="none" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrow-7dd3fc)" />
-<path class="edge edge-1" d="M 482.0,341.9 L 527.0,341.9 L 527.0,227.1 L 572.0,227.1" fill="none" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrow-7dd3fc)" />
-<path class="edge edge-2" d="M 682.0,286.0 L 682.0,560.0" fill="none" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrow-7dd3fc)" />
-<path class="edge edge-3" d="M 1012.0,286.0 L 1012.0,560.0" fill="none" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrow-7dd3fc)" />
-<path class="edge edge-4" d="M 892.0,636.1 L 792.0,636.9" fill="none" stroke="#7dd3fc" stroke-width="1.6" marker-end="url(#arrow-7dd3fc)" />
-<path class="edge edge-5" d="M 1132.0,227.1 L 1175.0,227.1 L 1175.0,341.9 L 1218.0,341.9" fill="none" stroke="#7dd3fc" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#arrow-7dd3fc)" />
-<path class="edge edge-6" d="M 792.0,603.8 L 1005.0,603.8 L 1005.0,388.0 L 1218.0,388.0" fill="none" stroke="#7dd3fc" stroke-width="1.6" stroke-dasharray="6,4" marker-end="url(#arrow-7dd3fc)" /><g class="node-body " data-node-id="assistants">
-<rect x="56.0" y="306.0" width="170.0" height="108.0" rx="14" fill="#09111f" />
-<rect x="56.0" y="306.0" width="170.0" height="108.0" rx="14" fill="rgba(30, 41, 59, 0.55)" stroke="#cbd5e1" stroke-width="1.6" />
-<text class="node-title" x="141.0" y="332.0" text-anchor="middle">AI Assistants</text>
-<text class="node-line" x="141.0" y="355.0" text-anchor="middle">Codex / Claude</text>
-<text class="node-line" x="141.0" y="372.0" text-anchor="middle">Cursor / Agent</text>
-<text class="node-line" x="141.0" y="389.0" text-anchor="middle">手动加载 session</text>
-</g>
-<g class="node-body " data-node-id="session-shell">
-<rect x="292.0" y="284.0" width="190.0" height="152.0" rx="14" fill="#09111f" />
-<rect x="292.0" y="284.0" width="190.0" height="152.0" rx="14" fill="rgba(8, 51, 68, 0.40)" stroke="#22d3ee" stroke-width="1.6" />
-<text class="node-title" x="387.0" y="310.0" text-anchor="middle">Session Shell</text>
-<text class="node-line" x="387.0" y="333.0" text-anchor="middle">/session load/new</text>
-<text class="node-line" x="387.0" y="350.0" text-anchor="middle">/session exec</text>
-<text class="node-line" x="387.0" y="367.0" text-anchor="middle">/session review</text>
-</g>
-<a href="nodes/workflow-core/index.html" class="node-link"><g class="node-body is-linked" data-node-id="workflow-core">
-<rect x="572.0" y="132.0" width="220.0" height="154.0" rx="14" fill="#09111f" />
-<rect x="572.0" y="132.0" width="220.0" height="154.0" rx="14" fill="rgba(6, 78, 59, 0.40)" stroke="#34d399" stroke-width="1.6" />
-<text class="node-title" x="682.0" y="158.0" text-anchor="middle">Workflow Core</text>
-<text class="node-line" x="682.0" y="181.0" text-anchor="middle">/brain /plan</text>
-<text class="node-line" x="682.0" y="198.0" text-anchor="middle">/exec /review</text>
-<text class="node-line" x="682.0" y="215.0" text-anchor="middle">tmp artifacts + session</text>
-<text class="node-badge" x="682.0" y="274.0" text-anchor="middle">Open child</text>
-</g></a>
-<g class="node-body " data-node-id="shared-contract">
-<rect x="572.0" y="560.0" width="220.0" height="154.0" rx="14" fill="#09111f" />
-<rect x="572.0" y="560.0" width="220.0" height="154.0" rx="14" fill="rgba(76, 29, 149, 0.40)" stroke="#a78bfa" stroke-width="1.6" />
-<text class="node-title" x="682.0" y="586.0" text-anchor="middle">.shared/</text>
-<text class="node-line" x="682.0" y="609.0" text-anchor="middle">commands / patterns</text>
-<text class="node-line" x="682.0" y="626.0" text-anchor="middle">templates / scripts</text>
-<text class="node-line" x="682.0" y="643.0" text-anchor="middle">session / project</text>
-</g>
-<g class="node-body " data-node-id="source-maintenance">
-<rect x="892.0" y="132.0" width="240.0" height="154.0" rx="14" fill="#09111f" />
-<rect x="892.0" y="132.0" width="240.0" height="154.0" rx="14" fill="rgba(120, 53, 15, 0.30)" stroke="#fbbf24" stroke-width="1.6" />
-<text class="node-title" x="1012.0" y="158.0" text-anchor="middle">.agentwork/</text>
-<text class="node-line" x="1012.0" y="181.0" text-anchor="middle">bootstrap / tools</text>
-<text class="node-line" x="1012.0" y="198.0" text-anchor="middle">upstreams</text>
-<text class="node-line" x="1012.0" y="215.0" text-anchor="middle">source-of-truth</text>
-</g>
-<g class="node-body " data-node-id="installers">
-<rect x="892.0" y="560.0" width="240.0" height="152.0" rx="14" fill="#09111f" />
-<rect x="892.0" y="560.0" width="240.0" height="152.0" rx="14" fill="rgba(136, 19, 55, 0.40)" stroke="#fb7185" stroke-width="1.6" />
-<text class="node-title" x="1012.0" y="586.0" text-anchor="middle">Install Scripts</text>
-<text class="node-line" x="1012.0" y="609.0" text-anchor="middle">install-bootstrap.py</text>
-<text class="node-line" x="1012.0" y="626.0" text-anchor="middle">install-tool.py</text>
-<text class="node-line" x="1012.0" y="643.0" text-anchor="middle">project-local install</text>
-</g>
-<g class="node-body " data-node-id="command-checks">
-<rect x="1218.0" y="312.0" width="150.0" height="96.0" rx="14" fill="#09111f" />
-<rect x="1218.0" y="312.0" width="150.0" height="96.0" rx="14" fill="rgba(251, 146, 60, 0.30)" stroke="#fb923c" stroke-width="1.6" />
-<text class="node-title" x="1293.0" y="338.0" text-anchor="middle">Checks</text>
-<text class="node-line" x="1293.0" y="361.0" text-anchor="middle">agentwork-check.py</text>
-<text class="node-line" x="1293.0" y="378.0" text-anchor="middle">session-review.sh</text>
-</g><g class="edge-label-group"><rect class="edge-label-bg" x="202.4" y="446.0" width="113.2" height="24.0" rx="9" /><text class="edge-label" x="259.0" y="462.0" text-anchor="middle">manual context</text></g>
-<g class="edge-label-group"><rect class="edge-label-bg" x="452.6" y="272.5" width="92.8" height="24.0" rx="9" /><text class="edge-label" x="499.0" y="288.5" text-anchor="middle">orchestrate</text></g>
-<g class="edge-label-group"><rect class="edge-label-bg" x="610.8" y="411.0" width="106.4" height="24.0" rx="9" /><text class="edge-label" x="664.0" y="427.0" text-anchor="middle">read / update</text></g>
-<g class="edge-label-group"><rect class="edge-label-bg" x="930.6" y="411.0" width="126.8" height="24.0" rx="9" /><text class="edge-label" x="994.0" y="427.0" text-anchor="middle">render / install</text></g>
-<g class="edge-label-group"><rect class="edge-label-bg" x="802.4" y="652.5" width="79.2" height="24.0" rx="9" /><text class="edge-label" x="842.0" y="668.5" text-anchor="middle">sync core</text></g>
-<g class="edge-label-group"><rect class="edge-label-bg" x="1153.4" y="272.5" width="79.2" height="24.0" rx="9" /><text class="edge-label" x="1193.0" y="288.5" text-anchor="middle">self-test</text></g>
-<g class="edge-label-group"><rect class="edge-label-bg" x="940.6" y="483.9" width="92.8" height="24.0" rx="9" /><text class="edge-label" x="987.0" y="499.9" text-anchor="middle">shape check</text></g></svg>
-      </div>
-    </section>
-
-    <section class="cards">
-      <section class="card"><h3>Task Snapshot</h3><ul><li>session 负责任务快照与流程串联</li>
-<li>当前任务上下文通过显式 load 管理</li></ul></section>
-<section class="card"><h3>Core Workflow</h3><ul><li>/brain /plan /exec /review 是核心动作</li>
-<li>可直接用临时工件，也可写入 session</li></ul></section>
-<section class="card"><h3>Source Repo</h3><ul><li>.agentwork/ 维护 source</li>
-<li>install-* 负责向目标项目物化</li></ul></section>
-<section class="card"><h3>Validation</h3><ul><li>agentwork-check.py self-test 做硬校验</li>
-<li>session-review.sh + strict-flow 做取证</li></ul></section>
-    </section>
-
-    <p class="footer">2026-04-16</p>
-  </main>
+<body class="root-page">
+  <main class="arch-shell">
+  <header class="hero">
+    <div class="hero-card">
+      <h1>电商业务架构站</h1>
+      <p class="lede">围绕一套区域仓配电商系统，整理主线架构、关键链路、数据通路与大促值班场景。</p>
+    </div>
+    <div class="version-jump"><a href="#version-mainline">主线 · 8</a><a href="#version-scenario">场景 · 1</a></div>
+  </header>
+  <section class="site-grid">
+    <section class="version-section" id="version-mainline">
+  <div class="section-head">
+    <div>
+      <h2>主线</h2>
+      <p class="section-note">长期有效的系统主线视图，覆盖总览、订单、数据与部署等核心结构。</p>
+    </div>
+    <p class="section-note">8 个条目</p>
+  </div>
+  <div class="group-stack">
+    <section class="group-block">
+  <div class="group-title"><h3>交付与运行</h3></div>
+  <div class="cards">
+    <article class="item-card">
+  <h3><a class="card-link" href="content/mainline/deployment-surface/index.html">部署分层</a></h3>
+  <p>对比发布入口、控制面、策略网格、运行单元和内部运维工具的层次关系。</p>
+  <p class="section-note">部署, 运行时</p>
+</article>
+  </div>
+</section><section class="group-block">
+  <div class="group-title"><h3>交易流程</h3></div>
+  <div class="cards">
+    <article class="item-card">
+  <h3><a class="card-link" href="content/mainline/order-journey/index.html">订单旅程</a></h3>
+  <p>从下单、支付、拆单到履约通知的一条多阶段协同链路。</p>
+  <p class="section-note">订单, 流程</p>
+</article><article class="item-card">
+  <h3><a class="card-link" href="content/mainline/cross-region-order-chain/index.html">跨域订单长链路</a></h3>
+  <p>覆盖活动会场、风控校验、跨仓拆单、履约配送、消息回流与结算归档的订单主链路。</p>
+  <p class="section-note">流程, 跨域</p>
+</article><article class="item-card">
+  <h3><a class="card-link" href="content/mainline/payment-exception-loop/index.html">支付异常回路</a></h3>
+  <p>展示支付授权失败、补单重试、人工介入和状态回补之间的异常处理闭环。</p>
+  <p class="section-note">支付, 异常</p>
+</article><article class="item-card">
+  <h3><a class="card-link" href="content/mainline/fulfillment-routing-board/index.html">履约分拨编排</a></h3>
+  <p>把同城仓、区域中心仓和预售补货三种履约路径放到同一张分拨编排图里。</p>
+  <p class="section-note">履约, 分拨</p>
+</article><article class="item-card">
+  <h3><a class="card-link" href="content/mainline/refund-reversal-loop/index.html">售后逆向闭环</a></h3>
+  <p>聚焦退款申请、审核、退货入库、质检复核和资金回退的逆向链路。</p>
+  <p class="section-note">售后, 逆向</p>
+</article>
+  </div>
+</section><section class="group-block">
+  <div class="group-title"><h3>全景</h3></div>
+  <div class="cards">
+    <article class="item-card">
+  <h3><a class="card-link" href="content/mainline/commerce-overview/index.html">电商总览</a></h3>
+  <p>展示用户入口、交易核心、库存履约、会员营销和外部合作面的总体关系。</p>
+  <p class="section-note">系统, 总览</p>
+</article>
+  </div>
+</section><section class="group-block">
+  <div class="group-title"><h3>数据与智能</h3></div>
+  <div class="cards">
+    <article class="item-card">
+  <h3><a class="card-link" href="content/mainline/data-fabric/index.html">数据织网</a></h3>
+  <p>展示埋点、事件流、清洗、策略路由、分析和模型服务之间的密集管线。</p>
+  <p class="section-note">数据, 分析</p>
+</article>
+  </div>
+</section>
+  </div>
+</section><section class="version-section" id="version-scenario">
+  <div class="section-head">
+    <div>
+      <h2>场景</h2>
+      <p class="section-note">针对某个时段、角色或专题的聚焦视图，承载值班、排障和专项决策。</p>
+    </div>
+    <p class="section-note">1 个条目</p>
+  </div>
+  <div class="group-stack">
+    <section class="group-block">
+  <div class="group-title"><h3>运营场景</h3></div>
+  <div class="cards">
+    <article class="item-card">
+  <h3><a class="card-link" href="content/scenario/double-11-watch/index.html">双 11 值班视图</a></h3>
+  <p>面向大促值班团队的聚焦视图，只保留发布门禁、库存热区、支付告警和回滚路径。</p>
+  <p class="section-note">运营, 大促</p>
+</article>
+  </div>
+</section>
+  </div>
+</section>
+  </section>
+</main>
 </body>
 </html>

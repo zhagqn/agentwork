@@ -1,18 +1,28 @@
-# agentwork Workflow Architecture
+# 电商业务架构站
 
-本目录用于沉淀当前 `agentwork` 工作流架构的正式图。
+本目录使用 `/arch` 维护一套区域仓配电商系统的架构文档，按“主线 / 场景”拆分长期结构与值班视图。
 
-## 文件约定
-- `diagram.arch.json`：根图事实源
-- `index.html`：根图渲染结果
-- `nodes/<slug>/diagram.arch.json`：子图事实源
-- `nodes/<slug>/index.html`：子图渲染结果
+## 文档范围
 
-## 当前图
-- 根图：`diagram.arch.json`
-- 子图：`nodes/workflow-core/diagram.arch.json`
+- `主线`：系统总览、订单主链路、支付异常、履约分拨、售后逆向、数据通路和部署分层
+- `场景`：围绕大促值班、故障处置或专项治理的聚焦视图
 
-## 渲染方式
+## 当前条目
+
+- `主线 / 电商总览`
+- `主线 / 订单旅程`
+- `主线 / 跨域订单长链路`
+- `主线 / 支付异常回路`
+- `主线 / 履约分拨编排`
+- `主线 / 售后逆向闭环`
+- `主线 / 数据织网`
+- `主线 / 部署分层`
+- `场景 / 双 11 值班视图`
+
+## 生成方式
+
 ```bash
-python3 .shared/scripts/arch-render.py docs/architecture --recursive
+python3 .shared/scripts/arch-export-mermaid.py docs/architecture
+python3 .shared/scripts/arch-render.py docs/architecture --check
+python3 .shared/scripts/arch-render.py docs/architecture
 ```

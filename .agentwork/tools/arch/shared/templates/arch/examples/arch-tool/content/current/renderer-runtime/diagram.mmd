@@ -1,0 +1,7 @@
+flowchart LR
+    A[catalog.json] --> B[validate versions and items]
+    B --> C[load markdown + source + svg]
+    C --> D[render root index]
+    C --> E[render item pages]
+    D --> F[write assets/arch.css]
+    E --> F
