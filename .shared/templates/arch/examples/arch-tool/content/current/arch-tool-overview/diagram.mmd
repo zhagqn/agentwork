@@ -1,6 +1,31 @@
 flowchart LR
-    A[/arch command/] --> B[catalog.json]
-    A --> C[index.md + diagram.mmd]
-    C --> D[diagram.svg]
-    B --> E[index.html + item pages]
+    subgraph source["事实源"]
+        direction TB
+        A[/arch command/]
+        B[catalog.json]
+        C[index.md + diagram.mmd]
+    end
+
+    subgraph publish["发布产物"]
+        direction TB
+        D[diagram.svg]
+        E[index.html + item pages]
+    end
+
+    A --> B
+    A --> C
+    C --> D
+    B --> E
     D --> E
+
+    classDef warm fill:#fff7ec,stroke:#aa6232,color:#1f2c2d,stroke-width:1.5px;
+    classDef teal fill:#ecf7f5,stroke:#0f766e,color:#1f2c2d,stroke-width:1.5px;
+    classDef neutral fill:#fffdfa,stroke:#8ea0a2,color:#1f2c2d,stroke-width:1.5px;
+    class A,D warm;
+    class B,E teal;
+    class C neutral;
+
+    style source fill:#fbf1e4,stroke:#ddcdb8,color:#6f5d4a;
+    style publish fill:#eef7f4,stroke:#ddcdb8,color:#4f6662;
+
+    linkStyle default stroke:#8e6746,stroke-width:1.6px;

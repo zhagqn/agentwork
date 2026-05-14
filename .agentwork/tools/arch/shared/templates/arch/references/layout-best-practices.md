@@ -23,6 +23,14 @@
 - 原始图源保留为可 review 文本，文件名固定为 `diagram.<source>`
 - 若需要展示补充材料，优先放在 Markdown 列表或短代码块中，而不是扩展 catalog schema
 
+## Mermaid 基础样式
+
+- Mermaid 图默认使用 `editorial-base`，保持与当前 `docs/architecture` 一致的暖色业务文档风格
+- 节点角色优先归入 `warm`、`teal`、`neutral` 三类，避免为每张图重新发明配色语义
+- 分组背景用低饱和底色表达域边界，节点高亮再承担主次区分
+- 主链路用实线，补偿 / 回补 / 异常分支再改为虚线；不要同时混入多种线条语法
+- 需要复用或切换风格时，优先从 `references/mermaid-style-presets.md` 挑选，不要在每个 item 里散落新的私有主题
+
 ## SVG 与页面展示
 
 - `diagram.svg` 应为可直接内嵌的完整 SVG 文本，而不是依赖外部脚本二次渲染

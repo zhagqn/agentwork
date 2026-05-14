@@ -1,7 +1,35 @@
 flowchart LR
-    A[catalog.json] --> B[validate versions and items]
-    B --> C[load markdown + source + svg]
-    C --> D[render root index]
-    C --> E[render item pages]
-    D --> F[write assets/arch.css]
+    subgraph check["校验阶段"]
+        direction LR
+        A[catalog.json] --> B[validate versions and items]
+    end
+
+    subgraph load["装载阶段"]
+        direction LR
+        C[load markdown + source + svg]
+    end
+
+    subgraph render["生成阶段"]
+        direction LR
+        D[render root index]
+        E[render item pages]
+        F[write assets/arch.css]
+    end
+
+    B --> C
+    C --> D
+    C --> E
+    D --> F
     E --> F
+
+    classDef warm fill:#fff7ec,stroke:#aa6232,color:#1f2c2d,stroke-width:1.5px;
+    classDef teal fill:#ecf7f5,stroke:#0f766e,color:#1f2c2d,stroke-width:1.5px;
+    classDef neutral fill:#fffdfa,stroke:#8ea0a2,color:#1f2c2d,stroke-width:1.5px;
+    class A,D,F warm;
+    class B,C,E teal;
+
+    style check fill:#fbf1e4,stroke:#ddcdb8,color:#6f5d4a;
+    style load fill:#eef7f4,stroke:#ddcdb8,color:#4f6662;
+    style render fill:#f7f3eb,stroke:#ddcdb8,color:#6f5d4a;
+
+    linkStyle default stroke:#8e6746,stroke-width:1.6px;

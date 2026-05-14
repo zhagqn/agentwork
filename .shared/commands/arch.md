@@ -141,6 +141,19 @@ python3 .shared/scripts/arch-export-mermaid.py docs/architecture
 
 这样 Mermaid 预览与最终页面会共享同一份语义源，避免再靠手写 SVG 维持视觉。
 
+## Mermaid 样式约定
+
+- 默认基础样式固化为当前文档站正在使用的 `editorial-base`：暖米色 / 青绿色 / 中性色三类节点，配合低饱和分组底色和棕色连线。
+- 节点类默认使用：
+  - `warm`：`fill:#fff7ec`、`stroke:#aa6232`
+  - `teal`：`fill:#ecf7f5`、`stroke:#0f766e`
+  - `neutral`：`fill:#fffdfa`、`stroke:#8ea0a2`
+  - 文本色统一用 `#1f2c2d`，节点描边默认 `1.5px`
+- 分组底色默认从 `#fbf1e4`、`#eef7f4`、`#f7f3eb`、`#f2f7f6` 中选择，分组描边统一 `#ddcdb8`
+- 主链路连线默认使用 `linkStyle default stroke:#8e6746,stroke-width:1.5px` 到 `1.6px`
+- 补偿、回补、异常等支线可在同色系下改为虚线，推荐 `stroke-dasharray:6 4`
+- Mermaid 图默认优先复用这套基础样式；若需要更强控制面、告警态或打印态风格，参考 `.shared/templates/arch/references/mermaid-style-presets.md`
+
 ## 页面与导航规则
 
 - 根 `index.html` 展示站点摘要、版本分组、导航卡片和交叉引用入口

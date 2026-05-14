@@ -1,4 +1,22 @@
 flowchart LR
-    A[catalog] --> B[source files]
-    B --> C[diagram.svg]
-    C --> D[item page]
+    subgraph legacy["旧版本事实源"]
+        direction LR
+        A[catalog] --> B[source files]
+    end
+
+    subgraph output["旧版本产物"]
+        direction LR
+        C[diagram.svg] --> D[item page]
+    end
+
+    B --> C
+
+    classDef warm fill:#fff7ec,stroke:#aa6232,color:#1f2c2d,stroke-width:1.5px;
+    classDef teal fill:#ecf7f5,stroke:#0f766e,color:#1f2c2d,stroke-width:1.5px;
+    class A,B warm;
+    class C,D teal;
+
+    style legacy fill:#fbf1e4,stroke:#ddcdb8,color:#6f5d4a;
+    style output fill:#eef7f4,stroke:#ddcdb8,color:#4f6662;
+
+    linkStyle default stroke:#8e6746,stroke-width:1.6px;
