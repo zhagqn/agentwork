@@ -24,4 +24,5 @@
 - 页面路径由 `version + id` 推导，不在 catalog 里重复维护 `href`
 - 默认不内置前端脚本、server、live reload、搜索、权限或托管预览
 - renderer 本身不承担文本图源到 SVG 的页面运行时渲染；对 Mermaid 源可通过独立 helper 统一导出
+- Mermaid 导出与页面 render 必须串行；renderer 会在 `diagram.<source>` 新于 `diagram.svg` 时直接失败
 - 修改后优先用 renderer `--check` 检查 catalog、source、SVG 与链接

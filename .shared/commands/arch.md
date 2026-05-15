@@ -37,9 +37,9 @@
 3. 根据任务描述确定版本、item id、分组和图源类型
 4. 写入或更新 `content/<version>/<item>/index.md`、`diagram.<source>`、`diagram.svg`
 5. upsert `catalog.json` 中对应 item 条目
-6. 若图源是 Mermaid，优先通过 `.shared/scripts/arch-export-mermaid.py` 刷新 `diagram.svg`
-7. 运行 renderer 生成根 `index.html`、item `index.html` 和 `assets/arch.css`
-8. 运行 `--check` 验证 catalog、source、SVG 和链接
+6. 若图源是 Mermaid，先通过 `.shared/scripts/arch-export-mermaid.py` 刷新 `diagram.svg`
+7. 先运行 `.shared/scripts/arch-render.py <arch-root> --check`，确认 catalog、source、SVG、链接与新鲜度通过
+8. 再运行 renderer 生成根 `index.html`、item `index.html` 和 `assets/arch.css`
 9. 输出改动文件、结构决策、仍待确认的问题
 
 ## 目录约定
@@ -139,7 +139,7 @@ docs/architecture/
 python3 .shared/scripts/arch-export-mermaid.py docs/architecture
 ```
 
-这样 Mermaid 预览与最终页面会共享同一份语义源，避免再靠手写 SVG 维持视觉。
+这样 Mermaid 预览与最终页面会共享同一份语义源，避免再靠手写 SVG 维持视觉。`arch-export-mermaid.py` 和 `arch-render.py` 必须串行执行；不要并行跑，否则 renderer 可能先读到旧的 `diagram.svg`。当前 renderer 也会在 `diagram.<source>` 新于 `diagram.svg` 时直接失败，避免静默产出吃到旧图的页面。
 
 ## Mermaid 样式约定
 
@@ -177,6 +177,7 @@ python3 .shared/scripts/arch-export-mermaid.py docs/architecture
 
 - `catalog.json` 的版本、版本列表、item 列表和引用是否有效
 - `content/<version>/<item>/` 是否同时具备 `index.md`、文本图源和 `diagram.svg`
+- `diagram.svg` 是否没有落后于 `diagram.<source>`
 - Markdown、SVG 和源码链接是否闭环
 - 根导航是否按 `version + group + order` 正确生成
 - item 页面是否由 source 渲染，而不是手写结构事实

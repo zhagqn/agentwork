@@ -763,6 +763,7 @@ def load_site(root: Path) -> tuple[dict, list[VersionRecord], list[ItemRecord]]:
         if len(source_paths) != 1:
             raise SystemExit(f"invalid source set: {item_dir} must contain exactly one diagram.<source> file")
         source_path = source_paths[0]
+        ensure_svg_is_fresh(source_path, svg_path)
 
         version_info = version_map[version_id]
         items.append(
@@ -811,6 +812,14 @@ def validate_svg(path: Path) -> str:
     if "<svg" not in svg:
         raise SystemExit(f"invalid svg: {path} does not contain <svg")
     return svg
+
+
+def ensure_svg_is_fresh(source_path: Path, svg_path: Path) -> None:
+    if source_path.stat().st_mtime_ns > svg_path.stat().st_mtime_ns:
+        raise SystemExit(
+            f"stale svg: {svg_path} is older than {source_path}; "
+            "refresh diagram.svg before running arch-render"
+        )
 
 
 def svg_intrinsic_width(svg: str) -> float | None:
