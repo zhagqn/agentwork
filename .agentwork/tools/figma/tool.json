@@ -4,7 +4,7 @@
     "command",
     "mcp"
   ],
-  "description": "Figma optional tool pack with MCP config guidance and cross-AI wrappers.",
+  "description": "Remote-first Figma optional tool pack with MCP guidance and cross-AI wrappers.",
   "entries": [
     {
       "surface": "shared",
@@ -13,8 +13,8 @@
     },
     {
       "surface": "shared",
-      "from": "shared/scripts/figma-mcp-health-check.sh",
-      "to": ".shared/scripts/figma-mcp-health-check.sh"
+      "from": "shared/scripts/figma-desktop-mcp-check.sh",
+      "to": ".shared/scripts/figma-desktop-mcp-check.sh"
     },
     {
       "surface": "shared",

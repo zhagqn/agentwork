@@ -1,10 +1,3 @@
----
-name: figma
-description: Figma 设计读取与分析命令
-metadata:
-  short-description: Figma 设计分析（focus|read|brief|review）
----
-
 # /figma [subcommand] [args]
 
 Figma 设计读取与分析命令（命令入口，读取共享规则）。

@@ -31,6 +31,12 @@
 
 这些脚本不代表“核心 `.shared` 契约”回涨；它们的归属仍然是对应的 optional tool，应以工具安装入口和工具文档为准。
 
+## 命名约定
+- 脚本名优先使用 `domain-action` 或 `domain-context-action`，例如 `agentwork-check.py`、`session-review.sh`、`figma-desktop-mcp-check.sh`
+- 当脚本只适用于某个运行环境或 fallback 路径时，在名称中写明 context，避免被误认为通用入口
+- Python 适合结构化校验、文件生成、JSON / Markdown 处理和跨平台逻辑
+- Shell 适合很薄的命令包装、环境探测和调用系统工具
+
 ## 可选工具脚本
 - 可选工具脚本不属于核心 `.shared` 层；应通过项目自己的工具安装流程按需引入
 - 若某个脚本来自 optional tool，它可以物理存在于 `.shared/scripts/`，但语义上仍不属于核心工作流脚本
