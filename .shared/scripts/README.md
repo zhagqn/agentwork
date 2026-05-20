@@ -18,6 +18,26 @@
 .shared/scripts/agentwork-check.py self-test
 ```
 
+### command-preview.sh
+用途：对未知或可能很大的命令输出做统一 preview，优先保护上下文体积，同时保留底层命令退出码。
+
+默认策略：
+- 合并 `stdout` / `stderr` 后落临时文件
+- 输出 `exit` / `bytes` / `lines` 元信息
+- 总量不超过 `4000` bytes 时返回全文
+- 超过阈值时返回首尾采样，默认各 `2000` bytes
+
+```bash
+.shared/scripts/command-preview.sh -- git diff
+.shared/scripts/command-preview.sh -- rg -n TODO src
+.shared/scripts/command-preview.sh --max-bytes 6000 -- python3 script.py
+```
+
+当 preview 不足以定位问题时，优先：
+- 收窄原命令范围
+- 再次调用脚本并调整 `--max-bytes`
+- 或按行号 / 偏移重新抓取定向片段
+
 ### session-review.sh
 用途：对照 session 的“当前批次工作集”与当前工作区实际改动，并检查“产出批次（提交锚点）”，辅助执行 `/review` 或 `/session review`
 

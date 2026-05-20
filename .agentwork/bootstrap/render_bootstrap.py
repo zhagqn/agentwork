@@ -50,6 +50,8 @@ def render_memory(kind: str) -> str:
 
 def render_copilot() -> str:
     v = SPEC['variants']['copilot']
+    basic_lines = [f'- {item}' for item in COMMON['basic_items']]
+    workflow_lines = [f'- {item}' for item in COMMON['workflow_items']]
     lines = [
         AUTO,
         v['title'],
@@ -59,15 +61,10 @@ def render_copilot() -> str:
         '- 启动硬约束：先阅读 `.shared/constraints/coding-style.md`、`.shared/constraints/destructive-operations.md`、`.shared/constraints/placeholder-naming.md`。',
         '- 需要命令、模板或工作流入口时阅读 `.shared/INDEX.md`。',
         '- 需要仓库长期事实时阅读 `.shared/project/index.md`。',
-        '- 若任务涉及具体项目或目录，先根据 `.shared/project/index.md` 读取对应的轻量 project 文档。',
-        '- 当第一次确定将读取或修改的目标路径后，立即对照 `.shared/project/index.md` 的读取映射；若命中条目，先读取对应 `project/*.md`，若目标路径扩大则重新对照一次。',
         '- 遵循 `.shared/constraints/coding-style.md` 中的代码与文档风格。',
-        '- 对破坏性或不可逆操作必须先确认。',
-        '- Git index（staged 区）是用户的提交和 review 边界；未经明确要求，不改变 staged 区。',
-        '- 不自动加载 `.shared/session/*`；只有显式引用时才使用。',
-        '- 临时工件统一写入 `.tmp/`。',
-        '- 工作流默认顺序：`/brain` → `/plan` → `/exec` → `/review` → `/commit`。',
-        '- 可选工具默认不预装，按项目约定单独引入。',
+        *basic_lines,
+        '',
+        *workflow_lines,
         '',
         f"> {v['note']}",
     ]

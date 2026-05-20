@@ -30,6 +30,7 @@
 - 不自动加载 `.shared/session/*`
 - 不要预读全部 `.shared/project/*.md`；当任务涉及具体项目或目录时，先根据 `.shared/project/index.md` 读取对应的轻量 project 文档
 - 当第一次确定将读取或修改的目标路径后，必须立即对照 `.shared/project/index.md` 的读取映射；若命中条目，先读取对应 `project/*.md` 再继续工作；若目标路径扩大，重新对照一次
+- 预览未知或可能很大的命令输出时，优先使用 `.shared/scripts/command-preview.sh -- COMMAND ...`，避免直接把大段输出送入上下文
 - 临时工件统一写入 `.tmp/`
 - 可选工具默认不预装，按项目约定单独引入
 - Git index（staged 区）是用户的提交和 review 边界；未经明确要求，不改变 staged 区

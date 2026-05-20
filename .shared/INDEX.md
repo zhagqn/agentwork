@@ -25,6 +25,7 @@
 - Project 索引：`.shared/project/index.md`
 - 平台适配：`.shared/patterns/platform-adapter.md`
 - 核心脚本说明：`.shared/scripts/README.md`
+- 命令输出预览：`.shared/scripts/command-preview.sh`（未知或大输出命令优先使用）
 - 命令自检脚本：`.shared/scripts/agentwork-check.py`（本地回归入口：`self-test`）
 
 ## 2) 命令栈
