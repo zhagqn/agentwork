@@ -5,7 +5,6 @@ Session 是 agentwork 的**任务快照与工作流外壳**：
 - `new / load` 管理工件
 - `brain / plan / exec / review` 负责 `.tmp/agentwork/*` 工作流工件
 - `/session plan` 负责把已确认 `.tmp/agentwork/*` 结果写入 session
-- `exec --ralph` 提供按需启用的持久执行策略
 - `/session ...` 只是把这些动作串起来，围绕当前 session 运转
 
 > 具体命令规则以 `.shared/commands/*.md` 为准；本文档只描述命令协作模型、阶段裁剪和工件关系。
@@ -17,12 +16,11 @@ Session 是 agentwork 的**任务快照与工作流外壳**：
 3. Session 写入显式化：只有 `/session plan [plan-source]` 把已确认 brain / plan 结果写入 session
 4. 计划先于执行：设计确认且计划明确后才进入 `/exec` 或 `/session exec`
 5. 执行许可显式化：确认推荐方案只表示可以进入 `/plan` 或 `/session plan`，不等于可以修改源码；真正开始动手仍需明确 `/exec` 或 `/session exec`
-6. 执行小步化：通过 `/exec` 小批次推进
-7. 持久执行按需启用：默认先 `/exec`，只有在确实需要多轮持续推进时才进入 `/exec --ralph`
-8. review 双层化：通过 `/review` 同时 review 工件与工作产物
-9. 无 session 也可工作：没有 session 也能通过 `.tmp/agentwork/*` 跑通
-10. 快照不替代事实：load session 后，若需要精确代码/差异/提交上下文，继续以仓库当前文件与 git 记录为准
-11. 提交边界保守：session 记录只用于帮助判断归属，不自动扩大提交范围；具体提交确认规则以 `.shared/commands/commit.md` 为准
+6. 执行小步化：默认通过 `/exec` / `/session exec` 推进 1-3 个任务，再回到 `/review`
+7. review 双层化：通过 `/review` 同时 review 工件与工作产物
+8. 无 session 也可工作：没有 session 也能通过 `.tmp/agentwork/*` 跑通
+9. 快照不替代事实：load session 后，若需要精确代码/差异/提交上下文，继续以仓库当前文件与 git 记录为准
+10. 提交边界保守：session 记录只用于帮助判断归属，不自动扩大提交范围；具体提交确认规则以 `.shared/commands/commit.md` 为准
 
 ## Brain 约束
 
@@ -44,7 +42,7 @@ Session 是 agentwork 的**任务快照与工作流外壳**：
 | --------------- | ------------------------------------- | ------------------------------- |
 | `/brain`        | 设计收敛                              | `.tmp/agentwork/brain/*.md`     |
 | `/plan`         | 轻量计划落地                          | `.tmp/agentwork/plan/*.md`      |
-| `/exec`         | 小步执行 / 可选持久执行               | 更新 `.tmp/agentwork/plan/*.md` |
+| `/exec`         | 小步执行                              | 更新 `.tmp/agentwork/plan/*.md` |
 | `/review`       | 工件 + 工作双层审查                   | `.tmp/agentwork/review/*.md`    |
 | `/session plan` | 已确认工件写入 session                | `.shared/session/*.md`          |
 | `/session exec` | 按 session 快照执行当前批次           | `.shared/session/*.md`          |
@@ -55,7 +53,6 @@ Session 是 agentwork 的**任务快照与工作流外壳**：
 - 不写入 session：`/brain` → `/plan` → `/exec` → `/review`
 - 写入 session：`/brain` → `/plan` → `/session plan [plan-source]` → `/session exec` → `/session review`
 - 用户对推荐方案的确认只代表可以进入 `/plan` 或 `/session plan`，不代表可以直接改源码；如果没有明确 `/exec`，就停在 plan 边界
-- 需要多轮持续推进、共享执行摘要或辅助工件时，显式使用 `/exec --ralph`
 - 当用户或计划明确采用 subagent 分工或局部复核时，任务拆解、输出契约与验收责任参考 `.shared/patterns/subagent-workflow.md`
 - 平台原生 goal / loop / hook 的选择责任见 `.shared/patterns/platform-adapter.md`
 
@@ -67,7 +64,6 @@ Session 是 agentwork 的**任务快照与工作流外壳**：
 | 已有明确方向，但任务跨文件 / 多步骤  | 可跳过 `/brain`，先 `/plan` | 计划中写清范围、任务、验证和非目标              |
 | 单文件或小范围修复，目标与验证都明确 | 可直接 `/exec`              | 执行前仍要复核边界，完成后按需 `/review`        |
 | 当前批次已完成、风险变化或准备提交   | 不跳过 `/review`            | 以当前文件、diff、测试和 session 为事实重新审查 |
-| 需要多轮持续推进或共享辅助工件       | 使用 `/exec --ralph`        | 保持目标、phase、进度摘要和阻塞可恢复           |
 
 ## 典型流程
 
@@ -100,7 +96,6 @@ Session 是 agentwork 的**任务快照与工作流外壳**：
 - `.tmp/agentwork/brain/*.md`：设计 note
 - `.tmp/agentwork/plan/*.md`：轻量计划
 - `.tmp/agentwork/review/*.md`：review note
-- `.tmp/agentwork/ralph/{slug}/*`：持久执行辅助工件
 
 ## 命令内建 Harness
 

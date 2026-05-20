@@ -12,7 +12,7 @@ Session 管理与推进命令。
 | `new <session-desc>`   | 创建新 session                                                                   | 仅建文件，不自动脑暴                                                             |
 | `plan [plan-source]`   | 把已确认 brain / plan / 当前结论写入 session                                     | `/brain` / `/plan` → `/session plan`                                             |
 | `load <session-ref>`   | 手动加载 session                                                                 | 读取任务 / 结论 / 计划摘要 / 当前批次工作集 / 最近产出批次 / 风险 / 最近审查记录 |
-| `exec [--ralph]`       | 按任务列表推进当前批次，或进入持久执行策略                                       | 调用 `/exec` 或 `/exec --ralph`                                                  |
+| `exec`                 | 按任务列表推进当前批次                                                           | 调用 `/exec`                                                                     |
 | `review [session-ref]` | 审查 session 与当前工作                                                          | 调用 `/review [review-source]`                                                   |
 
 ## 说明
@@ -70,11 +70,9 @@ Session 管理与推进命令。
 - `load` 只恢复任务快照，不替代实际仓库事实。
 - 当需要确认具体实现、精确文件内容、真实 diff、提交边界时，必须继续读取相关文件，并按需使用 `git diff`、`git show`、`git log -- <path>` 等方式取证。
 
-## /session exec [--ralph]
+## /session exec
 
-- 默认：调用 `/exec`
-- 指定 `--ralph`：调用 `/exec --ralph`
-- session 仍然是当前任务快照，持久执行辅助工件位于 `.tmp/agentwork/ralph/{slug}/`
+- 调用 `/exec`
 - 执行后必须同步 session 的任务状态、当前批次工作集、产出批次和风险 / 阻塞
 - 当前批次工作集必须保留 `## 当前批次工作集（可选）` 小节；条目格式必须是 `- 范围: `path` | 主题: ...`，不要写成 `- 已完成:` 或命令流水
 - 同步后运行 `.shared/scripts/agentwork-check.py session <session-ref> --strict-flow`

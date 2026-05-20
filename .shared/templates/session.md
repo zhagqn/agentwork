@@ -31,7 +31,7 @@
 ### 执行批次 / 优先级
 - {当前批次应先做什么}
 ### 执行策略（可选）
-- {standard | ralph}
+- {standard}
 ### 验证策略
 - {本轮最小验证方式}
 ### 完成标准（可选）
@@ -41,7 +41,6 @@
 - `.tmp/agentwork/brain/...`
 - `.tmp/agentwork/plan/...`
 - `.tmp/agentwork/review/...`
-- `.tmp/agentwork/ralph/...`
 
 ## 当前批次工作集（可选）
 - 范围: `src/module/` | 主题: {为什么属于当前批次}

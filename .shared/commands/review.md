@@ -47,9 +47,3 @@
 - 结果：写入 `.tmp/agentwork/review/{YYYYMMDD-HHMM-slug}.md`
 - 使用模板：`.shared/templates/review.md`
 - 写入后运行 `.shared/scripts/agentwork-check.py review <review-note>`；若该 review 要作为“无阻塞问题”的完成 gate，再运行 `.shared/scripts/agentwork-check.py review <review-note> --fail-on-major`
-
-### 若当前执行策略是 `--ralph`
-- 还应同步更新 `.tmp/agentwork/ralph/{slug}/progress.json`
-- 保持目标、phase、进度摘要和阻塞可恢复，与 `/exec --ralph` 的主上下文约束一致
-- 把本轮结论压缩成高信号摘要，避免把完整过程回灌进主上下文
-- 若使用 subagent 做局部复核，仍按 `.shared/patterns/subagent-workflow.md` 约束委派契约、输出格式和验收责任

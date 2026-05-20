@@ -9,7 +9,6 @@
 
 ## 当前上游
 - `superpowers.md`
-- `oh-my-codex-ralph.md`
 
 ## 与其他目录的关系
 - `.agentwork/foundation/`：迁移到目标项目的基础文件源

@@ -20,7 +20,6 @@
 - Session 模板：`.shared/templates/session.md`
 - Session 目录说明：`.shared/session/README.md`
 - Brain / Plan / Review 模板：`.shared/templates/brain.md`、`.shared/templates/plan.md`、`.shared/templates/review.md`
-- Ralph 辅助模板：`.shared/templates/ralph-context.md`、`.shared/templates/ralph-progress.json.example`
 - Project 管理：`.shared/patterns/project-management.md`
 - Project 索引：`.shared/project/index.md`
 - 平台适配：`.shared/patterns/platform-adapter.md`
@@ -31,7 +30,7 @@
 ## 2) 命令栈
 - `/brain`：设计收敛，输出 `.tmp/agentwork/brain/*.md`
 - `/plan`：计划落地，输出 `.tmp/agentwork/plan/*.md`
-- `/exec`：任务执行；`--ralph` 可启用持久执行策略
+- `/exec`：任务执行
 - `/review`：工件 + 工作双层审查
 - `/session plan`：把已确认 brain / plan 工件写入 session
 - `/session exec` / `/session review`：围绕当前 session 执行和审查
@@ -40,7 +39,6 @@
 - `.tmp/agentwork/brain/*.md`
 - `.tmp/agentwork/plan/*.md`
 - `.tmp/agentwork/review/*.md`
-- `.tmp/agentwork/ralph/{slug}/*`
 - 上述是核心 workflow 的临时工件；可选工具或上游镜像可使用各自 `.tmp/<domain>/`，默认不纳入提交
 
 ## 4) Optional Tools

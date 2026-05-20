@@ -119,7 +119,7 @@
     },
     {
       "name": "exec",
-      "title": "/exec [--ralph] [exec-source]",
+      "title": "/exec [exec-source]",
       "target": ".shared/commands/exec.md"
     },
     {

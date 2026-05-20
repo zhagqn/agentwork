@@ -1,4 +1,4 @@
-# /exec [--ralph] [exec-source]
+# /exec [exec-source]
 
 按当前任务的计划执行当前批次工作。
 
@@ -25,18 +25,6 @@
 - 一轮后停下来，等待下一次 `/exec` 或 `/review`
 - 当前批次完成、风险变化或准备提交前，优先进入 `/review`
 - 若本轮计划或用户要求使用 subagent，先参考 `.shared/patterns/subagent-workflow.md`，再拆分任务、指定输出格式和验收方式
-
-### Ralph 策略（`--ralph`）
-- 让 `/exec` 进入可选的持久执行策略，而不是默认主路径
-- 每轮执行后自动进入 review / fix / verify 循环
-- 尽量使用 **subagent** 承担独立实现、局部分析、局部 review；使用前参考 `.shared/patterns/subagent-workflow.md`
-- 主上下文只保留目标、phase、进度摘要、阻塞
-- 辅助工件位于 `.tmp/agentwork/ralph/{slug}/`
-
-## `--ralph` 辅助工件
-- `.tmp/agentwork/ralph/{slug}/context.md`
-- `.tmp/agentwork/ralph/{slug}/progress.json`
-- `.tmp/agentwork/ralph/{slug}/review.md`
 
 ## 关键纪律
 - 先复核计划，再执行
