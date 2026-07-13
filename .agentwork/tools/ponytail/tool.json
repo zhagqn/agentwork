@@ -1,0 +1,14 @@
+{
+  "name": "ponytail",
+  "kind": [
+    "rules"
+  ],
+  "description": "Reference-only optional tool pack for DietrichGebert/ponytail: platform-native install guidance for the YAGNI-ladder ruleset (no vendored upstream source).",
+  "entries": [
+    {
+      "surface": "shared",
+      "from": "shared/tools/ponytail.md",
+      "to": ".shared/tools/ponytail.md"
+    }
+  ]
+}

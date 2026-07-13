@@ -37,6 +37,20 @@
       "kind": [
         "command"
       ]
+    },
+    {
+      "name": "ponytail",
+      "dir": "ponytail",
+      "kind": [
+        "rules"
+      ]
+    },
+    {
+      "name": "codegraph",
+      "dir": "codegraph",
+      "kind": [
+        "mcp"
+      ]
     }
   ]
 }
