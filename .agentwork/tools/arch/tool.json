@@ -17,6 +17,11 @@
     },
     {
       "surface": "shared",
+      "from": "shared/scripts/arch-export-mermaid.py",
+      "to": ".shared/scripts/arch-export-mermaid.py"
+    },
+    {
+      "surface": "shared",
       "from": "shared/templates/arch",
       "to": ".shared/templates/arch"
     },

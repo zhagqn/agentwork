@@ -73,21 +73,39 @@ def load_tool_registry() -> dict:
     return json.loads(REGISTRY.read_text(encoding='utf-8'))
 
 
+def is_path_covered(path: Path, declared_paths: set[Path]) -> bool:
+    return any(path == declared or declared in path.parents for declared in declared_paths)
+
+
 def collect_optional_shared_relpaths() -> set[Path]:
     relpaths: set[Path] = set()
     registry = load_tool_registry()
     for tool in registry.get('tools', []):
-        tool_meta_path = TOOLS_ROOT / tool['dir'] / 'tool.json'
-        tool_meta = json.loads(tool_meta_path.read_text(encoding='utf-8'))
-        for entry in tool_meta.get('entries', []):
+        tool_dir = TOOLS_ROOT / tool['dir']
+        tool_meta = json.loads((tool_dir / 'tool.json').read_text(encoding='utf-8'))
+        entries = tool_meta.get('entries', [])
+        declared_sources = {
+            Path(entry['from'])
+            for entry in entries
+            if entry.get('from', '').startswith('shared/') and entry.get('to', '').startswith('.shared/')
+        }
+        shared_dir = tool_dir / 'shared'
+        missing = []
+        if shared_dir.exists():
+            missing = [
+                path.relative_to(tool_dir)
+                for path in sorted(shared_dir.rglob('*'))
+                if path.is_file() and not is_path_covered(path.relative_to(tool_dir), declared_sources)
+            ]
+        if missing:
+            details = ', '.join(str(path) for path in missing)
+            raise SystemExit(f'optional tool shared files missing from tool.json entries ({tool_dir.name}): {details}')
+
+        for entry in entries:
             target = entry.get('to', '')
             if target.startswith('.shared/'):
                 relpaths.add(Path(target.removeprefix('.shared/')))
     return relpaths
-
-
-def is_optional_shared_relpath(rel: Path, optional_shared_relpaths: set[Path]) -> bool:
-    return any(rel == optional_rel or optional_rel in rel.parents for optional_rel in optional_shared_relpaths)
 
 
 def collect_core_shared_writes(target: Path):
@@ -99,7 +117,7 @@ def collect_core_shared_writes(target: Path):
             continue
         if rel.parts and rel.parts[0] in {'project', 'session'}:
             continue
-        if is_optional_shared_relpath(rel, optional_shared_relpaths):
+        if is_path_covered(rel, optional_shared_relpaths):
             continue
         writes.append((src, target / '.shared' / rel, 'file', 'core shared file'))
     return writes
