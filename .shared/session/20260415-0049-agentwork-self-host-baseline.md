@@ -14,7 +14,8 @@
 - [x] 增加 `agentwork-check.py` 命令内建 harness，并把核心命令的落盘自检入口统一到 `.shared/scripts/`。
 - [x] 同步 bootstrap source、project/index 文档与平台入口文案，使“命令入口，读取共享规则”成为统一表述。
 - [x] 增加 `command-preview.sh` 命令输出 preview 策略，并同步到 bootstrap 启动约束，降低未知大输出对上下文的冲击。
-- [ ] 若后续要把 source repo 自测扩到可选工具层，再补充 tool self-install / real-cli 回归策略。
+- [x] 修复 optional tool shared 载荷漏登记时被 bootstrap 误判为核心文件的问题，并验证 bootstrap 排除与显式 tool install 两条路径。
+- [ ] 若后续要把 source repo 自测继续扩到可选工具层，再补充非 shared surface / real-cli 回归策略。
 - [ ] 若后续仍发现 `/brain`、`/plan` 或 `/session plan` 边界被绕过，再补结构化校验或 review 侧检查。
 
 ## 已确认结论（工作快照）
@@ -51,6 +52,7 @@
 - `.shared/scripts/agentwork-check.py` 已覆盖 `brain`、`plan`、`exec`、`review`、`session`、`latest` 与 `self-test`。
 - `.shared/scripts/command-preview.sh` 已作为未知或可能大输出命令的默认 preview 入口，按 `exit/bytes/lines` 元信息与首尾采样保护上下文。
 - source repo 可以原地刷新 bootstrap，并把 `.agentwork/bootstrap/*` 同步到根目录 core wrappers；tool 级实现细节以各自 session 为准。
+- bootstrap 会校验 optional tool 的 `shared/` 载荷是否由 `tool.json` 完整登记，避免 source repo 已安装的可选文件扩散到目标项目。
 
 ## 关键入口
 - 核心 workflow：`.shared/commands/*`
@@ -66,19 +68,14 @@
 
 ## 计划摘要（可选）
 ### 关键文件 / 边界
-- `.shared/commands/brain.md`、`.shared/commands/plan.md`、`.shared/commands/exec.md`、`.shared/commands/review.md`、`.shared/commands/session.md`、`.shared/patterns/session-workflow.md`：核心命令分层、strict-flow 与 session 快照职责。
-- `.shared/INDEX.md`、`.shared/project/`、`.shared/templates/brain.md`、`.shared/templates/plan.md`、`.shared/templates/session.md`：目录说明、project 入口和模板语义同步。
-- `.shared/scripts/agentwork-check.py`、`.shared/scripts/README.md`：本地确定性 harness 与脚本文档。
-- `.shared/scripts/command-preview.sh`：未知或可能大输出命令的固定 preview 策略，默认返回小输出全文或大输出首尾采样。
-- `.agentwork/bootstrap/`、`.agent/workflows/`、`.claude/commands/`：bootstrap source 与 source repo 安装态 core wrapper 同步。
-- `.shared/session/20260504-1103-integrated-test-standard.md`：记录旧集成诊断退场后的专题快照，不再作为主理解入口。
-- 不把 `.shared/commands/arch.md`、`.shared/scripts/arch-render.py`、`.agentwork/tools/arch/`、`docs/architecture/`、`.shared/session/20260512-1031-arch-source-first-site.md` 混入当前批次。
+- `install-bootstrap.py`：收集 optional shared 路径前校验工具清单完整性，保持 bootstrap 核心同步边界。
+- `.agentwork/tools/arch/tool.json`：登记 Mermaid export 脚本，使其只通过显式 `arch` 安装进入目标项目。
+- 不修改 bootstrap 的目标文件保留策略，也不扩展到非 shared surface 或 real-cli 行为。
 
 ### 执行批次 / 优先级
-- 第一批：移除旧 `standalone / session mode` 与 `/session brain` 过渡措辞，固定 `/brain -> /plan -> /session plan` 分层。
-- 第二批：补齐 `agentwork-check.py`、command docs 自检要求、project/index/template 文档同步。
-- 第三批：同步 bootstrap source 与 source repo 安装态 core wrappers，压缩 self-host / integrated-test session 快照并清退旧集成诊断的主入口定位。
-- 第四批：补充命令输出 preview 策略脚本，并把“未知或大输出优先 preview”同步到 bootstrap 与各平台入口。
+- 第一批：补齐遗漏的 optional tool 安装条目。
+- 第二批：增加 shared 载荷完整性校验，并精简重复的路径覆盖判断。
+- 第三批：验证纯 bootstrap 排除、显式 `arch` 安装和 session 快照一致性。
 
 ### 执行策略（可选）
 - standard
@@ -87,13 +84,14 @@
 - `bash .shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md`
 - `python3 .shared/scripts/agentwork-check.py session .shared/session/20260415-0049-agentwork-self-host-baseline.md --strict-flow`
 - `python3 .shared/scripts/agentwork-check.py self-test`
-- `.shared/scripts/command-preview.sh -- seq 2000`
-- `git diff --check -- .shared/session/20260415-0049-agentwork-self-host-baseline.md`
+- `python3 -m py_compile install-bootstrap.py`
+- 安装态 smoke：纯 bootstrap 不包含 `arch-export-mermaid.py`，显式安装 `arch` 后包含该脚本。
+- `git diff --check`
 
 ### 完成标准（可选）
-- 顶部工作快照不再保留过期的 `/session brain`、`standalone mode` 或旧集成诊断主入口描述。
-- 当前批次工作集与风险能准确覆盖 self-host workflow / harness 收敛，不把 `arch` source-first 等其他专题混入当前 session。
-- session 能通过 strict-flow 自检，审查记录只保留高信号结论，不继续堆过渡讨论。
+- optional shared 载荷漏登记时 bootstrap 明确失败，不再静默将其当作核心文件同步。
+- `arch-export-mermaid.py` 默认不进入目标项目，但显式安装 `arch` 时正常安装。
+- session 当前工作集、风险和审查记录与真实 diff 一致。
 
 ## 关联工件（可选）
 - `.shared/session/20260504-1103-integrated-test-standard.md`
@@ -107,46 +105,27 @@
 - 提交: `269ebfa docs(workflow): 收敛命令入口并移除 test harness 主流程` | 范围: 核心命令分层、bootstrap / wrapper 入口文案、`.shared/scripts/agentwork-check.py`、`.shared/project/*` 与历史 `test/` 资产清退
 - 提交: `1da3a8e docs(session): 清理旧集成诊断历史引用` | 范围: `.shared/project/agentwork.md`, `.shared/session/20260504-1103-integrated-test-standard.md`, `.shared/session/20260415-0049-agentwork-self-host-baseline.md`（清理旧集成诊断历史引用，并回填本轮 session / project 最终口径）
 - 提交: `835faba feat(workflow): 增加命令输出 preview 策略` | 范围: `.shared/scripts/command-preview.sh`, `.shared/scripts/README.md`, `.shared/INDEX.md`, `.agentwork/bootstrap/*`, root / 平台 bootstrap 入口（补充命令输出 preview 策略并同步启动约束）
+- 提交: `1ad3eed fix(bootstrap): 修复可选工具文件误同步` | 范围: optional tool shared 清单完整性校验与 `arch-export-mermaid.py` 登记修复
 
 ## 当前批次工作集（可选）
-- 范围: `.shared/scripts/command-preview.sh` | 主题: 固定命令输出 preview 策略，保留退出码并按总量选择全文或首尾采样
-- 范围: `.shared/scripts/README.md` | 主题: 记录 `command-preview.sh` 用法、默认阈值和不足时的追加取证策略
-- 范围: `.shared/INDEX.md` | 主题: 将命令输出 preview 入口纳入核心 workflow 索引
-- 范围: `.agentwork/bootstrap/` | 主题: 在 bootstrap 单一源与生成基线中加入未知或大输出优先 preview 的启动约束
-- 范围: `AGENTS.md` | 主题: 同步 source repo 根入口的 command preview 约束
-- 范围: `.claude/` | 主题: 同步 Claude 安装态入口的 command preview 约束
-- 范围: `.agent/` | 主题: 同步 Antigravity 安装态入口的 command preview 约束
-- 范围: `.cursor/` | 主题: 同步 Cursor 安装态入口的 command preview 约束
-- 范围: `.github/` | 主题: 同步 Copilot 安装态入口的 command preview 约束
-- 范围: `.shared/session/20260415-0049-agentwork-self-host-baseline.md` | 主题: 收敛本轮 session review 后的当前批次、风险和审查记录
+- 范围: `install-bootstrap.py` | 主题: 校验 optional tool shared 载荷登记完整性并复用路径覆盖判断
+- 范围: `.agentwork/tools/arch/tool.json` | 主题: 补齐 `arch-export-mermaid.py` 安装声明
+- 范围: `.shared/session/20260415-0049-agentwork-self-host-baseline.md` | 主题: 收敛本轮修复的任务、工作集、风险和审查记录
 
 ## 风险 / 阻塞
-- optional tools 已 source-managed，但 source repo 场景下的 tool self-install / real-cli 还没有纳入本地确定性回归。
-- `agentwork-check.py` 只覆盖 workflow 工件形态和关键契约，不替代真实 provider 行为、optional tool 效果或人工质量判断。
-- `command-preview.sh` 是机械 preview，不替代完整取证；结构化输出、错误上下文在中段或诊断仍不充分时，需要继续按行号、偏移或更窄命令追加读取。
+- 当前完整性校验只覆盖会影响 bootstrap 核心边界的 optional `shared/` 载荷；其他 surface 与 real-cli 行为仍依赖各工具自己的安装验证。
 
 ## 审查记录
+### 2026-07-28 session review
+- 发现：`arch-export-mermaid.py` 未登记导致 bootstrap 静默扩散；初版修复又形成单调用校验包装和重复路径覆盖判断；当前 session 工作集仍停留在已提交的 command preview 批次。
+- 修正：补齐 tool entry，把完整性校验并入 optional shared 路径收集并复用单一覆盖判断；当前工作集和计划摘要已收敛到真实 diff。
+- 结论：实现保持在 bootstrap 边界内，不改变目标文件保留策略；未发现阻塞性问题，剩余边界是非 shared surface / real-cli 尚未纳入本轮校验。
+
 ### 2026-05-20 session review
-- 发现：当前实现改动集中在 `command-preview.sh`、脚本文档、`.shared/INDEX.md`、bootstrap 单一源与各平台生成入口；脚本辅助审查发现 session 的旧当前批次工作集仍指向 integrated-test 清理路径，未覆盖当前 15 个工作区改动。
-- 修正：已将当前批次工作集改写为本轮 command preview 相关路径，补充未提交产出批次、能力快照、关键入口、风险说明和本条审查记录；实现审查未发现阻塞性问题。
-- 回填：已将旧集成诊断清理批次回填为 `1da3a8e docs(session): 清理旧集成诊断历史引用`，并将 command preview 批次回填为 `835faba feat(workflow): 增加命令输出 preview 策略`。
-- 验证：已运行 `git status --short`、`git diff --stat`、`.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md`、针对核心脚本 / bootstrap 的 diff 审查、`python3 .shared/scripts/agentwork-check.py session .shared/session/20260415-0049-agentwork-self-host-baseline.md --strict-flow`、`python3 .shared/scripts/agentwork-check.py self-test`、`bash -n .shared/scripts/command-preview.sh`、`.shared/scripts/command-preview.sh -- seq 2000` 与 `git diff --check`。
-- 风险/待办：preview 策略只能降低默认上下文压力，不能证明输出已经语义完整；后续若需要更强行为保障，可把 targeted slice / keyword scan 做成脚本参数。
+- 结论：command preview 批次已将旧 integrated-test 工作集替换为真实改动，并以 `835faba` 提交；preview 只控制默认输出体积，不替代定向取证。
 
 ### 2026-05-13 session review
-- 变更：按当前 dirty tree 重写 self-host baseline 顶部快照，补齐 `计划摘要`，把旧 `/session brain` 和旧集成诊断主入口表述改为当前 `/brain -> /plan -> /session plan` 与 `agentwork-check.py self-test` 语义，并压缩过长的产出批次 / 审查记录。
-- 验证：已运行 `.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md`、`python3 .shared/scripts/agentwork-check.py session .shared/session/20260415-0049-agentwork-self-host-baseline.md --strict-flow`、`python3 .shared/scripts/agentwork-check.py self-test` 与 `git diff --check -- .shared/session/20260415-0049-agentwork-self-host-baseline.md`。
-- 风险/待办：本轮只清理 self-host / integrated-test 两份 session 与 project 入口；`arch` 等其他专题继续由各自 session 维护。
-
-### 2026-05-11 brain / session 边界复核
-- 变更：保留 brain / plan 分层，只强化需求澄清、问题域拆分、方案对比质量和高影响确认门；随后把“session 写入”从讨论阶段进一步拆开，为后续 `/session plan` 收敛铺平语义边界。
-- 验证：已运行 targeted `git diff --check`、`.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md`；当时旧工作集与当前 brain 批次不匹配，已在本轮 session review 中继续收敛。
-- 风险/待办：若模型仍把推荐方案直接写成已选方案或跳过 `/plan`，需要补 deterministic prompt 检查或 review 侧结构化校验。
-
-### 2026-05-06 workflow 语义复核
-- 变更：吸收 `.tmp/agentwork/review` 中仍有价值的建议，补强 `/plan` 与 `/exec` 约束；随后按实际约束统一 session-ref、review-source、计划摘要、当前批次工作集、产出批次、风险 / 阻塞等核心术语。
-- 验证：已运行 `python3 install-bootstrap.py -p .`、当时的历史集成诊断回归、`.shared/scripts/session-review.sh .shared/session/20260415-0049-agentwork-self-host-baseline.md` 与 `git diff --check`；相关结果只作为历史取证保留。
-- 风险/待办：这条记录只作为历史取证保留；当前默认回归入口已转向 `.shared/scripts/agentwork-check.py self-test`，不再把旧集成诊断入口视为主要理解入口。
+- 结论：self-host 快照已切换到 `/brain -> /plan -> /session plan` 与 `agentwork-check.py self-test` 口径；工具专题继续由独立 session 维护。
 
 ### 阶段摘要
 - 2026-04-09 - 2026-04-15：完成 research 结论到 live docs 的落地，确认 session 是当前任务快照而非 runtime state；完成 runtime-agnostic/source-repo refactor、source repo 原地 bootstrap、自承载基线和 session 轻量产出格式。
