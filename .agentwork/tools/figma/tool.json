@@ -4,7 +4,7 @@
     "command",
     "mcp"
   ],
-  "description": "Remote-first Figma optional tool pack with MCP guidance and cross-AI wrappers.",
+  "description": "Desktop-first Figma optional tool pack with remote fallback guidance and cross-AI wrappers.",
   "entries": [
     {
       "surface": "shared",

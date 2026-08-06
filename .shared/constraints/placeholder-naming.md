@@ -24,7 +24,7 @@
 | `<commit-hash>` | Git 提交 hash（通常为短 hash） | `9f3c2ab` |
 | `<commit-subject>` | Git 提交标题（单行 subject） | `修复登录页焦点回退` |
 | `<lsp-location>` | LSP 位置（`path:line:column`，1-based） | `src/main.ts:18:7` |
-| `[figma-target]` | Figma frame / layer 链接，或 desktop fallback 下的 node 标识 | `https://www.figma.com/design/...?...node-id=1-28` / `1:28` |
+| `[figma-target]` | desktop MCP nodeId，或 remote fallback 使用的 Figma frame / layer 链接；省略时读取 desktop 当前选区 | `1:28` / `https://www.figma.com/design/...?...node-id=1-28` |
 | `[figma-artifact-root]` | Figma 截图、节点上下文、brief 等临时产物根目录 | `.tmp/figma` |
 | `[arch-root]` | 架构图工具的目标根目录 | `docs/architecture` / `.tmp/architecture` |
 | `<arch-task-desc>` | 架构站工具的口语化任务描述 | `生成当前版本总览页并补 payment-runtime 文档` |
