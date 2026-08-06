@@ -11,3 +11,7 @@ description: /plan [plan-source] 命令入口
 ## 执行前必读
 - 主定义：`.shared/commands/plan.md`
 - 占位符规范：`.shared/constraints/placeholder-naming.md`
+
+## Codex 交互适配
+- 复核输入来源时，若仍缺少关键已确认结论、范围边界或验收标准，且 `request_user_input` 可用，优先使用该工具做最小必要确认。
+- 不要重复询问已经确认的内容；若 `request_user_input` 不可用，改用普通文本提问，并在确认完成前停留在 plan 阶段。

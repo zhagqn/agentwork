@@ -46,7 +46,7 @@
 ## 复杂任务
 
 - 当任务涉及多步骤/跨文件/需要调研时，参考：`.shared/patterns/session-workflow.md`
-- 如需确认跨平台（Codex / Claude / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`
+- 如需确认跨平台（Codex / Claude / OpenCode / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`
 
 ## 代码导航默认策略
 

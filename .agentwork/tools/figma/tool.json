@@ -45,6 +45,11 @@
       "surface": "copilot",
       "from": "copilot/prompts/figma.instructions.md",
       "to": ".github/prompts/figma.instructions.md"
+    },
+    {
+      "surface": "opencode",
+      "from": "opencode/commands/figma.md",
+      "to": ".opencode/commands/figma.md"
     }
   ]
 }

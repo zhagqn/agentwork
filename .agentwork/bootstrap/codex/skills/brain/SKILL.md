@@ -11,3 +11,7 @@ description: /brain <brain-topic> 命令入口
 ## 执行前必读
 - 主定义：`.shared/commands/brain.md`
 - 占位符规范：`.shared/constraints/placeholder-naming.md`
+
+## Codex 交互适配
+- 需要用户补充关键缺口、选择候选方案或确认高影响取舍时，若 `request_user_input` 可用，优先使用该工具；问题和选项应简短、互斥，并将推荐项置于首位。
+- 若 `request_user_input` 不可用，改用普通文本提问；不得因此跳过共享规则要求的澄清或确认。

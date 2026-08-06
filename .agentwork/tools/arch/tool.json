@@ -49,6 +49,11 @@
       "surface": "copilot",
       "from": "copilot/prompts/arch.instructions.md",
       "to": ".github/prompts/arch.instructions.md"
+    },
+    {
+      "surface": "opencode",
+      "from": "opencode/commands/arch.md",
+      "to": ".opencode/commands/arch.md"
     }
   ]
 }

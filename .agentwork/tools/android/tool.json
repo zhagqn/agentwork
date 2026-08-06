@@ -40,6 +40,11 @@
       "surface": "copilot",
       "from": "copilot/prompts/android.instructions.md",
       "to": ".github/prompts/android.instructions.md"
+    },
+    {
+      "surface": "opencode",
+      "from": "opencode/commands/android.md",
+      "to": ".opencode/commands/android.md"
     }
   ]
 }

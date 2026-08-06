@@ -29,6 +29,11 @@
       "surface": "copilot",
       "from": "copilot/prompts/godot.instructions.md",
       "to": ".github/prompts/godot.instructions.md"
+    },
+    {
+      "surface": "opencode",
+      "from": "opencode/commands/godot.md",
+      "to": ".opencode/commands/godot.md"
     }
   ]
 }

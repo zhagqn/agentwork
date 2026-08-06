@@ -7,7 +7,7 @@
 ## 内容
 - shared browser skill
 - browser-run.sh 统一入口脚本
-- Codex / Claude / Agent 平台入口
+- Codex / Claude / Agent 平台入口（OpenCode 经 `.claude/skills` 兼容发现）
 
 ## 何时物化
 - 项目需要浏览器自动化、表单交互、截图、抓取、PDF、state save 等能力

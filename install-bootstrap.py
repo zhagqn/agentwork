@@ -138,6 +138,11 @@ def collect_writes(target: Path):
     for src in sorted((BOOTSTRAP / 'codex' / 'skills').iterdir()):
         if src.is_dir():
             writes.append((src, target / '.codex' / 'skills' / src.name, 'dir', 'Codex skill wrapper'))
+    for src in sorted((BOOTSTRAP / 'opencode' / 'commands').glob('*.md')):
+        writes.append((src, target / '.opencode' / 'commands' / src.name, 'file', 'OpenCode command wrapper'))
+    opencode_gitignore = BOOTSTRAP / 'opencode' / '.gitignore'
+    if opencode_gitignore.exists():
+        writes.append((opencode_gitignore, target / '.opencode' / '.gitignore', 'file', 'OpenCode dir gitignore'))
     writes.append((BOOTSTRAP / 'copilot' / 'copilot-instructions.md', target / '.github' / 'copilot-instructions.md', 'file', 'Copilot repository instructions'))
     return writes
 

@@ -55,7 +55,7 @@
       "intro": "本项目使用 `agentwork` 作为工作流基础层。",
       "note": "",
       "extra_complex": [
-        "如需确认跨平台（Codex / Claude / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
+        "如需确认跨平台（Codex / Claude / OpenCode / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
       ],
       "extra_basic": []
     },
@@ -70,7 +70,7 @@
       "intro": "",
       "note": "本文件会被助手自动加载。Antigravity 适配层按本仓库兼容约定维护。",
       "extra_complex": [
-        "如需确认跨平台（Codex / Claude / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
+        "如需确认跨平台（Codex / Claude / OpenCode / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
       ]
     },
     "copilot": {
@@ -90,7 +90,7 @@
       "intro": "本项目使用 `agentwork` 作为工作流基础层。",
       "note": "",
       "extra_complex": [
-        "如需确认跨平台（Codex / Claude / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
+        "如需确认跨平台（Codex / Claude / OpenCode / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
       ],
       "extra_basic": [
         "source repo 的安装入口：`install-bootstrap.py`、`install-tool.py`"
@@ -101,7 +101,7 @@
       "intro": "本项目使用 `agentwork` 作为工作流基础层。",
       "note": "",
       "extra_complex": [
-        "如需确认跨平台（Codex / Claude / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
+        "如需确认跨平台（Codex / Claude / OpenCode / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
       ],
       "extra_basic": []
     }
@@ -110,12 +110,20 @@
     {
       "name": "brain",
       "title": "/brain <brain-topic>",
-      "target": ".shared/commands/brain.md"
+      "target": ".shared/commands/brain.md",
+      "codex_interaction": [
+        "需要用户补充关键缺口、选择候选方案或确认高影响取舍时，若 `request_user_input` 可用，优先使用该工具；问题和选项应简短、互斥，并将推荐项置于首位。",
+        "若 `request_user_input` 不可用，改用普通文本提问；不得因此跳过共享规则要求的澄清或确认。"
+      ]
     },
     {
       "name": "plan",
       "title": "/plan [plan-source]",
-      "target": ".shared/commands/plan.md"
+      "target": ".shared/commands/plan.md",
+      "codex_interaction": [
+        "复核输入来源时，若仍缺少关键已确认结论、范围边界或验收标准，且 `request_user_input` 可用，优先使用该工具做最小必要确认。",
+        "不要重复询问已经确认的内容；若 `request_user_input` 不可用，改用普通文本提问，并在确认完成前停留在 plan 阶段。"
+      ]
     },
     {
       "name": "exec",

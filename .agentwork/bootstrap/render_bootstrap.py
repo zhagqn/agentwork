@@ -118,8 +118,13 @@ def render_agent_workflow(title: str, target: str) -> str:
     )
 
 
-def render_codex_skill(name: str, title: str, target: str) -> str:
-    return (
+def render_codex_skill(
+    name: str,
+    title: str,
+    target: str,
+    interaction: list[str] | None = None,
+) -> str:
+    out = (
         f"---\nname: {name}\ndescription: {title} 命令入口\n---\n\n"
         f"{AUTO}\n"
         f"# {title}\n\n"
@@ -127,6 +132,22 @@ def render_codex_skill(name: str, title: str, target: str) -> str:
         "## 执行前必读\n"
         f"- 主定义：`{target}`\n"
         "- 占位符规范：`.shared/constraints/placeholder-naming.md`\n"
+    )
+    if interaction:
+        out += f"\n## Codex 交互适配\n{bullet(interaction)}\n"
+    return out
+
+
+def render_opencode_command(title: str, target: str) -> str:
+    return (
+        f"---\ndescription: {title} 命令入口\n---\n\n"
+        f"{AUTO}\n"
+        f"# {title}\n\n"
+        "按共享定义执行本命令，参数如下（可为空）：\n\n"
+        "$ARGUMENTS\n\n"
+        "## 执行前必读\n"
+        f"@{target}\n"
+        "@.shared/constraints/placeholder-naming.md\n"
     )
 
 
@@ -167,6 +188,7 @@ def main() -> int:
     (BOOTSTRAP / 'root').mkdir(parents=True, exist_ok=True)
     (BOOTSTRAP / 'claude' / 'commands').mkdir(parents=True, exist_ok=True)
     (BOOTSTRAP / 'agent' / 'workflows').mkdir(parents=True, exist_ok=True)
+    (BOOTSTRAP / 'opencode' / 'commands').mkdir(parents=True, exist_ok=True)
     (ROOT / 'AGENTS.md').write_text(render_memory('source_root'), encoding='utf-8')
     sync_root_shared_data()
     (BOOTSTRAP / 'root' / 'AGENTS.md').write_text(render_memory('target_root'), encoding='utf-8')
@@ -184,7 +206,14 @@ def main() -> int:
         (BOOTSTRAP / 'agent' / 'workflows' / f'{name}.md').write_text(render_agent_workflow(title, target), encoding='utf-8')
         skill_dir = BOOTSTRAP / 'codex' / 'skills' / name
         skill_dir.mkdir(parents=True, exist_ok=True)
-        (skill_dir / 'SKILL.md').write_text(render_codex_skill(name, title, target), encoding='utf-8')
+        (skill_dir / 'SKILL.md').write_text(
+            render_codex_skill(name, title, target, wrapper.get('codex_interaction')),
+            encoding='utf-8',
+        )
+        (BOOTSTRAP / 'opencode' / 'commands' / f'{name}.md').write_text(
+            render_opencode_command(title, target),
+            encoding='utf-8',
+        )
     return 0
 
 

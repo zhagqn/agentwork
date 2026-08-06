@@ -22,6 +22,7 @@
 ### 代码与目录约定
 - `.shared/`：项目可同步的核心工作流契约
 - `.agentwork/bootstrap/`：迁移到其他 AI 助手的基础文件源
+- `.opencode/commands/`：OpenCode 核心工作流薄 wrapper，由 bootstrap 生成并在 source repo 自承载
 - `.agentwork/tools/`：可选工具源（figma/browser/android/godot/...）
 - `.agentwork/upstreams/`：外部工作流/方法论基座映射
 - `.tmp/`：上游镜像、核心 workflow 临时工件和可选工具临时工件；核心 workflow 默认使用 `.tmp/agentwork/*`
@@ -33,10 +34,11 @@
 - `.tmp/*` 默认不纳入提交，除非明确保留证据
 - source repo 自身也按目标项目结构自承载 bootstrap；相同路径的核心 `.shared` 文件应跳过复制，只刷新根目录适配层与 managed block
 - `install-bootstrap.py` 只同步核心工作流；已安装的可选工具文件不会随着 bootstrap 自动扩散到目标项目
-- source repo 根目录适配层产物属于正式版本基线：bootstrap 生成的 `AGENTS.md`、`.claude/`、`.agent/`、`.cursor/`、`.github/`、`.codex/skills/*` 核心 wrapper 应与 `.agentwork/bootstrap/*` 保持一致；必要时通过命令自检或安装态人工 smoke 做诊断，可选工具安装态允许额外存在，不视为 bootstrap 漂移
+- source repo 根目录适配层产物属于正式版本基线：bootstrap 生成的 `AGENTS.md`、`.claude/`、`.agent/`、`.opencode/commands/*`、`.cursor/`、`.github/`、`.codex/skills/*` 核心 wrapper 应与 `.agentwork/bootstrap/*` 保持一致；必要时通过命令自检或安装态人工 smoke 做诊断，可选工具安装态允许额外存在，不视为 bootstrap 漂移
 
 ## 关键入口
 - `.agentwork/bootstrap/`
+- `.opencode/commands/`
 - `.agentwork/tools/`
 - `.shared/`
 - `install-bootstrap.py`
@@ -44,4 +46,4 @@
 
 ## 更新记录
 - 创建: 2026-04-15
-- 最近更新: 2026-05-13
+- 最近更新: 2026-08-05

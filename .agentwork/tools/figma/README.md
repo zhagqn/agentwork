@@ -7,7 +7,7 @@
 ## 内容
 - shared command definition
 - figma desktop MCP check script
-- Codex / Claude / Agent 平台入口
+- Codex / Claude / Agent / OpenCode 平台入口
 - per-tool MCP config reference
 
 ## 何时物化
