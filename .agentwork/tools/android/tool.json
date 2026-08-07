@@ -27,19 +27,9 @@
       "to": ".claude/commands/android.md"
     },
     {
-      "surface": "agent",
-      "from": "agent/workflows/android.md",
-      "to": ".agent/workflows/android.md"
-    },
-    {
       "surface": "cursor",
       "from": "cursor/rules/android.mdc",
       "to": ".cursor/rules/android.mdc"
-    },
-    {
-      "surface": "copilot",
-      "from": "copilot/prompts/android.instructions.md",
-      "to": ".github/prompts/android.instructions.md"
     },
     {
       "surface": "opencode",

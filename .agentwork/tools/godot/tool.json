@@ -16,19 +16,9 @@
       "to": ".codex/skills/godot/SKILL.md"
     },
     {
-      "surface": "agent",
-      "from": "agent/workflows/godot.md",
-      "to": ".agent/workflows/godot.md"
-    },
-    {
       "surface": "cursor",
       "from": "cursor/rules/godot.mdc",
       "to": ".cursor/rules/godot.mdc"
-    },
-    {
-      "surface": "copilot",
-      "from": "copilot/prompts/godot.instructions.md",
-      "to": ".github/prompts/godot.instructions.md"
     },
     {
       "surface": "opencode",

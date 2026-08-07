@@ -4,7 +4,7 @@
 - `.shared/commands/figma.md`
 - `.shared/scripts/figma-desktop-mcp-check.sh`
 - `.shared/mcp/figma.md`
-- optional thin wrappers for Codex / Claude / Agent / Cursor / Copilot / OpenCode
+- thin wrappers for Codex / Claude / Cursor / OpenCode
 
 ## Install
 ```bash

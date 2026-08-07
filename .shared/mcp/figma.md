@@ -84,32 +84,6 @@ claude mcp add --transport http figma-remote https://mcp.figma.com/mcp
 }
 ```
 
-## Antigravity
-
-### Preferred: Desktop MCP
-
-```json
-{
-  "mcpServers": {
-    "figma": {
-      "serverUrl": "http://127.0.0.1:3845/mcp"
-    }
-  }
-}
-```
-
-### Remote fallback
-
-```json
-{
-  "mcpServers": {
-    "figma-remote": {
-      "serverUrl": "https://mcp.figma.com/mcp"
-    }
-  }
-}
-```
-
 ## Cursor
 
 ### Preferred: Desktop MCP
@@ -130,34 +104,6 @@ claude mcp add --transport http figma-remote https://mcp.figma.com/mcp
 {
   "mcpServers": {
     "figma-remote": {
-      "url": "https://mcp.figma.com/mcp"
-    }
-  }
-}
-```
-
-## VS Code
-
-### Preferred: Desktop MCP
-
-```json
-{
-  "servers": {
-    "figma": {
-      "type": "http",
-      "url": "http://127.0.0.1:3845/mcp"
-    }
-  }
-}
-```
-
-### Remote fallback
-
-```json
-{
-  "servers": {
-    "figma-remote": {
-      "type": "http",
       "url": "https://mcp.figma.com/mcp"
     }
   }

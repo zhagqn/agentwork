@@ -10,7 +10,7 @@
 - Markdown 说明、文本图源、SVG 展示产物与共享 CSS
 - `--check` 验证入口
 - 样例模板与参考文档
-- Codex / Claude / Agent / Cursor / Copilot / OpenCode 平台入口
+- Codex / Claude / Cursor / OpenCode 平台入口
 
 ## 何时物化
 - 项目需要通过自然语言生成或调整静态架构文档站

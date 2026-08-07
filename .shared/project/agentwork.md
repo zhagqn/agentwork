@@ -34,7 +34,8 @@
 - `.tmp/*` 默认不纳入提交，除非明确保留证据
 - source repo 自身也按目标项目结构自承载 bootstrap；相同路径的核心 `.shared` 文件应跳过复制，只刷新根目录适配层与 managed block
 - `install-bootstrap.py` 只同步核心工作流；已安装的可选工具文件不会随着 bootstrap 自动扩散到目标项目
-- source repo 根目录适配层产物属于正式版本基线：bootstrap 生成的 `AGENTS.md`、`.claude/`、`.agent/`、`.opencode/commands/*`、`.cursor/`、`.github/`、`.codex/skills/*` 核心 wrapper 应与 `.agentwork/bootstrap/*` 保持一致；必要时通过命令自检或安装态人工 smoke 做诊断，可选工具安装态允许额外存在，不视为 bootstrap 漂移
+- 退役平台入口只在内容可识别为 agentwork 生成物时自动删除；同路径的项目自定义文件和符号链接必须保留并报告
+- source repo 根目录适配层产物属于正式版本基线：bootstrap 生成的 `AGENTS.md`、`.claude/`、`.opencode/commands/*`、`.cursor/`、`.codex/skills/*` 核心 wrapper 应与 `.agentwork/bootstrap/*` 保持一致；必要时通过命令自检或安装态人工 smoke 做诊断，可选工具安装态允许额外存在，不视为 bootstrap 漂移
 
 ## 关键入口
 - `.agentwork/bootstrap/`
@@ -46,4 +47,4 @@
 
 ## 更新记录
 - 创建: 2026-04-15
-- 最近更新: 2026-08-05
+- 最近更新: 2026-08-07

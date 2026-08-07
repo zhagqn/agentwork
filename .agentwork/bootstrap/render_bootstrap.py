@@ -48,29 +48,6 @@ def render_memory(kind: str) -> str:
     return "\n".join(out).rstrip() + "\n"
 
 
-def render_copilot() -> str:
-    v = SPEC['variants']['copilot']
-    basic_lines = [f'- {item}' for item in COMMON['basic_items']]
-    workflow_lines = [f'- {item}' for item in COMMON['workflow_items']]
-    lines = [
-        AUTO,
-        v['title'],
-        '',
-        v['intro'],
-        '',
-        '- 启动硬约束：先阅读 `.shared/constraints/coding-style.md`、`.shared/constraints/destructive-operations.md`、`.shared/constraints/placeholder-naming.md`。',
-        '- 需要命令、模板或工作流入口时阅读 `.shared/INDEX.md`。',
-        '- 需要仓库长期事实时阅读 `.shared/project/index.md`。',
-        '- 遵循 `.shared/constraints/coding-style.md` 中的代码与文档风格。',
-        *basic_lines,
-        '',
-        *workflow_lines,
-        '',
-        f"> {v['note']}",
-    ]
-    return "\n".join(lines).rstrip() + "\n"
-
-
 def render_cursor() -> str:
     v = SPEC['variants']['cursor']
     body = [
@@ -100,17 +77,6 @@ def render_cursor() -> str:
 def render_claude_command(title: str, target: str) -> str:
     return (
         f"{AUTO}\n# {title}\n\n"
-        "命令入口，读取共享规则。\n\n"
-        "## 执行前必读\n"
-        f"- 主定义：`{target}`\n"
-        "- 占位符规范：`.shared/constraints/placeholder-naming.md`\n"
-    )
-
-
-def render_agent_workflow(title: str, target: str) -> str:
-    return (
-        f"{AUTO}\n---\ndescription: {title} 命令入口\n---\n\n"
-        f"# {title}\n\n"
         "命令入口，读取共享规则。\n\n"
         "## 执行前必读\n"
         f"- 主定义：`{target}`\n"
@@ -187,15 +153,11 @@ def sync_root_shared_data():
 def main() -> int:
     (BOOTSTRAP / 'root').mkdir(parents=True, exist_ok=True)
     (BOOTSTRAP / 'claude' / 'commands').mkdir(parents=True, exist_ok=True)
-    (BOOTSTRAP / 'agent' / 'workflows').mkdir(parents=True, exist_ok=True)
     (BOOTSTRAP / 'opencode' / 'commands').mkdir(parents=True, exist_ok=True)
     (ROOT / 'AGENTS.md').write_text(render_memory('source_root'), encoding='utf-8')
     sync_root_shared_data()
     (BOOTSTRAP / 'root' / 'AGENTS.md').write_text(render_memory('target_root'), encoding='utf-8')
     (BOOTSTRAP / 'claude' / 'CLAUDE.md').write_text(render_memory('claude'), encoding='utf-8')
-    (BOOTSTRAP / 'agent' / 'rules' / 'bootstrap.md').write_text(render_memory('antigravity'), encoding='utf-8')
-    (BOOTSTRAP / 'copilot').mkdir(parents=True, exist_ok=True)
-    (BOOTSTRAP / 'copilot' / 'copilot-instructions.md').write_text(render_copilot(), encoding='utf-8')
     (BOOTSTRAP / 'cursor' / 'rules').mkdir(parents=True, exist_ok=True)
     (BOOTSTRAP / 'cursor' / 'rules' / 'agentwork-bootstrap.mdc').write_text(render_cursor(), encoding='utf-8')
     for wrapper in SPEC['wrappers']:
@@ -203,7 +165,6 @@ def main() -> int:
         title = wrapper['title']
         target = wrapper['target']
         (BOOTSTRAP / 'claude' / 'commands' / f'{name}.md').write_text(render_claude_command(title, target), encoding='utf-8')
-        (BOOTSTRAP / 'agent' / 'workflows' / f'{name}.md').write_text(render_agent_workflow(title, target), encoding='utf-8')
         skill_dir = BOOTSTRAP / 'codex' / 'skills' / name
         skill_dir.mkdir(parents=True, exist_ok=True)
         (skill_dir / 'SKILL.md').write_text(

@@ -7,7 +7,7 @@
 ## 内容
 - shared command definition
 - figma desktop MCP check script
-- Codex / Claude / Agent / Cursor / Copilot / OpenCode 平台入口
+- Codex / Claude / Cursor / OpenCode 平台入口
 - per-tool MCP config reference
 
 ## 何时物化
@@ -15,7 +15,7 @@
 - 需要 `/figma focus|read|brief|review`
 - 需要接入 Figma 官方 MCP，并在当前项目中保留最小设计分析命令
 
-## 当前约束
+## 使用边界
 - `figma` 是 optional tool，不进入 bootstrap 默认命令
 - 默认走 desktop MCP，通过当前选区或 nodeId 读取设计
 - remote MCP 只在 desktop 不可用或用户明确提供 Figma 链接时作为 fallback

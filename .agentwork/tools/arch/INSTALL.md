@@ -5,7 +5,7 @@
 - `.shared/scripts/arch-export-mermaid.py`
 - `.shared/scripts/arch-render.py`
 - `.shared/templates/arch/`
-- optional thin wrappers for Codex / Claude / Antigravity / Cursor / Copilot
+- thin wrappers for Codex / Claude / Cursor / OpenCode
 
 ## Install
 ```bash

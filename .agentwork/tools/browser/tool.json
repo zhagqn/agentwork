@@ -26,19 +26,9 @@
       "to": ".claude/skills/browser/SKILL.md"
     },
     {
-      "surface": "agent",
-      "from": "agent/skills/browser/SKILL.md",
-      "to": ".agent/skills/browser/SKILL.md"
-    },
-    {
       "surface": "cursor",
       "from": "cursor/rules/browser.mdc",
       "to": ".cursor/rules/browser.mdc"
-    },
-    {
-      "surface": "copilot",
-      "from": "copilot/prompts/browser.instructions.md",
-      "to": ".github/prompts/browser.instructions.md"
     }
   ]
 }

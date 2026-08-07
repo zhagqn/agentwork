@@ -3,7 +3,7 @@
 ## What gets installed
 - `.shared/skills/browser/SKILL.md`
 - `.shared/skills/browser/scripts/browser-run.sh`
-- optional thin wrappers for Codex / Claude / Antigravity
+- thin wrappers for Codex / Claude / Cursor
 
 ## Install
 ```bash

@@ -36,19 +36,9 @@
       "to": ".claude/commands/arch.md"
     },
     {
-      "surface": "agent",
-      "from": "agent/workflows/arch.md",
-      "to": ".agent/workflows/arch.md"
-    },
-    {
       "surface": "cursor",
       "from": "cursor/rules/arch.mdc",
       "to": ".cursor/rules/arch.mdc"
-    },
-    {
-      "surface": "copilot",
-      "from": "copilot/prompts/arch.instructions.md",
-      "to": ".github/prompts/arch.instructions.md"
     },
     {
       "surface": "opencode",

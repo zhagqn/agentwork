@@ -3,7 +3,7 @@
 ## What gets installed
 - `.shared/commands/android.md`
 - `.shared/scripts/android-shell-pull-fallback.sh`
-- optional thin wrappers for Codex / Claude / Antigravity
+- thin wrappers for Codex / Claude / Cursor / OpenCode
 
 ## Install
 ```bash

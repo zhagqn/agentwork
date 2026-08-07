@@ -2,7 +2,7 @@
 
 ## What gets installed
 - `.shared/commands/godot.md`
-- optional thin wrappers for Codex / Antigravity
+- thin wrappers for Codex / Cursor / OpenCode
 
 ## Install
 ```bash

@@ -55,7 +55,7 @@
       "intro": "本项目使用 `agentwork` 作为工作流基础层。",
       "note": "",
       "extra_complex": [
-        "如需确认跨平台（Codex / Claude / OpenCode / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
+        "如需确认跨平台（Codex / Claude / OpenCode / Cursor）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
       ],
       "extra_basic": []
     },
@@ -63,20 +63,6 @@
       "title": "# Claude Code 项目指引",
       "intro": "",
       "note": "本文件会被 Claude Code 自动加载。",
-      "extra_complex": []
-    },
-    "antigravity": {
-      "title": "# Bootstrap（启动规则）",
-      "intro": "",
-      "note": "本文件会被助手自动加载。Antigravity 适配层按本仓库兼容约定维护。",
-      "extra_complex": [
-        "如需确认跨平台（Codex / Claude / OpenCode / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
-      ]
-    },
-    "copilot": {
-      "title": "# Copilot 仓库说明",
-      "intro": "VS Code / GitHub Copilot 的仓库级说明。",
-      "note": "Copilot 仓库说明应保持简短、与仓库直接相关。",
       "extra_complex": []
     },
     "cursor": {
@@ -90,7 +76,7 @@
       "intro": "本项目使用 `agentwork` 作为工作流基础层。",
       "note": "",
       "extra_complex": [
-        "如需确认跨平台（Codex / Claude / OpenCode / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
+        "如需确认跨平台（Codex / Claude / OpenCode / Cursor）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
       ],
       "extra_basic": [
         "source repo 的安装入口：`install-bootstrap.py`、`install-tool.py`"
@@ -101,7 +87,7 @@
       "intro": "本项目使用 `agentwork` 作为工作流基础层。",
       "note": "",
       "extra_complex": [
-        "如需确认跨平台（Codex / Claude / OpenCode / Antigravity / Cursor / VS Code Copilot）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
+        "如需确认跨平台（Codex / Claude / OpenCode / Cursor）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
       ],
       "extra_basic": []
     }

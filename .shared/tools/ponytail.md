@@ -33,7 +33,7 @@ codex plugin add ponytail@ponytail
 
 ## 其他平台
 
-Cursor / Copilot / Antigravity 等 instruction-only 平台可复制上游仓库对应 rules 文件（`.cursor/rules/`、`.github/copilot-instructions.md`、`AGENTS.md` 等），只加载 always-on 规则、无命令；完整平台映射见上游 `docs/agent-portability.md`。
+Cursor 等 instruction-only 平台可复制上游仓库对应 rules 文件（如 `.cursor/rules/` 或 `AGENTS.md`），只加载 always-on 规则、无命令；完整平台映射见上游 `docs/agent-portability.md`。
 
 ## 日常使用
 

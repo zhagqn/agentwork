@@ -32,19 +32,9 @@
       "to": ".claude/commands/figma.md"
     },
     {
-      "surface": "agent",
-      "from": "agent/workflows/figma.md",
-      "to": ".agent/workflows/figma.md"
-    },
-    {
       "surface": "cursor",
       "from": "cursor/rules/figma.mdc",
       "to": ".cursor/rules/figma.mdc"
-    },
-    {
-      "surface": "copilot",
-      "from": "copilot/prompts/figma.instructions.md",
-      "to": ".github/prompts/figma.instructions.md"
     },
     {
       "surface": "opencode",

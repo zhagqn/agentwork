@@ -1,11 +1,11 @@
-# 平台适配层说明（Codex / Claude / OpenCode / Antigravity / Cursor / VS Code Copilot）
+# 平台适配层说明（Codex / Claude / OpenCode / Cursor）
 
 > 目的：在保留 `.shared/` 统一规则的前提下，明确“平台能力边界 + 触发差异 + 回退策略”，确保跨平台协作的一致性。
 
 ## 适用范围
 
-- 目录：`AGENTS.md`、`.claude/*`、`.agent/*`、`.codex/*`、`.opencode/*`、`.cursor/*`、`.github/*`、`.shared/*`
-- 对象：Codex CLI、Claude Code、OpenCode、Antigravity、Cursor、VS Code Copilot（及同类代理平台）
+- 目录：`AGENTS.md`、`.claude/*`、`.codex/*`、`.opencode/*`、`.cursor/*`、`.shared/*`
+- 对象：Codex CLI、Claude Code、OpenCode、Cursor（及同类代理平台）
 
 ## 核心原则（最佳实践）
 
@@ -55,9 +55,7 @@
 | Codex CLI | `AGENTS.md`、`.codex/skills/*`、`.codex/agents/*` | AGENTS 分层合并、审批与沙箱参数、生效优先级、custom agents 的发现与继承规则 | Goal + 原生多代理/工具能力；长任务优先 Goal，再配合 `/exec` | 直接执行 `.shared/commands/*` 文本流程，必要时把结论回收到 session / plan / review |
 | Claude Code | `.claude/CLAUDE.md`、`.claude/commands/*`、`.claude/skills/*` | slash commands 与 skills 触发/优先级规则 | 自动迭代优先平台原生 loop；定时轮询优先官方 loop | 以 `.shared/commands/*` 为主入口，需跨平台共享语义时写入 session / plan / review |
 | OpenCode | `AGENTS.md`、`.opencode/commands/*` | 项目规则首个匹配、`AGENTS.md` 普通文件引用不会自动展开、commands/agents/skills 发现与权限默认值 | 使用原生 command 薄 wrapper 注入共享定义；平台 agents/skills 仅按任务需要启用 | 直接读取 `.shared/commands/*` 手动执行，继续以 session / plan / review 工件接力 |
-| Antigravity | `.agent/rules/*`、`.agent/workflows/*`、`.agent/skills/*` | rules/workflows/skills 触发语义、执行策略默认值 | 以平台原生 workflow 能力为先 | 退回 `.shared/INDEX.md` + `.shared/commands/*` 手动流程 |
 | Cursor | `.cursor/rules/*` | rules 的触发范围、上下文注入时机和工具权限需按项目验证 | 优先使用 Cursor 原生编辑、检索与诊断能力 | 退回 `AGENTS.md` + `.shared/commands/*`，需要接力时写入 session |
-| VS Code Copilot | `.github/copilot-instructions.md` | instructions 注入范围、chat / agent mode 能力边界和命令触发语义需按官方文档确认 | 优先使用 VS Code / Copilot 原生 workspace 能力 | 退回 `AGENTS.md` + `.shared/commands/*`，需要接力时写入 session |
 
 ## OpenCode 适配边界
 
@@ -72,7 +70,7 @@
 ## Codex custom agent 边界
 
 - `.codex/agents/` 是 **Codex-only** 的项目级运行层，不是跨平台共享规则层。
-- 不要为了“平台对齐”把 agent prompt 正文复制到 `.claude/`、`.agent/` 或 `.opencode/agents/`。
+- 不要为了“平台对齐”把 agent prompt 正文复制到 `.claude/` 或 `.opencode/agents/`。
 - 如果某条规则需要跨平台长期复用，应先写入 `.shared/*`；custom agent 只保留委派角色与输出契约。
 - 如果 Codex custom agents 失效、未加载或行为漂移，主代理应直接退回 `.shared/*` 工作流，不阻塞交付。
 
