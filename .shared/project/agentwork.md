@@ -23,6 +23,7 @@
 - `.shared/`：项目可同步的核心工作流契约
 - `.agentwork/bootstrap/`：迁移到其他 AI 助手的基础文件源
 - `.opencode/commands/`：OpenCode 核心工作流薄 wrapper，由 bootstrap 生成并在 source repo 自承载
+- `.codex/agents/`：Codex 项目级执行子代理，由 bootstrap 生成、显式注册并在 source repo 自承载
 - `.agentwork/tools/`：可选工具源（figma/browser/android/godot/...）
 - `.agentwork/upstreams/`：外部工作流/方法论基座映射
 - `.tmp/`：上游镜像、核心 workflow 临时工件和可选工具临时工件；核心 workflow 默认使用 `.tmp/agentwork/*`
@@ -35,7 +36,8 @@
 - source repo 自身也按目标项目结构自承载 bootstrap；相同路径的核心 `.shared` 文件应跳过复制，只刷新根目录适配层与 managed block
 - `install-bootstrap.py` 只同步核心工作流；已安装的可选工具文件不会随着 bootstrap 自动扩散到目标项目
 - 退役平台入口只在内容可识别为 agentwork 生成物时自动删除；同路径的项目自定义文件和符号链接必须保留并报告
-- source repo 根目录适配层产物属于正式版本基线：bootstrap 生成的 `AGENTS.md`、`.claude/`、`.opencode/commands/*`、`.cursor/`、`.codex/skills/*` 核心 wrapper 应与 `.agentwork/bootstrap/*` 保持一致；必要时通过命令自检或安装态人工 smoke 做诊断，可选工具安装态允许额外存在，不视为 bootstrap 漂移
+- source repo 根目录适配层产物属于正式版本基线：bootstrap 生成的 `AGENTS.md`、`.claude/`、`.opencode/commands/*`、`.cursor/`、`.codex/skills/*`、`.codex/agents/*` 与 `.codex/config.toml` 受管块应与 `.agentwork/bootstrap/*` 保持一致；必要时通过命令自检或安装态人工 smoke 做诊断，可选工具安装态允许额外存在，不视为 bootstrap 漂移
+- bootstrap 默认安装并注册 `luna_worker` Codex 执行子代理；安装器只维护 agentwork 受管配置块和受管 agent 文件，遇到同名项目自定义定义时停止，不静默覆盖
 - optional tool 可通过 `tool.json.env_keys` 声明项目级凭据名；安装器只在 Git ignored 的根 `.env` 中追加缺失的空占位，不覆盖、执行或回显值，卸载时保留用户原有或已填写的 assignment
 - `research` 是 provider-neutral 单一研究入口；它可主动选择最窄 provider，也可在本地或直接官方路径已足够时选择不调用远程 provider；行为 routing contract 只有通过固定评测 gate 后才可标记为 stable
 - Exa 是仅用于公开 Web 发现/批量 fetch 的受限 provisional optional provider；Octocode 仍为跨仓库证据研究的 experimental tool，快速 GitHub 查询继续优先 `gh`；Research 与 provider 的 stable 状态必须由现行评测 gate 支撑

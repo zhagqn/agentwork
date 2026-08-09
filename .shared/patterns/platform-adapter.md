@@ -52,7 +52,7 @@
 
 | 平台 | 入口文件 | 平台差异（需官方确认） | 推荐优先能力 | 回退方式 |
 | --- | --- | --- | --- | --- |
-| Codex CLI | `AGENTS.md`、`.codex/skills/*`、`.codex/agents/*` | AGENTS 分层合并、审批与沙箱参数、生效优先级、custom agents 的发现与继承规则 | Goal + 原生多代理/工具能力；长任务优先 Goal，再配合 `/exec` | 直接执行 `.shared/commands/*` 文本流程，必要时把结论回收到 session / plan / review |
+| Codex CLI | `AGENTS.md`、`.codex/skills/*`、`.codex/config.toml`、`.codex/agents/*` | AGENTS 分层合并、审批与沙箱参数、生效优先级、custom agents 的注册与继承规则 | Goal + 原生多代理/工具能力；范围明确的独立执行任务优先委派 `luna_worker` | 直接执行 `.shared/commands/*` 文本流程，必要时把结论回收到 session / plan / review |
 | Claude Code | `.claude/CLAUDE.md`、`.claude/commands/*`、`.claude/skills/*` | slash commands 与 skills 触发/优先级规则 | 自动迭代优先平台原生 loop；定时轮询优先官方 loop | 以 `.shared/commands/*` 为主入口，需跨平台共享语义时写入 session / plan / review |
 | OpenCode | `AGENTS.md`、`.opencode/commands/*` | 项目规则首个匹配、`AGENTS.md` 普通文件引用不会自动展开、commands/agents/skills 发现与权限默认值 | 使用原生 command 薄 wrapper 注入共享定义；平台 agents/skills 仅按任务需要启用 | 直接读取 `.shared/commands/*` 手动执行，继续以 session / plan / review 工件接力 |
 | Cursor | `.cursor/rules/*` | rules 的触发范围、上下文注入时机和工具权限需按项目验证 | 优先使用 Cursor 原生编辑、检索与诊断能力 | 退回 `AGENTS.md` + `.shared/commands/*`，需要接力时写入 session |
@@ -69,7 +69,9 @@
 
 ## Codex custom agent 边界
 
-- `.codex/agents/` 是 **Codex-only** 的项目级运行层，不是跨平台共享规则层。
+- Codex custom agent 必须在受信任项目的 `.codex/config.toml` 中通过 `[agents.<name>]` 和 `config_file` 显式注册；仅放置 `.codex/agents/*.toml` 不构成有效安装。
+- bootstrap 默认注册 `luna_worker`，用于范围明确、边界清晰且可独立验证的执行任务；总体目标调整、跨任务协调和开放式探索仍由主代理负责。
+- `.codex/agents/` 是 **Codex-only** 的项目级运行层，不是跨平台共享规则层；bootstrap 逐文件维护自身 agent，并保留其他项目 agent。
 - 不要为了“平台对齐”把 agent prompt 正文复制到 `.claude/` 或 `.opencode/agents/`。
 - 如果某条规则需要跨平台长期复用，应先写入 `.shared/*`；custom agent 只保留委派角色与输出契约。
 - 如果 Codex custom agents 失效、未加载或行为漂移，主代理应直接退回 `.shared/*` 工作流，不阻塞交付。
