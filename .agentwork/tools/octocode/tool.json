@@ -1,0 +1,20 @@
+{
+  "name": "octocode",
+  "kind": [
+    "cli",
+    "mcp"
+  ],
+  "description": "Experimental Octocode reference and pinned read-only GitHub research MCP wrapper with local, clone, release, and discussion tools disabled.",
+  "entries": [
+    {
+      "surface": "shared",
+      "from": "shared/mcp/octocode.md",
+      "to": ".shared/mcp/octocode.md"
+    },
+    {
+      "surface": "shared",
+      "from": "shared/scripts/octocode-mcp.py",
+      "to": ".shared/scripts/octocode-mcp.py"
+    }
+  ]
+}

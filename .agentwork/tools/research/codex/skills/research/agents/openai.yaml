@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research"
+  short_description: "Evidence-led cross-source research"
+  default_prompt: "Use $research to investigate this question with current first-party evidence."

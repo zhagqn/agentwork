@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "suite": "agentwork-public-research-v1",
+  "default_security_class": "public-only",
+  "forbidden_inputs": [
+    "private repository content",
+    "internal project names or URLs",
+    "credentials, tokens, cookies, or environment values",
+    "personal or customer data"
+  ],
+  "cases": [
+    {
+      "id": "nodejs-release-status",
+      "category": "current-release",
+      "question": "截至执行日，确认 Node.js 当前 Current 与 Maintenance LTS 发布线、代号、发布日期和支持状态。",
+      "time_window": "current-at-run-time",
+      "allowed_sources": [
+        "official Node.js release pages",
+        "nodejs/Release repository metadata",
+        "nodejs/node release metadata"
+      ],
+      "expected_primary_evidence": [
+        "https://github.com/nodejs/Release",
+        "https://nodejs.org/en/about/previous-releases"
+      ],
+      "success_criteria": [
+        "reports observed release lines and observation date",
+        "distinguishes Current, Active LTS, Maintenance LTS, and end-of-life status",
+        "reports LTS codenames and release dates from first-party sources",
+        "does not substitute an adjacent or nightly release for a requested stable line"
+      ],
+      "security_class": "public-only"
+    },
+    {
+      "id": "web-provider-surface",
+      "category": "provider-comparison",
+      "question": "比较 Exa、Firecrawl 和 Tavily 当前 MCP 的默认工具面、认证方式、运行时要求与适用研究场景。",
+      "time_window": "current-at-run-time",
+      "allowed_sources": [
+        "official provider GitHub repositories",
+        "official provider documentation",
+        "npm registry metadata"
+      ],
+      "expected_primary_evidence": [
+        "https://github.com/exa-labs/exa-mcp-server",
+        "https://github.com/firecrawl/firecrawl-mcp-server",
+        "https://github.com/tavily-ai/tavily-mcp"
+      ],
+      "success_criteria": [
+        "separates search, fetch, extract, map, crawl, browser interaction, and delegated research",
+        "identifies keyless, OAuth, and API-key paths without exposing a credential",
+        "does not infer quality from stars or downloads",
+        "recommends one provider per use case instead of enabling all providers"
+      ],
+      "security_class": "public-only"
+    },
+    {
+      "id": "github-mcp-readonly",
+      "category": "repository-policy",
+      "question": "从 GitHub MCP 官方文档确认 read-only、toolsets、individual tools 和 exclude-tools 的优先级，并给出最小仓库研究配置。",
+      "time_window": "current-at-run-time",
+      "allowed_sources": [
+        "github/github-mcp-server repository documentation",
+        "github/github-mcp-server source code",
+        "official GitHub changelog"
+      ],
+      "expected_primary_evidence": [
+        "https://github.com/github/github-mcp-server/blob/main/docs/server-configuration.md"
+      ],
+      "success_criteria": [
+        "states that read-only overrides requested write tools",
+        "states that excluded tools override toolsets and individual tools",
+        "provides a minimal repositories, issues, and pull requests research surface",
+        "does not perform a GitHub write operation"
+      ],
+      "security_class": "public-read-only"
+    },
+    {
+      "id": "mcp-registry-architecture",
+      "category": "repository-architecture",
+      "question": "解释 modelcontextprotocol/registry 的主要组件、server metadata 的发布/验证流程，以及哪些边界属于 registry 而不是 MCP client。",
+      "time_window": "repository-default-branch-at-run-time",
+      "allowed_sources": [
+        "modelcontextprotocol/registry source code",
+        "repository documentation",
+        "repository issues and pull requests when needed"
+      ],
+      "expected_primary_evidence": [
+        "https://github.com/modelcontextprotocol/registry"
+      ],
+      "success_criteria": [
+        "anchors architecture claims to repository paths or official documentation",
+        "describes publication and validation without guessing undocumented internals",
+        "separates registry discovery from client installation and trust decisions",
+        "reports unresolved architecture gaps explicitly"
+      ],
+      "security_class": "public-read-only"
+    },
+    {
+      "id": "agent-extension-packaging",
+      "category": "cross-repository-pattern",
+      "question": "比较 Agent Skills 与 Agent Plugins 1.0 的包装边界，说明 skill、MCP 配置和 plugin manifest 应分别承载什么。",
+      "time_window": "current-default-branches-at-run-time",
+      "allowed_sources": [
+        "anthropics/skills specification and examples",
+        "agentplugins/agent-plugins-spec specification and schema",
+        "official repository release metadata"
+      ],
+      "expected_primary_evidence": [
+        "https://github.com/anthropics/skills",
+        "https://github.com/agentplugins/agent-plugins-spec"
+      ],
+      "success_criteria": [
+        "identifies SKILL.md name and description discovery metadata",
+        "identifies plugin.json as the plugin package manifest",
+        "explains that a plugin may package skills and MCP configuration",
+        "does not claim identical runtime behavior across clients"
+      ],
+      "security_class": "public-read-only"
+    },
+    {
+      "id": "github-mcp-release-trace",
+      "category": "change-trace",
+      "question": "定位 github/github-mcp-server 最新稳定 release，并从 release、commit 或 pull request 证据说明其中一个研究相关配置变化。",
+      "time_window": "latest-stable-release-at-run-time",
+      "allowed_sources": [
+        "GitHub release metadata",
+        "github/github-mcp-server commits",
+        "github/github-mcp-server pull requests",
+        "official changelog"
+      ],
+      "expected_primary_evidence": [
+        "https://github.com/github/github-mcp-server/releases"
+      ],
+      "success_criteria": [
+        "reports release tag, publication date, and immutable URL",
+        "traces one research-related change to a commit or pull request when the release evidence permits",
+        "distinguishes observed facts from inferred motivation",
+        "does not rely on a third-party release summary"
+      ],
+      "security_class": "public-read-only"
+    },
+    {
+      "id": "recent-mcp-security-signal",
+      "category": "recent-community-signal",
+      "question": "汇总执行日前 30 天内开发者社区关于 MCP/agent skill 安全的高信号问题，并用维护者或安全项目的一手材料复核。",
+      "time_window": "rolling-30-days",
+      "allowed_sources": [
+        "official security project repositories and releases",
+        "maintainer changelogs and advisories",
+        "Hacker News stories and discussions",
+        "vendor security research with reproducible detail"
+      ],
+      "expected_primary_evidence": [
+        "https://github.com/NVIDIA/SkillSpector",
+        "https://github.com/snyk/agent-scan",
+        "https://news.ycombinator.com/"
+      ],
+      "success_criteria": [
+        "enforces the rolling 30-day cutoff",
+        "separates community attention from verified vulnerability evidence",
+        "covers prompt injection, tool poisoning, credential handling, or supply-chain risk only when supported",
+        "reports thin or absent evidence instead of widening the date window silently"
+      ],
+      "security_class": "public-untrusted-content"
+    },
+    {
+      "id": "chinese-source-cross-check",
+      "category": "multilingual-cross-check",
+      "question": "用中文回答 Exa、Firecrawl、Tavily 对开发者系统调研的定位差异，并检查中文开发者资料是否提供了超出官方文档的可复核证据。",
+      "time_window": "rolling-180-days",
+      "allowed_sources": [
+        "official provider sources in any language",
+        "Chinese developer community articles with identifiable author and date",
+        "Chinese repository issues or discussions",
+        "search results used only for discovery"
+      ],
+      "expected_primary_evidence": [
+        "https://github.com/exa-labs/exa-mcp-server",
+        "https://github.com/firecrawl/firecrawl-mcp-server",
+        "https://github.com/tavily-ai/tavily-mcp"
+      ],
+      "success_criteria": [
+        "answers in Simplified Chinese",
+        "uses official sources for capability claims",
+        "labels Chinese community material as opinion, test evidence, or low-confidence discovery",
+        "reports no credible Chinese incremental evidence when none is found"
+      ],
+      "security_class": "public-untrusted-content"
+    }
+  ]
+}

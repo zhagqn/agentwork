@@ -1,0 +1,26 @@
+{
+  "name": "exa",
+  "kind": [
+    "mcp"
+  ],
+  "description": "Pinned Exa MCP reference and project-local STDIO wrapper with a minimal search/fetch tool surface.",
+  "env_keys": [
+    {
+      "name": "EXA_API_KEY",
+      "required": false,
+      "description": "Optional at install time; required when using the project-local Exa STDIO wrapper."
+    }
+  ],
+  "entries": [
+    {
+      "surface": "shared",
+      "from": "shared/mcp/exa.md",
+      "to": ".shared/mcp/exa.md"
+    },
+    {
+      "surface": "shared",
+      "from": "shared/scripts/exa-mcp.py",
+      "to": ".shared/scripts/exa-mcp.py"
+    }
+  ]
+}

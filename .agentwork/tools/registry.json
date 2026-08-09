@@ -51,6 +51,28 @@
       "kind": [
         "mcp"
       ]
+    },
+    {
+      "name": "research",
+      "dir": "research",
+      "kind": [
+        "skill"
+      ]
+    },
+    {
+      "name": "exa",
+      "dir": "exa",
+      "kind": [
+        "mcp"
+      ]
+    },
+    {
+      "name": "octocode",
+      "dir": "octocode",
+      "kind": [
+        "cli",
+        "mcp"
+      ]
     }
   ]
 }
