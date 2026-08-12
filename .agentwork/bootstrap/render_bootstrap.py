@@ -170,37 +170,74 @@ def parse_block(block_text: str):
     return start.group(0), end.group(0), block_text[start.start():end.end()]
 
 
-def upsert_block(target_file: Path, block_file: Path, scaffold: str):
+def managed_block_span(
+    text: str,
+    start_marker: str,
+    end_marker: str,
+    label: str,
+) -> tuple[int, int] | None:
+    start_count = text.count(start_marker)
+    end_count = text.count(end_marker)
+    if start_count == 0 and end_count == 0:
+        return None
+    if start_count != 1 or end_count != 1:
+        raise SystemExit(f'{label} has a malformed or duplicate agentwork managed block')
+    start_idx = text.find(start_marker)
+    end_idx = text.find(end_marker)
+    if start_idx >= end_idx:
+        raise SystemExit(f'{label} has an invalid agentwork managed block')
+    return start_idx, end_idx + len(end_marker)
+
+
+def prepare_block(target_file: Path, block_file: Path, scaffold: str) -> tuple[Path, str]:
     block_text = block_file.read_text(encoding='utf-8')
     start_marker, end_marker, block = parse_block(block_text)
     if target_file.exists():
-        text = target_file.read_text(encoding='utf-8')
+        try:
+            text = target_file.read_bytes().decode('utf-8')
+        except UnicodeDecodeError as exc:
+            raise SystemExit(f'cannot update non-UTF-8 managed data file: {target_file}') from exc
     else:
         text = scaffold.rstrip() + "\n\n"
-    start_idx = text.find(start_marker)
-    end_idx = text.find(end_marker)
-    if start_idx != -1 and end_idx != -1 and start_idx < end_idx:
-        end_idx += len(end_marker)
+    span = managed_block_span(text, start_marker, end_marker, f'managed data file {target_file}')
+    if span is not None:
+        start_idx, end_idx = span
         text = text[:start_idx] + block + text[end_idx:]
     else:
         if text and not text.endswith("\n"):
             text += "\n"
         text += block + "\n"
-    target_file.parent.mkdir(parents=True, exist_ok=True)
-    target_file.write_text(text, encoding='utf-8')
+    return target_file, text
 
 
-def sync_root_shared_data():
-    upsert_block(ROOT / '.shared/project/index.md', DATA / 'project-index.block.md', '# Project 索引\n\n## 本项目自定义内容\n')
-    upsert_block(ROOT / '.shared/session/README.md', DATA / 'session-readme.block.md', '# Session 目录说明\n\n## 本项目补充说明\n')
+def prepare_root_shared_data() -> tuple[tuple[Path, str], ...]:
+    return (
+        prepare_block(
+            ROOT / '.shared/project/index.md',
+            DATA / 'project-index.block.md',
+            '# Project 索引\n\n## 本项目自定义内容\n',
+        ),
+        prepare_block(
+            ROOT / '.shared/session/README.md',
+            DATA / 'session-readme.block.md',
+            '# Session 目录说明\n\n## 本项目补充说明\n',
+        ),
+    )
+
+
+def write_prepared_blocks(prepared: tuple[tuple[Path, str], ...]) -> None:
+    for target_file, text in prepared:
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+        target_file.write_text(text, encoding='utf-8')
 
 
 def main() -> int:
+    root_shared_data = prepare_root_shared_data()
     (BOOTSTRAP / 'root').mkdir(parents=True, exist_ok=True)
     (BOOTSTRAP / 'claude' / 'commands').mkdir(parents=True, exist_ok=True)
     (BOOTSTRAP / 'opencode' / 'commands').mkdir(parents=True, exist_ok=True)
     (ROOT / 'AGENTS.md').write_text(render_memory('source_root'), encoding='utf-8')
-    sync_root_shared_data()
+    write_prepared_blocks(root_shared_data)
     (BOOTSTRAP / 'root' / 'AGENTS.md').write_text(render_memory('target_root'), encoding='utf-8')
     (BOOTSTRAP / 'claude' / 'CLAUDE.md').write_text(render_memory('claude'), encoding='utf-8')
     (BOOTSTRAP / 'cursor' / 'rules').mkdir(parents=True, exist_ok=True)
