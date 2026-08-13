@@ -6,7 +6,7 @@
 
 ## TL;DR
 - 本仓库是 `agentwork` 的 source repo，不是直接业务项目模板
-- 核心职责：维护可复用工作流、基础迁移文件、可选工具源、上游参考镜像
+- 核心职责：维护可复用工作流、基础迁移文件和可选工具源
 - source repo 自身也按目标项目结构自承载 bootstrap
 - `install-bootstrap.py` 只同步核心工作流，不会把已安装的可选工具自动扩散到目标项目
 
@@ -25,9 +25,7 @@
 - `.opencode/commands/`：OpenCode 核心工作流薄 wrapper，由 bootstrap 生成并在 source repo 自承载
 - `.codex/agents/`：Codex 项目级执行子代理，由 bootstrap 生成、显式注册并在 source repo 自承载
 - `.agentwork/tools/`：可选工具源（figma/browser/android/godot/...）
-- `.agentwork/upstreams/`：外部工作流/方法论基座映射
-- `.tmp/`：上游镜像、核心 workflow 临时工件和可选工具临时工件；核心 workflow 默认使用 `.tmp/agentwork/*`
-- 外部上游的更新命令直接写在 `.agentwork/upstreams/*.md` 中
+- `.tmp/`：核心 workflow 和可选工具的临时工件；核心 workflow 默认使用 `.tmp/agentwork/*`
 
 ### 兼容性 / 运行时红线
 - 不默认依赖任何特定 runtime
@@ -35,6 +33,9 @@
 - `.tmp/*` 默认不纳入提交，除非明确保留证据
 - source repo 自身也按目标项目结构自承载 bootstrap；相同路径的核心 `.shared` 文件应跳过复制，只刷新根目录适配层与 managed block
 - `install-bootstrap.py` 只同步核心工作流；已安装的可选工具文件不会随着 bootstrap 自动扩散到目标项目
+- 外部项目 bootstrap 不刷新 agentwork source checkout；只有 source repo self-host (`-p .`) 才先做只读 preflight、运行 renderer，再对生成后的最终计划执行目标事务
+- project/session/`.gitignore` managed block 只接受“完全不存在”或“唯一且有序”的 marker；残缺、逆序、重复 marker 与非 UTF-8 内容在首个目标写入前停止
+- bootstrap 与 optional tool 安装器不新增或改写目标项目许可文件；agentwork 根 `LICENSE` 是 source repo 的许可事实源
 - 退役平台入口只在内容可识别为 agentwork 生成物时自动删除；同路径的项目自定义文件和符号链接必须保留并报告
 - source repo 根目录适配层产物属于正式版本基线：bootstrap 生成的 `AGENTS.md`、`.claude/`、`.opencode/commands/*`、`.cursor/`、`.codex/skills/*`、`.codex/agents/*` 与 `.codex/config.toml` 受管块应与 `.agentwork/bootstrap/*` 保持一致；必要时通过命令自检或安装态人工 smoke 做诊断，可选工具安装态允许额外存在，不视为 bootstrap 漂移
 - bootstrap 默认安装并注册 `luna_worker` Codex 执行子代理；安装器只维护 agentwork 受管配置块和受管 agent 文件，遇到同名项目自定义定义时停止，不静默覆盖
@@ -53,4 +54,4 @@
 
 ## 更新记录
 - 创建: 2026-04-15
-- 最近更新: 2026-08-09
+- 最近更新: 2026-08-12

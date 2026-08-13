@@ -39,7 +39,7 @@
 - `.tmp/agentwork/brain/*.md`
 - `.tmp/agentwork/plan/*.md`
 - `.tmp/agentwork/review/*.md`
-- 上述是核心 workflow 的临时工件；可选工具或上游镜像可使用各自 `.tmp/<domain>/`，默认不纳入提交
+- 上述是核心 workflow 的临时工件；可选工具可使用各自 `.tmp/<domain>/`，默认不纳入提交
 
 ## 4) Optional Tools
 - 可选工具默认不预装
