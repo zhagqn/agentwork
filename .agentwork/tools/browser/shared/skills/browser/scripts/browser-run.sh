@@ -12,10 +12,95 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
 BROWSER_TMP_ROOT="${BROWSER_TMP_ROOT:-${PROJECT_ROOT}/.tmp/browser}"
 PROFILE_DIR="${BROWSER_TMP_ROOT}/profile"
 DOWNLOAD_DIR="${BROWSER_TMP_ROOT}/downloads"
-SOCKET_DIR="${BROWSER_TMP_ROOT}/agent-browser"
 BROWSER_CDP_PREFER="${BROWSER_CDP_PREFER:-1}"
 BROWSER_CDP_TARGET="${BROWSER_CDP_TARGET:-9222}"
 OS_NAME="$(uname -s)"
+
+PROJECT_KEY="$(python3 - "${PROJECT_ROOT}" <<'PY'
+import hashlib
+import sys
+
+print(hashlib.sha256(sys.argv[1].encode()).hexdigest()[:16])
+PY
+)"
+DEFAULT_RUNTIME_ROOT="/tmp/agentwork-browser-$(id -u)"
+SESSION="${AGENT_BROWSER_SESSION:-default}"
+PREVIOUS_SOCKET_DIR="${BROWSER_TMP_ROOT}/agent-browser"
+LEGACY_SOCKET_DIR="${BROWSER_TMP_ROOT}"
+
+session_runtime_is_live() {
+  local socket_dir="$1"
+  local session="$2"
+
+  [[ -S "${socket_dir}/${session}.sock" ]] || return 1
+
+  ps eww -ax -o command= | awk \
+    -v project_root="${PROJECT_ROOT}" \
+    -v project_key="${PROJECT_KEY}" \
+    -v socket_dir="${socket_dir}" \
+    -v session="${session}" '
+      function has_env(line, name, value,    needle, start, suffix) {
+        needle = name "=" value
+        start = index(line, needle)
+        while (start > 0) {
+          suffix = start + length(needle)
+          if ((start == 1 || substr(line, start - 1, 1) == " ") &&
+              (suffix > length(line) || substr(line, suffix, 1) == " ")) {
+            return 1
+          }
+          line = substr(line, start + 1)
+          start = index(line, needle)
+        }
+        return 0
+      }
+
+      {
+        has_daemon = has_env($0, "AGENT_BROWSER_DAEMON", "1")
+        has_project_marker = index($0, "AGENTWORK_BROWSER_PROJECT_KEY=") > 0
+        marked_project = has_env($0, "AGENTWORK_BROWSER_PROJECT_KEY", project_key)
+        legacy_project = !has_project_marker && has_env($0, "PWD", project_root)
+        same_socket_dir = has_env($0, "AGENT_BROWSER_SOCKET_DIR", socket_dir)
+        has_session = index($0, "AGENT_BROWSER_SESSION=") > 0
+        same_session = has_env($0, "AGENT_BROWSER_SESSION", session)
+
+        if (session == "default" && !has_session) {
+          same_session = 1
+        }
+
+        if (has_daemon && (marked_project || legacy_project) && same_session && same_socket_dir) {
+          found = 1
+        }
+      }
+      END { exit found ? 0 : 1 }
+    '
+}
+
+if [[ -n "${AGENT_BROWSER_SOCKET_DIR:-}" ]]; then
+  SOCKET_DIR="${AGENT_BROWSER_SOCKET_DIR}"
+elif session_runtime_is_live "${PREVIOUS_SOCKET_DIR}" "${SESSION}"; then
+  SOCKET_DIR="${PREVIOUS_SOCKET_DIR}"
+elif session_runtime_is_live "${LEGACY_SOCKET_DIR}" "${SESSION}"; then
+  SOCKET_DIR="${LEGACY_SOCKET_DIR}"
+else
+  SOCKET_DIR="${DEFAULT_RUNTIME_ROOT}/${PROJECT_KEY}"
+fi
+
+if [[ "${SOCKET_DIR}" == "${DEFAULT_RUNTIME_ROOT}/${PROJECT_KEY}" ]]; then
+  if [[ -e "${DEFAULT_RUNTIME_ROOT}" && \
+    (! -d "${DEFAULT_RUNTIME_ROOT}" || -L "${DEFAULT_RUNTIME_ROOT}" || ! -O "${DEFAULT_RUNTIME_ROOT}") ]]; then
+    echo "错误: browser runtime 根目录不安全: ${DEFAULT_RUNTIME_ROOT}" >&2
+    exit 1
+  fi
+
+  mkdir -p "${DEFAULT_RUNTIME_ROOT}"
+  chmod 700 "${DEFAULT_RUNTIME_ROOT}" 2>/dev/null || true
+fi
+
+if [[ -e "${SOCKET_DIR}" && \
+  (! -d "${SOCKET_DIR}" || -L "${SOCKET_DIR}" || ! -O "${SOCKET_DIR}") ]]; then
+  echo "错误: browser socket 目录不安全: ${SOCKET_DIR}" >&2
+  exit 1
+fi
 
 case "${OS_NAME}" in
   Darwin)
@@ -38,6 +123,7 @@ chmod 700 "${SOCKET_DIR}" 2>/dev/null || true
 
 export AGENT_BROWSER_SOCKET_DIR="${SOCKET_DIR}"
 export AGENT_BROWSER_DOWNLOAD_PATH="${AGENT_BROWSER_DOWNLOAD_PATH:-${DOWNLOAD_DIR}}"
+export AGENTWORK_BROWSER_PROJECT_KEY="${PROJECT_KEY}"
 
 # macOS 下强改 XDG/TMPDIR 会把 Playwright 内部 runtime/socket 也带到项目目录，
 # 这会放大 agent-browser 的 daemon/socket 冲突概率；默认只显式固定 agent-browser 自己的 socket 目录。
@@ -54,61 +140,101 @@ now() {
 }
 
 cleanup_orphaned_daemons() {
-  local session="${AGENT_BROWSER_SESSION:-default}"
-  local current_socket="${SOCKET_DIR}/${session}.sock"
-  local legacy_socket="${BROWSER_TMP_ROOT}/${session}.sock"
+  local session="${SESSION}"
   local pids
 
-  if [[ -S "${current_socket}" || -S "${legacy_socket}" ]]; then
+  if session_runtime_is_live "${SOCKET_DIR}" "${session}"; then
     return
   fi
 
   pids="$(
     ps eww -ax -o pid=,command= | awk \
       -v project_root="${PROJECT_ROOT}" \
+      -v project_key="${PROJECT_KEY}" \
       -v socket_dir="${SOCKET_DIR}" \
-      -v browser_tmp_root="${BROWSER_TMP_ROOT}" '
-        {
-          has_daemon = index($0, "AGENT_BROWSER_DAEMON=1")
-          in_project = index($0, "PWD=" project_root)
-          same_socket_dir = index($0, "AGENT_BROWSER_SOCKET_DIR=" socket_dir)
-          legacy_socket_dir = index($0, "AGENT_BROWSER_SOCKET_DIR=" browser_tmp_root)
-          legacy_xdg_only = index($0, "XDG_RUNTIME_DIR=" browser_tmp_root) && !index($0, "AGENT_BROWSER_SOCKET_DIR=")
+      -v previous_socket_dir="${PREVIOUS_SOCKET_DIR}" \
+      -v legacy_socket_dir="${LEGACY_SOCKET_DIR}" \
+      -v session="${session}" '
+        function has_env(line, name, value,    needle, start, suffix) {
+          needle = name "=" value
+          start = index(line, needle)
+          while (start > 0) {
+            suffix = start + length(needle)
+            if ((start == 1 || substr(line, start - 1, 1) == " ") &&
+                (suffix > length(line) || substr(line, suffix, 1) == " ")) {
+              return 1
+            }
+            line = substr(line, start + 1)
+            start = index(line, needle)
+          }
+          return 0
+        }
 
-          if (has_daemon && in_project && (same_socket_dir || legacy_socket_dir || legacy_xdg_only)) {
-          print $1
+        {
+          has_daemon = has_env($0, "AGENT_BROWSER_DAEMON", "1")
+          has_project_marker = index($0, "AGENTWORK_BROWSER_PROJECT_KEY=") > 0
+          marked_project = has_env($0, "AGENTWORK_BROWSER_PROJECT_KEY", project_key)
+          legacy_project = !has_project_marker && has_env($0, "PWD", project_root)
+          has_session = index($0, "AGENT_BROWSER_SESSION=") > 0
+          same_session = has_env($0, "AGENT_BROWSER_SESSION", session)
+          same_socket_dir = has_env($0, "AGENT_BROWSER_SOCKET_DIR", socket_dir)
+          previous_socket = has_env($0, "AGENT_BROWSER_SOCKET_DIR", previous_socket_dir)
+          legacy_socket = has_env($0, "AGENT_BROWSER_SOCKET_DIR", legacy_socket_dir)
+          legacy_xdg_only = has_env($0, "XDG_RUNTIME_DIR", legacy_socket_dir) &&
+            index($0, "AGENT_BROWSER_SOCKET_DIR=") == 0
+
+          if (session == "default" && !has_session) {
+            same_session = 1
+          }
+
+          if (has_daemon && (marked_project || legacy_project) && same_session && (same_socket_dir || previous_socket || legacy_socket || legacy_xdg_only)) {
+            print $1
           }
         }
       '
   )"
 
-  if [[ -z "${pids}" ]]; then
-    return
+  if [[ -n "${pids}" ]]; then
+    while IFS= read -r pid; do
+      [[ -n "${pid}" ]] || continue
+      kill "${pid}" 2>/dev/null || true
+    done <<< "${pids}"
+
+    sleep 0.2
+
+    while IFS= read -r pid; do
+      [[ -n "${pid}" ]] || continue
+      if kill -0 "${pid}" 2>/dev/null; then
+        kill -9 "${pid}" 2>/dev/null || true
+      fi
+    done <<< "${pids}"
   fi
-
-  while IFS= read -r pid; do
-    [[ -n "${pid}" ]] || continue
-    kill "${pid}" 2>/dev/null || true
-  done <<< "${pids}"
-
-  sleep 0.2
-
-  while IFS= read -r pid; do
-    [[ -n "${pid}" ]] || continue
-    if kill -0 "${pid}" 2>/dev/null; then
-      kill -9 "${pid}" 2>/dev/null || true
-    fi
-  done <<< "${pids}"
 
   rm -f -- \
     "${SOCKET_DIR}/${session}.sock" \
     "${SOCKET_DIR}/${session}.pid" \
     "${SOCKET_DIR}/${session}.port" \
     "${SOCKET_DIR}/${session}.stream" \
-    "${legacy_socket}" \
-    "${BROWSER_TMP_ROOT}/${session}.pid" \
-    "${BROWSER_TMP_ROOT}/${session}.port" \
-    "${BROWSER_TMP_ROOT}/${session}.stream"
+    "${SOCKET_DIR}/${session}.target" \
+    "${SOCKET_DIR}/${session}.version" \
+    "${SOCKET_DIR}/${session}.engine" \
+    "${SOCKET_DIR}/${session}.config" \
+    "${PREVIOUS_SOCKET_DIR}/${session}.sock" \
+    "${PREVIOUS_SOCKET_DIR}/${session}.pid" \
+    "${PREVIOUS_SOCKET_DIR}/${session}.port" \
+    "${PREVIOUS_SOCKET_DIR}/${session}.stream" \
+    "${PREVIOUS_SOCKET_DIR}/${session}.target" \
+    "${PREVIOUS_SOCKET_DIR}/${session}.version" \
+    "${PREVIOUS_SOCKET_DIR}/${session}.engine" \
+    "${PREVIOUS_SOCKET_DIR}/${session}.config" \
+    "${LEGACY_SOCKET_DIR}/${session}.sock" \
+    "${LEGACY_SOCKET_DIR}/${session}.pid" \
+    "${LEGACY_SOCKET_DIR}/${session}.port" \
+    "${LEGACY_SOCKET_DIR}/${session}.stream" \
+    "${LEGACY_SOCKET_DIR}/${session}.target" \
+    "${LEGACY_SOCKET_DIR}/${session}.version" \
+    "${LEGACY_SOCKET_DIR}/${session}.engine" \
+    "${LEGACY_SOCKET_DIR}/${session}.config"
 }
 
 if [[ $# -eq 0 ]]; then
@@ -179,7 +305,7 @@ for arg in "$@"; do
 done
 
 case "$1" in
-  install | paths | help | --help | -h | --version | -V)
+  install | paths | skills | help | --help | -h | --version | -V)
     ;;
   *)
     cleanup_orphaned_daemons
@@ -213,7 +339,7 @@ fi
 
 if [[ "${BROWSER_CDP_PREFER}" == "1" ]]; then
   case "$1" in
-    connect | install | paths | help | --help | -h | --version | -V)
+    connect | install | paths | skills | help | --help | -h | --version | -V)
       ;;
     *)
       # 临时测试默认优先尝试 CDP，失败时自动回退到本地模式。

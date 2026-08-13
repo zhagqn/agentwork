@@ -3,7 +3,7 @@
   "kind": [
     "skill"
   ],
-  "description": "Browser automation tool pack with local browser-run wrapper and cross-AI wrappers.",
+  "description": "Project wrapper and cross-AI entry points for an externally installed browser CLI.",
   "entries": [
     {
       "surface": "shared",

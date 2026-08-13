@@ -10,4 +10,3 @@ alwaysApply: false
 当任务需要浏览器自动化、截图、抓取、表单交互时：
 - 先读取 `.shared/skills/browser/SKILL.md`
 - 执行时统一通过 `.shared/skills/browser/scripts/browser-run.sh`
-- 页面交互遵循：`snapshot -i` → `@ref` 交互 → 页面变化后重新抓取 `snapshot -i`
