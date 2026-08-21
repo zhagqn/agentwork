@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Session 审查工具 - 对照 session 的“当前批次工作集”范围与工作区改动，并检查“产出批次”锚点
+# Session 审查工具 - 对照 session 的“当前批次工作集”范围与工作区改动，并检查聚合后的“产出批次”锚点
 
 set -euo pipefail
 
@@ -102,7 +102,7 @@ extract_current_workset() {
         sort -u
 }
 
-extract_commit_hashes() {
+extract_deliverable_section() {
     local session_file="$1"
     local section
 
@@ -113,21 +113,65 @@ extract_commit_hashes() {
         { if (in_section) print }
     ' "$session_file")
 
-    if [[ -z "$section" ]]; then
-        # fallback：兼容 legacy 的“产出物（含提交锚点）”
-        section=$(awk '
+    if [[ -n "$section" ]]; then
+        printf '%s\n' "$section"
+        return
+    fi
+
+    # fallback：兼容 legacy 的“产出物（含提交锚点）”
+    awk '
         BEGIN { in_deliverables=0 }
         /^##[[:space:]]+产出物([（(].*[)）])?[[:space:]]*$/ { in_deliverables=1; next }
         /^##[[:space:]]+/ { if (in_deliverables) exit }
         { if (in_deliverables) print }
-    ' "$session_file")
-    fi
+    ' "$session_file"
+}
 
-    # 解析产出批次中的提交锚点；支持 “提交:” 明细与 “历史:” 摘要中的 hash。
-    {
-        echo "$section" | sed -nE 's/^.*提交:[[:space:]]*`?([0-9a-fA-F]{7,40}).*/\1/p'
-        echo "$section" | sed -nE '/历史:/ s/^.*范围:[[:space:]]*//p' | grep -oE '[0-9a-fA-F]{7,40}' || true
-    } | tr 'A-F' 'a-f' | sort -u
+extract_commit_hashes() {
+    local session_file="$1"
+    extract_commit_hash_occurrences "$session_file" | sort -u
+}
+
+extract_commit_hash_occurrences() {
+    local session_file="$1"
+    local section
+    section="$(extract_deliverable_section "$session_file")"
+
+    # 一个“提交:”字段可以聚合多个相关 hash；只解析字段本身，避免把日期或文件名当成 hash。
+    printf '%s\n' "$section" |
+        sed -nE 's/^.*提交:[[:space:]]*([^|]+).*/\1/p' |
+        grep -oE '[0-9a-fA-F]{7,40}' |
+        tr 'A-F' 'a-f' |
+        sed '/^$/d' || true
+}
+
+extract_duplicate_commit_hashes() {
+    local session_file="$1"
+    extract_commit_hash_occurrences "$session_file" | sort | uniq -d
+}
+
+extract_external_commit_hashes() {
+    local session_file="$1"
+    local section
+    section="$(extract_deliverable_section "$session_file")"
+
+    # 独立仓/外部仓锚点不在当前仓 Git object database 中，仍保留但不误报为无效。
+    # 混合记录只把来源标记之后的 hash 视为外部；范围中标记为外部仓时整条均视为外部。
+    local candidates
+    candidates="$(printf '%s\n' "$section" | awk '
+        /^- (提交|历史):/ {
+            line = $0
+            commit = line
+            sub(/^.*提交:[[:space:]]*/, "", commit)
+            sub(/[[:space:]]*\|.*/, "", commit)
+            if (match(commit, /(独立前端仓|独立仓|外部仓|其他仓)/)) {
+                print substr(commit, RSTART + RLENGTH)
+            } else if (line ~ /(独立前端仓|独立仓|外部仓|其他仓)/) {
+                print commit
+            }
+        }
+    ' | grep -oE '[0-9a-fA-F]{7,40}' || true)"
+    printf '%s\n' "$candidates" | tr 'A-F' 'a-f' | sed '/^$/d' | sort -u
 }
 
 is_glob_scope() {
@@ -267,6 +311,12 @@ main() {
     local commit_hashes
     commit_hashes="$(extract_commit_hashes "$session_file" || true)"
 
+    local external_commit_hashes
+    external_commit_hashes="$(extract_external_commit_hashes "$session_file" || true)"
+
+    local duplicate_commit_hashes
+    duplicate_commit_hashes="$(extract_duplicate_commit_hashes "$session_file" || true)"
+
     local commit_hash_count=0
     if [[ -n "$commit_hashes" ]]; then
         commit_hash_count=$(echo "$commit_hashes" | wc -l | tr -d ' ')
@@ -309,20 +359,34 @@ main() {
 
     echo ""
 
-    # 提交锚点有效性检查
-    local invalid_hashes=()
+    # 提交锚点可验证性检查。不可见的历史 hash 不能据此删除，可能来自旧分支、历史重写或其他仓。
+    local unavailable_hashes=()
     if [[ -n "$commit_hashes" ]]; then
         while IFS= read -r hash; do
             [[ -z "$hash" ]] && continue
             if ! git cat-file -e "${hash}^{commit}" 2>/dev/null; then
-                invalid_hashes+=("$hash")
+                if [[ -z "$external_commit_hashes" ]] || ! grep -qxF "$hash" <<< "$external_commit_hashes"; then
+                    unavailable_hashes+=("$hash")
+                fi
             fi
         done <<< "$commit_hashes"
     fi
 
-    if [[ ${#invalid_hashes[@]} -gt 0 ]]; then
-        echo "无效/不存在的提交锚点："
-        printf '%s\n' "${invalid_hashes[@]}" | sort -u | sed 's/.*/- &/'
+    if [[ ${#unavailable_hashes[@]} -gt 0 ]]; then
+        echo "当前仓不可验证的历史提交锚点（保留原记录，不自动删除）："
+        printf '%s\n' "${unavailable_hashes[@]}" | sort -u | sed 's/.*/- &/'
+        echo ""
+    fi
+
+    if [[ -n "$external_commit_hashes" ]]; then
+        echo "外部仓提交锚点（当前仓不做 object 校验）："
+        printf '%s\n' "$external_commit_hashes" | sed 's/.*/- &/'
+        echo ""
+    fi
+
+    if [[ -n "$duplicate_commit_hashes" ]]; then
+        echo "重复提交锚点（默认应合并；仅在验证或边界明显不同时保留多处）："
+        printf '%s\n' "$duplicate_commit_hashes" | sed 's/.*/- &/'
         echo ""
     fi
 

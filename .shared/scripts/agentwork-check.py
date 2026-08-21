@@ -66,6 +66,7 @@ TEMPLATE_PLACEHOLDERS = [
     '{本轮不做什么}',
     '{约束 1}',
     '{当前已确认方案}',
+    '{只记录会影响后续恢复的已否决方案、兼容取舍或迁移前提；重复讨论留在 brain/review 工件}',
     '{尚未确认的推荐方案；确认前不要写成已选方案}',
     '{需要用户确认后才能进入 /plan 或 /session exec 的关键问题}',
     '{需要用户确认后才能进入 /session plan 或 /session exec 的关键问题}',
@@ -81,10 +82,14 @@ TEMPLATE_PLACEHOLDERS = [
     '{必要时可用 glob；精确路径由 review 脚本/git 取证}',
     '{阶段摘要}',
     '{提交区间或主题范围}',
+    '{结果结论}',
     '{当前风险或阻塞}',
     '{本次里程碑完成项}',
     '{检查结果（写结论，不写命令流水）}',
     '{剩余风险或下一步}',
+    '{历史审查时间范围}',
+    '{审查日期或主题}',
+    '{历史审查一句话摘要；含验证状态、未闭环风险或来源锚点}',
     '{如果出现长期稳定事实，列在这里等待确认}',
 ]
 
@@ -294,7 +299,7 @@ SELF_TEST_FIXTURES = {
 - 范围: `.shared/scripts/agentwork-check.py` | 主题: 命令自检入口
 
 ## 产出批次（提交锚点）
-- 提交: `-` | 范围: `.shared/scripts/agentwork-check.py`
+- 提交: `-` | 范围: `.shared/scripts/agentwork-check.py` | 验证: session strict-flow 检查通过。
 
 ## 风险 / 阻塞
 - 无。
@@ -547,6 +552,149 @@ def check_review(path: Path | None, fail_on_major: bool) -> tuple[Path | None, l
     return path, failures
 
 
+def deliverable_commit_anchors(line: str) -> list[str]:
+    anchor_text = ''
+    if line.startswith('- 提交:'):
+        anchor_text = line.split(' | 范围:', maxsplit=1)[0]
+    elif line.startswith('- 历史:') and ' | 提交:' in line:
+        anchor_text = line.split(' | 提交:', maxsplit=1)[1].split(' | 范围:', maxsplit=1)[0]
+    return [match.group(0).lower() for match in re.finditer(r'\b[0-9a-fA-F]{7,40}\b', anchor_text)]
+
+
+def check_duplicate_commit_anchors(deliverable_lines: list[str], failures: list[str]) -> None:
+    counts: dict[str, int] = {}
+    for line in deliverable_lines:
+        for anchor in deliverable_commit_anchors(line):
+            counts[anchor] = counts.get(anchor, 0) + 1
+    for anchor, count in counts.items():
+        if count > 1:
+            add_once(failures, f'duplicate_commit_anchor:{anchor}:{count}')
+
+
+def latest_review_date(title: str) -> tuple[int, int, int, int | None, int | None] | None:
+    dates: list[tuple[int, int, int, int | None, int | None]] = []
+    pattern = r'(?<!\d)(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?'
+    for match in re.finditer(pattern, title):
+        year, month, day = (int(match.group(index)) for index in range(1, 4))
+        hour = int(match.group(4)) if match.group(4) is not None else None
+        minute = int(match.group(5)) if match.group(5) is not None else None
+        try:
+            datetime(year, month, day, hour or 0, minute or 0)
+        except ValueError:
+            continue
+        dates.append((year, month, day, hour, minute))
+    if not dates:
+        return None
+    return max(dates, key=lambda value: (*value[:3], value[3] or 0, value[4] or 0))
+
+
+def parse_review_events(review_lines: list[str]) -> list[dict[str, object]]:
+    events: list[dict[str, object]] = []
+    current: dict[str, object] | None = None
+
+    def finish_current() -> None:
+        nonlocal current
+        if current is not None:
+            events.append(current)
+            current = None
+
+    for raw in review_lines:
+        line = raw.strip()
+        if line.startswith('### '):
+            finish_current()
+            title = line[4:].strip()
+            date = latest_review_date(title)
+            if date is not None:
+                current = {
+                    'title': title,
+                    'date': date,
+                    'history': '历史' in title and '摘要' in title,
+                    'body': [],
+                }
+            continue
+        if current is not None:
+            body = current['body']
+            assert isinstance(body, list)
+            body.append(raw)
+            continue
+        if line.startswith('- ') and latest_review_date(line) is not None:
+            events.append(
+                {
+                    'title': line,
+                    'date': latest_review_date(line),
+                    'history': '历史' in line and '摘要' in line,
+                    'body': [line],
+                }
+            )
+    finish_current()
+    return events
+
+
+def review_dates_out_of_order(
+    previous: tuple[int, int, int, int | None, int | None],
+    current: tuple[int, int, int, int | None, int | None],
+) -> bool:
+    if previous[:3] != current[:3]:
+        return previous[:3] < current[:3]
+    previous_time = previous[3:]
+    current_time = current[3:]
+    if None in previous_time or None in current_time:
+        return False
+    return previous_time < current_time
+
+
+def review_detail_fields(body: str) -> set[str]:
+    fields: set[str] = set()
+    if re.search(r'(?:变更|结论|收敛|修正|结果)\s*[:：]', body):
+        fields.add('change')
+    if re.search(r'(?:验证|证据)\s*[:：]', body):
+        fields.add('verification')
+    if re.search(r'(?:风险\s*(?:[/／]\s*待办)?|待办|后续|阻塞)\s*[:：]', body):
+        fields.add('risk')
+    return fields
+
+
+def check_review_history(review_lines: list[str], failures: list[str]) -> None:
+    for raw in review_lines:
+        line = raw.strip()
+        heading_match = re.match(r'^###(?:\s+(.*))?$', line)
+        if heading_match is None:
+            continue
+        title = (heading_match.group(1) or '').strip()
+        if latest_review_date(title) is None:
+            add_once(failures, f'missing_valid_review_date:{title or "<empty>"}')
+
+    events = parse_review_events(review_lines)
+    for previous, current in zip(events, events[1:]):
+        previous_date = previous['date']
+        current_date = current['date']
+        assert isinstance(previous_date, tuple) and isinstance(current_date, tuple)
+        if review_dates_out_of_order(previous_date, current_date):
+            add_once(failures, f'review_events_out_of_order:{previous["title"]}->{current["title"]}')
+
+    history_seen = False
+    detailed_events: list[dict[str, object]] = []
+    for event in events:
+        if event['history']:
+            history_seen = True
+            body = event['body']
+            assert isinstance(body, list)
+            if not any(line.strip() for line in body):
+                add_once(failures, f'empty_review_history:{event["title"]}')
+        else:
+            if history_seen:
+                add_once(failures, f'review_detail_after_history:{event["title"]}')
+            detailed_events.append(event)
+
+    for event in detailed_events[:3]:
+        body_lines = event['body']
+        assert isinstance(body_lines, list)
+        fields = review_detail_fields('\n'.join(body_lines))
+        missing = sorted({'change', 'verification', 'risk'} - fields)
+        if missing:
+            add_once(failures, f'incomplete_recent_review:{event["title"]}:{",".join(missing)}')
+
+
 def check_session(path: Path | None, strict_flow: bool) -> tuple[Path | None, list[str]]:
     failures: list[str] = []
     path = check_exists(path, 'session', failures)
@@ -572,8 +720,21 @@ def check_session(path: Path | None, strict_flow: bool) -> tuple[Path | None, li
     if strict_flow and not deliverable_lines:
         add_once(failures, 'missing_deliverable_entries')
     for line in deliverable_lines:
-        if not re.match(r'^- 提交: `[^`]+` \| 范围: .+', line) and not re.match(r'^- 历史: `[^`]+` \| 范围: .+', line):
+        if line.startswith('- 提交:'):
+            commit_match = re.match(r'^- 提交: `([^`]+)` \| 范围: .+ \| 验证: .+', line)
+            if not commit_match:
+                add_once(failures, f'incomplete_deliverable_entry:{line}')
+            else:
+                anchor_text = commit_match.group(1).strip()
+                no_commit_marker = re.match(r'^(?:不适用|未提交|无)(?:[（(]|$)', anchor_text)
+                if anchor_text != '-' and not no_commit_marker and not re.search(r'\b[0-9a-fA-F]{7,40}\b', anchor_text):
+                    add_once(failures, f'missing_commit_anchor:{line}')
+        elif line.startswith('- 历史:') and not re.match(r'^- 历史: `[^`]+`(?: \| 提交: .+)? \| 范围: .+', line):
             add_once(failures, f'bad_deliverable_entry:{line}')
+        elif not line.startswith(('- 提交:', '- 历史:')):
+            add_once(failures, f'bad_deliverable_entry:{line}')
+    check_duplicate_commit_anchors(deliverable_lines, failures)
+    check_review_history(section_lines(text, '## 审查记录'), failures)
     return path, failures
 
 
@@ -593,22 +754,135 @@ def run_self_test(root: Path) -> list[str]:
     for rel, content in SELF_TEST_FIXTURES.items():
         write_text(root / rel, content)
 
+    session_path = root / '.shared/session/20260101-0000-fixture.md'
+    session_text = read_text(session_path)
+    deliverable = '- 提交: `-` | 范围: `.shared/scripts/agentwork-check.py` | 验证: session strict-flow 检查通过。'
+    duplicate_text = session_text.replace(
+        deliverable,
+        '- 提交: `abcdef1 feat: first` | 范围: `.shared/scripts/agentwork-check.py` | 验证: first。\n'
+        '- 提交: `abcdef1 fix: second` | 范围: `.shared/scripts/agentwork-check.py` | 验证: second。',
+    )
+
+    def session_with_reviews(review_text: str) -> str:
+        return session_text.split('## 审查记录', maxsplit=1)[0] + '## 审查记录\n' + review_text
+
+    complete_review = (
+        '- 变更：更新 session。\n'
+        '- 验证：本地检查通过。\n'
+        '- 风险/待办：无。\n'
+    )
+    out_of_order_text = session_with_reviews(
+        '### 2026-01-01 first\n'
+        f'{complete_review}\n'
+        '### 2026-01-02 second\n'
+        f'{complete_review}'
+    )
+    incomplete_review_text = session_with_reviews(
+        '### 2026-01-02 incomplete\n'
+        '- 变更：更新 session。\n'
+        '- 验证：本地检查通过。\n'
+    )
+    undated_review_text = session_with_reviews(
+        '### review without date\n'
+        f'{complete_review}'
+    )
+    invalid_review_date_text = session_with_reviews(
+        '### 2026-02-30 invalid date\n'
+        f'{complete_review}'
+    )
+    history_before_detail_text = session_with_reviews(
+        '### 历史审查摘要（2025-01-01—2025-12-31）\n'
+        '- 2025：历史摘要。\n\n'
+        '### 2025-01-01 detail\n'
+        f'{complete_review}'
+    )
+    empty_history_text = session_with_reviews(
+        '### 2026-01-01 detail\n'
+        f'{complete_review}\n'
+        '### 历史审查摘要（2025-01-01—2025-12-31）\n'
+    )
+    many_reviews_text = session_with_reviews(
+        ''.join(f'### 2026-01-0{day} review {day}\n{complete_review}\n' for day in range(4, 0, -1))
+    )
+    same_day_text = session_with_reviews(
+        '### 2026-01-01 review A\n'
+        f'{complete_review}\n'
+        '### 2026-01-01 review B\n'
+        f'{complete_review}'
+    )
+
+    session_fixtures = {
+        'duplicate-anchor': duplicate_text,
+        'out-of-order': out_of_order_text,
+        'incomplete-review': incomplete_review_text,
+        'undated-review': undated_review_text,
+        'invalid-review-date': invalid_review_date_text,
+        'history-before-detail': history_before_detail_text,
+        'empty-history': empty_history_text,
+        'many-reviews': many_reviews_text,
+        'same-day': same_day_text,
+    }
+    for name, content in session_fixtures.items():
+        write_text(root / f'.shared/session/20260101-0000-{name}.md', content)
+
     checks = [
-        ('brain', check_brain(root / '.tmp/agentwork/brain/20260101-0000-fixture.md'), False),
-        ('plan', check_plan(root / '.tmp/agentwork/plan/20260101-0000-fixture.md'), False),
-        ('exec', check_exec(root / '.tmp/agentwork/plan/20260101-0001-exec-fixture.md'), False),
-        ('review', check_review(root / '.tmp/agentwork/review/20260101-0000-fixture.md', True), False),
-        ('session', check_session(root / '.shared/session/20260101-0000-fixture.md', True), False),
-        ('review-important', check_review(root / '.tmp/agentwork/review/20260101-0001-important-fixture.md', True), True),
+        ('brain', check_brain(root / '.tmp/agentwork/brain/20260101-0000-fixture.md'), None),
+        ('plan', check_plan(root / '.tmp/agentwork/plan/20260101-0000-fixture.md'), None),
+        ('exec', check_exec(root / '.tmp/agentwork/plan/20260101-0001-exec-fixture.md'), None),
+        ('review', check_review(root / '.tmp/agentwork/review/20260101-0000-fixture.md', True), None),
+        ('session', check_session(session_path, True), None),
+        ('session-many-reviews', check_session(root / '.shared/session/20260101-0000-many-reviews.md', True), None),
+        ('session-same-day', check_session(root / '.shared/session/20260101-0000-same-day.md', True), None),
+        (
+            'review-important',
+            check_review(root / '.tmp/agentwork/review/20260101-0001-important-fixture.md', True),
+            'review_has_important_findings',
+        ),
+        (
+            'session-duplicate-anchor',
+            check_session(root / '.shared/session/20260101-0000-duplicate-anchor.md', True),
+            'duplicate_commit_anchor',
+        ),
+        (
+            'session-out-of-order',
+            check_session(root / '.shared/session/20260101-0000-out-of-order.md', True),
+            'review_events_out_of_order',
+        ),
+        (
+            'session-incomplete-review',
+            check_session(root / '.shared/session/20260101-0000-incomplete-review.md', True),
+            'incomplete_recent_review',
+        ),
+        (
+            'session-undated-review',
+            check_session(root / '.shared/session/20260101-0000-undated-review.md', True),
+            'missing_valid_review_date',
+        ),
+        (
+            'session-invalid-review-date',
+            check_session(root / '.shared/session/20260101-0000-invalid-review-date.md', True),
+            'missing_valid_review_date',
+        ),
+        (
+            'session-history-before-detail',
+            check_session(root / '.shared/session/20260101-0000-history-before-detail.md', True),
+            'review_detail_after_history',
+        ),
+        (
+            'session-empty-history',
+            check_session(root / '.shared/session/20260101-0000-empty-history.md', True),
+            'empty_review_history',
+        ),
     ]
 
     failures: list[str] = []
-    for name, (_path, check_failures), expect_failure in checks:
-        if expect_failure:
-            if not any(failure.startswith('review_has_important_findings') for failure in check_failures):
+    for name, (_path, check_failures), expected_failure in checks:
+        if expected_failure:
+            if not any(failure.startswith(expected_failure) for failure in check_failures):
                 failures.append(f'self_test_negative_missed:{name}:{check_failures}')
         elif check_failures:
             failures.append(f'self_test_failed:{name}:{check_failures}')
+
     return failures
 
 

@@ -1,0 +1,240 @@
+{
+  "files": [
+    {
+      "path": ".claude/CLAUDE.md",
+      "sha256": "45d59059d011a99adca55ddb155410a44a3bfca77078344d6b7d7bff0256cae0",
+      "type": "file"
+    },
+    {
+      "path": ".claude/commands/brain.md",
+      "sha256": "b1d907b931220ffa9600e5d880630d75f0396613dfec8f132e6554d7dfc80855",
+      "type": "file"
+    },
+    {
+      "path": ".claude/commands/commit.md",
+      "sha256": "1795e6274996996a30342a1959f26c192412c7f703674f5f6350fc2d20cd0b4a",
+      "type": "file"
+    },
+    {
+      "path": ".claude/commands/exec.md",
+      "sha256": "9047044eb2c60bc60d11e7ac3d39bbcd5a354f6fcf3f73bfee71565e7584bdaf",
+      "type": "file"
+    },
+    {
+      "path": ".claude/commands/plan.md",
+      "sha256": "35770f8b68e7a89ebd8ea35ed6380412dee3733edfbc55993eb9ddfd144252b3",
+      "type": "file"
+    },
+    {
+      "path": ".claude/commands/review.md",
+      "sha256": "24167968d3927f7857fb8f64c7e22823d39e08f7b32bb6485b4c1c7575f74a51",
+      "type": "file"
+    },
+    {
+      "path": ".claude/commands/session.md",
+      "sha256": "ebd25b00645c2109cfa5a32ec3b27ae7718f388a7ea98f6e6a811d5ac341c744",
+      "type": "file"
+    },
+    {
+      "path": ".codex/agents/luna-worker.toml",
+      "sha256": "d2dd50b5e303be8b199da8680544ce32408540cf7691976848fb13d59a53d14b",
+      "type": "file"
+    },
+    {
+      "path": ".codex/skills/brain/SKILL.md",
+      "sha256": "b07aeee9849a586b7f592cb8101e2232e1bc0ed2857f3ee0079c6f54be464802",
+      "type": "file"
+    },
+    {
+      "path": ".codex/skills/commit/SKILL.md",
+      "sha256": "89de6169afef087a99e09d58c24553825f6baff020fe868d2e984e5f6818cf0c",
+      "type": "file"
+    },
+    {
+      "path": ".codex/skills/exec/SKILL.md",
+      "sha256": "475a61d03628fc9d7669e2488bfc288ef8387493d50a0a572e48aa2cbe735ac5",
+      "type": "file"
+    },
+    {
+      "path": ".codex/skills/plan/SKILL.md",
+      "sha256": "f5b71a43d8854ff6556feff43d401aa41ac831a67ce899f7782323892c178d9d",
+      "type": "file"
+    },
+    {
+      "path": ".codex/skills/review/SKILL.md",
+      "sha256": "6d5628b369a74666399559a1b2091a69a726ce399c32ec4b0abf791385c47dbe",
+      "type": "file"
+    },
+    {
+      "path": ".codex/skills/session/SKILL.md",
+      "sha256": "5d2f70aa5c9e4f08b3cd78467da48985f1680abba8068fc6176e6a43b726950d",
+      "type": "file"
+    },
+    {
+      "path": ".cursor/rules/agentwork-bootstrap.mdc",
+      "sha256": "73cfe3e9c39f07842c7a7f5b7488d44aae9254f48d326a950a3ec25d3151b5e5",
+      "type": "file"
+    },
+    {
+      "path": ".opencode/.gitignore",
+      "sha256": "ab65cf6a2d0a180cbfd763d8ec3f31ace77801cb7b385c5f8ef369b9a9e1b203",
+      "type": "file"
+    },
+    {
+      "path": ".opencode/commands/brain.md",
+      "sha256": "be90a3aa423bccdd67b1fe1d7a544697767aa877e2750995124ac36a5cacee3a",
+      "type": "file"
+    },
+    {
+      "path": ".opencode/commands/commit.md",
+      "sha256": "d883a66b2f9bd4afff2bbb902d471339dbba7159ecea84d5f3aba5c362bb6b80",
+      "type": "file"
+    },
+    {
+      "path": ".opencode/commands/exec.md",
+      "sha256": "ac422500228b040e64ecbc443b0917480f27ba4762161f27e68c00e1d22d8357",
+      "type": "file"
+    },
+    {
+      "path": ".opencode/commands/plan.md",
+      "sha256": "cda69b3afd2929c50a0b822425ab4817224b242ac6dd7baaf2afa16aa0cfe9d1",
+      "type": "file"
+    },
+    {
+      "path": ".opencode/commands/review.md",
+      "sha256": "8c04f0962dbdb92687a14e8a5f4c4698cd53660ac7228af5fae7d3c8ab102874",
+      "type": "file"
+    },
+    {
+      "path": ".opencode/commands/session.md",
+      "sha256": "11b20454d33ae6814f7b1468df86c2347eeb9e77c9f8ee243e70115c52fc8414",
+      "type": "file"
+    },
+    {
+      "path": ".shared/INDEX.md",
+      "sha256": "bc0d099c661d2f407afb03589deda9dd6d3e41cdcbbcabdd421e6bdc8d776608",
+      "type": "file"
+    },
+    {
+      "path": ".shared/commands/brain.md",
+      "sha256": "f39198cdb8e0f107ab4bcc9516c842f80a0a2bba6d268ac932a656b383a75d81",
+      "type": "file"
+    },
+    {
+      "path": ".shared/commands/commit.md",
+      "sha256": "9e58a6a76a34288518cca0337743274d120242e7b7da6aa0e4131d4a02fecd95",
+      "type": "file"
+    },
+    {
+      "path": ".shared/commands/exec.md",
+      "sha256": "a0c9cb4bbced54edc51d5019b00d9334fbe58a3c011f941a2a52271be8756a43",
+      "type": "file"
+    },
+    {
+      "path": ".shared/commands/plan.md",
+      "sha256": "b1e4d4e909817bee70c3c8f9244535bd71fc3454dd4b54d980ea17b5c8c9f3ef",
+      "type": "file"
+    },
+    {
+      "path": ".shared/commands/review.md",
+      "sha256": "da759eaf52c81f611e17b960570b16f1b72b5034bcbe9bc2a007a556db41058d",
+      "type": "file"
+    },
+    {
+      "path": ".shared/commands/session.md",
+      "sha256": "8b97fa073660d3105ff8a46db6ba6f9f10edbd3b8b38783c39f7964278b52928",
+      "type": "file"
+    },
+    {
+      "path": ".shared/constraints/coding-style.md",
+      "sha256": "2e13d9fd3943d3ec0ff6f51c3222d836cc52eda8a0d892e1b2d993c141afe1cb",
+      "type": "file"
+    },
+    {
+      "path": ".shared/constraints/destructive-operations.md",
+      "sha256": "62df872bce25d6dda39310a08bff4016da0c7e847101087f5764a212eca4c268",
+      "type": "file"
+    },
+    {
+      "path": ".shared/constraints/placeholder-naming.md",
+      "sha256": "a2e6cb8fbbed2f7fdc51798082a7059419a6a2170b1f02c268dea90b76596d42",
+      "type": "file"
+    },
+    {
+      "path": ".shared/patterns/platform-adapter.md",
+      "sha256": "b7923cd7d133ef9900153d24c6e8e0653a9740482c183eecaf0921cbfcebf2b0",
+      "type": "file"
+    },
+    {
+      "path": ".shared/patterns/project-management.md",
+      "sha256": "7961cfe744ba404dbe6a16f848ffa2f97366433d76d7c93c43077e6fd4bfce6e",
+      "type": "file"
+    },
+    {
+      "path": ".shared/patterns/semantic-navigation.md",
+      "sha256": "576a968ebe6043202a74b8547a98b091cdebf21d3d6c87014d459c391e7bc14b",
+      "type": "file"
+    },
+    {
+      "path": ".shared/patterns/session-workflow.md",
+      "sha256": "1b93a87eaaf3058e7492379f2da37118f1f99bb5108e70cbcfc861c21b5feb0c",
+      "type": "file"
+    },
+    {
+      "path": ".shared/patterns/subagent-workflow.md",
+      "sha256": "7c1a9b4470b771957c9d93c3347faad8ec35829bbee39aa11125c08ad1dcdb7c",
+      "type": "file"
+    },
+    {
+      "path": ".shared/scripts/README.md",
+      "sha256": "64cbf08a70272f5d9c4d0d81d07a173a7b1f66a95e158191faad60bf8a585ae0",
+      "type": "file"
+    },
+    {
+      "path": ".shared/scripts/agentwork-check.py",
+      "sha256": "78fa3dd210620f3bab81ea53610e8977cf26c9fcdb175f74ac3f991313825bd9",
+      "type": "file"
+    },
+    {
+      "path": ".shared/scripts/command-preview.sh",
+      "sha256": "4673dbe8b38be9ddd878714849a916f3dfffed539933ad565ca774ec972aec88",
+      "type": "file"
+    },
+    {
+      "path": ".shared/scripts/session-review.sh",
+      "sha256": "4845f477f703d4927b6333f336b39860f1eada3e9a0bca8748b970d5566b5ad8",
+      "type": "file"
+    },
+    {
+      "path": ".shared/templates/brain.md",
+      "sha256": "d788bc9dbbabad5b597164e9e73fc1d75094207c8cd001846f3a17790e0c4c99",
+      "type": "file"
+    },
+    {
+      "path": ".shared/templates/plan.md",
+      "sha256": "a413153ad0219f256fee53db313932d17d90a39db9f9befe906b9b474c62be55",
+      "type": "file"
+    },
+    {
+      "path": ".shared/templates/project.md",
+      "sha256": "ce1ab9294aa3f76a889fd0a4373e6aaa9ce1ffdd61cd88b5ac5d0fb96d16c17d",
+      "type": "file"
+    },
+    {
+      "path": ".shared/templates/review.md",
+      "sha256": "a290ef7de5bd28a0f18e37fb4fecf3e4e468419bf3f41cae170efc7cb5022170",
+      "type": "file"
+    },
+    {
+      "path": ".shared/templates/session.md",
+      "sha256": "2f9d6bf84b5832bf5b2cc7375d39dded8c92143368036da0b3fa5b6a93154bf2",
+      "type": "file"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "befefd2d9dedc580ad93f2bcf88c8e8e9475cacab7ffbd8ff0fb049e183529fd",
+      "type": "file"
+    }
+  ],
+  "schema_version": 1
+}

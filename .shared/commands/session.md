@@ -28,7 +28,7 @@ Session 管理与推进命令。
 
 把当前对话新增信息同步到当前 session。
 
-- 只同步当前对话中已经明确的新信息，不替代 `/exec` 的执行状态同步，也不替代 `/review` 的取证审查、历史压缩和语义收敛。
+- 只同步当前对话中已经明确的新信息，不替代 `/exec` 的执行状态同步，也不替代 `/review` 的取证审查、历史压缩和信息保留检查。
 
 ## /session new <session-desc>
 
@@ -75,6 +75,7 @@ Session 管理与推进命令。
 - 调用 `/exec`
 - 执行后必须同步 session 的任务状态、当前批次工作集、产出批次和风险 / 阻塞
 - 当前批次工作集必须保留 `## 当前批次工作集（可选）` 小节；条目格式必须是 `- 范围: `path` | 主题: ...`，不要写成 `- 已完成:` 或命令流水
+- 产出批次按提交、行为和决策归类；保留有独立语义的提交锚点，可把相关提交合并到一条并用目录/主题范围代替逐文件清单。同一 hash 默认只出现一次
 - 同步后运行 `.shared/scripts/agentwork-check.py session <session-ref> --strict-flow`
 
 ## /session review [session-ref]
@@ -82,5 +83,7 @@ Session 管理与推进命令。
 - 调用 `/review [review-source]`；未传入 `[session-ref]` 时使用当前 session，传入时把该 session ref 作为 `review-source`
 - 不仅整理 session 文本，也对当前工作产物做结构化审查
 - `/session review` 默认只更新 session，不额外生成 `.tmp/agentwork/review/*.md`
+- `/session review` 不按固定条数截断产出锚点；只压缩重复路径、命令流水和无新增语义的 session/格式提交。未解决风险、兼容/迁移前提、关键取舍和仍影响接力的旧结论必须保留或指向可追溯来源
+- `/session review` 的审查记录先按标题中的实际日期识别新旧并按时间倒序整理，不按原文位置推断时间；最近 3 个有独立结论/验证的审查事件保留变更、验证和风险/待办详情，历史审查摘要不计入名额；更早记录按里程碑或时间段压缩为一句话/简述。已关闭或归档指针 session 可主要保留历史摘要，但未解决风险、兼容/迁移前提、关键取舍和接力所需旧结论不压缩掉
 - review 后必须保证 session 仍保留可恢复的当前批次工作集；即使任务已完成，也不要删除该小节，完成状态由任务列表 checkbox 与产出批次表达
 - 完成 `.shared/scripts/session-review.sh <session-ref>` 取证和 session 收敛后，运行 `.shared/scripts/agentwork-check.py session <session-ref> --strict-flow`

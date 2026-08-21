@@ -39,7 +39,7 @@
 - 或按行号 / 偏移重新抓取定向片段
 
 ### session-review.sh
-用途：对照 session 的“当前批次工作集”与当前工作区实际改动，并检查“产出批次（提交锚点）”，辅助执行 `/review` 或 `/session review`
+用途：对照 session 的“当前批次工作集”与当前工作区实际改动，并检查“产出批次（提交锚点）”。支持一条产出记录聚合多个相关提交，区分当前仓、独立仓和当前仓不可验证的历史锚点；不可验证不等于应删除，辅助执行 `/review` 或 `/session review`
 
 ```bash
 .shared/scripts/session-review.sh                # 审查最新 session
