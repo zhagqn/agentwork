@@ -1,11 +1,11 @@
-# 平台适配层说明（Codex / Claude / OpenCode / Cursor）
+# 平台适配层说明（Codex / Claude / OpenCode / Cursor / Pi）
 
 > 目的：在保留 `.shared/` 统一规则的前提下，明确“平台能力边界 + 触发差异 + 回退策略”，确保跨平台协作的一致性。
 
 ## 适用范围
 
-- 目录：`AGENTS.md`、`.claude/*`、`.codex/*`、`.opencode/*`、`.cursor/*`、`.shared/*`
-- 对象：Codex CLI、Claude Code、OpenCode、Cursor（及同类代理平台）
+- 目录：`AGENTS.md`、`.claude/*`、`.codex/*`、`.opencode/*`、`.cursor/*`、`.pi/*`、`.shared/*`
+- 对象：Codex CLI、Claude Code、OpenCode、Cursor、Pi（及同类代理平台）
 
 ## 核心原则（最佳实践）
 
@@ -56,6 +56,7 @@
 | Claude Code | `.claude/CLAUDE.md`、`.claude/commands/*`、`.claude/skills/*` | slash commands 与 skills 触发/优先级规则 | 自动迭代优先平台原生 loop；定时轮询优先官方 loop | 以 `.shared/commands/*` 为主入口，需跨平台共享语义时写入 session / plan / review |
 | OpenCode | `AGENTS.md`、`.opencode/commands/*` | 项目规则首个匹配、`AGENTS.md` 普通文件引用不会自动展开、commands/agents/skills 发现与权限默认值 | 使用原生 command 薄 wrapper 注入共享定义；平台 agents/skills 仅按任务需要启用 | 直接读取 `.shared/commands/*` 手动执行，继续以 session / plan / review 工件接力 |
 | Cursor | `.cursor/rules/*` | rules 的触发范围、上下文注入时机和工具权限需按项目验证 | 优先使用 Cursor 原生编辑、检索与诊断能力 | 退回 `AGENTS.md` + `.shared/commands/*`，需要接力时写入 session |
+| Pi | `AGENTS.md`、`.pi/prompts/{brain,plan,exec,review,commit,aw-session}.md` | `AGENTS.md` 可从祖先目录加载，项目 prompt 只从启动 cwd 的受信任 `.pi/prompts/` 发现；trust 与 sandbox 分离 | 使用项目 prompt 薄 wrapper；Pi 原生 session 只用于当前平台对话 | 从仓库根启动；命令缺失或冲突时直接执行 `.shared/commands/*`，跨平台接力仍写入 session / plan / review |
 
 ## OpenCode 适配边界
 
@@ -66,6 +67,17 @@
 - OpenCode 项目级 skills 发现兼容 `.claude/skills/*` 与 `.agents/skills/*`；skill 类可选工具（如 browser）随工具安装落地 `.claude/skills/` 后即可被发现，无需重复包装到 `.opencode/skills/`。
 - OpenCode 的 `/undo` / `/redo` 会改写工作树；agentwork 不自动触发这些命令，也不把它们当作 staged 区管理工具。
 - command 解析或权限行为在平台升级后漂移时，按本文冲突处理流程回退。
+
+## Pi 适配边界
+
+- 当前兼容基线是 Pi `v0.84.4` 的 [prompt template](https://github.com/earendil-works/pi/blob/v0.84.4/packages/coding-agent/docs/prompt-templates.md)、[project trust / security](https://github.com/earendil-works/pi/blob/v0.84.4/packages/coding-agent/docs/security.md) 与 [CLI usage](https://github.com/earendil-works/pi/blob/v0.84.4/packages/coding-agent/docs/usage.md) 契约。平台升级后需重新验证，不能把该基线自动外推到所有未来版本。
+- `.pi/prompts/{brain,plan,exec,review,commit,aw-session}.md` 是生成式薄入口，只转发 Pi 展开的 `$ARGUMENTS` 并要求读取对应 `.shared/*`；共享文件仍是工作流语义唯一事实源。
+- Pi 会沿启动 cwd 的祖先目录加载 `AGENTS.md`，但项目 `.pi/prompts/` 从启动 cwd 发现且只有在项目被信任后加载。因此应从仓库根启动；从子目录启动可能仍得到根规则，却没有 agentwork 项目命令。
+- Project trust 只控制项目资源加载，不是 sandbox。Pi 内建工具与 extension 继承启动 Pi 的本机用户权限；agentwork 的高风险确认仍是文本契约，真正隔离需由操作系统、容器或虚拟化边界提供。
+- 非交互 `-p`、JSON 与 RPC 模式不会显示 trust 提示。`--approve` / `-a` 只为本次运行信任项目资源，不是工具调用批准；调用者必须先独立判断项目是否可信。
+- Pi 内置 `/session` 展示 Pi 自身对话 session 信息；agentwork 在 Pi 上使用 `/aw-session` 映射共享 `.shared/commands/session.md`。Pi 的用户目录 JSONL 状态不替代仓库内显式 session / plan / review 工件。
+- Pi 核心不内置 plan mode 或 subagent。官方 [plan-mode 示例](https://github.com/earendil-works/pi/tree/v0.84.4/packages/coding-agent/examples/extensions/plan-mode) 会注册 `/plan`，若用户另行安装可能与 agentwork `/plan` prompt 冲突；不承诺优先级，冲突时禁用或重命名其中一方，并直接回退到 `.shared/commands/plan.md`。
+- 核心 bootstrap 不安装 Pi runtime、package、extension、官方 [subagent 示例](https://github.com/earendil-works/pi/tree/v0.84.4/packages/coding-agent/examples/extensions/subagent) 或 optional tool。Browser、Research、CodeGraph 可通过各自 manifest 显式安装 `.pi/skills/**` 薄入口，但不会生成 `.pi/settings.json`、安装外部 CLI 或假设 MCP 已接线；其他 Pi 扩展能力仍需独立设计、安装与验证。
 
 ## Codex custom agent 边界
 

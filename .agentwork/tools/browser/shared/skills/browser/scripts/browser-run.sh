@@ -12,7 +12,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../../.." && pwd)"
 BROWSER_TMP_ROOT="${BROWSER_TMP_ROOT:-${PROJECT_ROOT}/.tmp/browser}"
 PROFILE_DIR="${BROWSER_TMP_ROOT}/profile"
 DOWNLOAD_DIR="${BROWSER_TMP_ROOT}/downloads"
-BROWSER_CDP_PREFER="${BROWSER_CDP_PREFER:-1}"
+BROWSER_CDP_PREFER="${BROWSER_CDP_PREFER:-0}"
 BROWSER_CDP_TARGET="${BROWSER_CDP_TARGET:-9222}"
 OS_NAME="$(uname -s)"
 
@@ -24,7 +24,20 @@ print(hashlib.sha256(sys.argv[1].encode()).hexdigest()[:16])
 PY
 )"
 DEFAULT_RUNTIME_ROOT="/tmp/agentwork-browser-$(id -u)"
-SESSION="${AGENT_BROWSER_SESSION:-default}"
+SESSION_IS_EXPLICIT=0
+SESSION="unscoped"
+if [[ -n "${AGENT_BROWSER_SESSION:-}" ]]; then
+  if [[ ! "${AGENT_BROWSER_SESSION}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$ ]]; then
+    echo "错误: AGENT_BROWSER_SESSION 必须是 1-64 位字母、数字、点、下划线或短横线，且以字母或数字开头。" >&2
+    exit 2
+  fi
+  if [[ "${AGENT_BROWSER_SESSION}" == "default" || "${AGENT_BROWSER_SESSION}" == "unscoped" ]]; then
+    echo "错误: AGENT_BROWSER_SESSION 不能使用保留名 default 或 unscoped，请为当前任务选择唯一名称。" >&2
+    exit 2
+  fi
+  SESSION="${AGENT_BROWSER_SESSION}"
+  SESSION_IS_EXPLICIT=1
+fi
 PREVIOUS_SOCKET_DIR="${BROWSER_TMP_ROOT}/agent-browser"
 LEGACY_SOCKET_DIR="${BROWSER_TMP_ROOT}"
 
@@ -248,6 +261,17 @@ EOF
   exit 1
 fi
 
+case "$1" in
+  install | paths | skills | help | --help | -h | --version | -V)
+    ;;
+  *)
+    if [[ "${SESSION_IS_EXPLICIT}" != "1" ]]; then
+      echo "错误: 浏览器命令必须显式设置任务级 AGENT_BROWSER_SESSION，例如 task-4f8a2c；同一任务的每次调用应复用同一值。" >&2
+      exit 2
+    fi
+    ;;
+esac
+
 if [[ "$1" == "paths" ]]; then
   cat <<EOF
 BROWSER_TMP_ROOT=${BROWSER_TMP_ROOT}
@@ -256,6 +280,7 @@ BROWSER_CDP_TARGET=${BROWSER_CDP_TARGET}
 PROFILE_DIR=${PROFILE_DIR}
 DOWNLOAD_DIR=${DOWNLOAD_DIR}
 SOCKET_DIR=${SOCKET_DIR}
+AGENT_BROWSER_SESSION=${AGENT_BROWSER_SESSION:-}
 AGENT_BROWSER_SOCKET_DIR=${AGENT_BROWSER_SOCKET_DIR}
 AGENT_BROWSER_DOWNLOAD_PATH=${AGENT_BROWSER_DOWNLOAD_PATH}
 BROWSER_EXPORT_TMPDIR=${BROWSER_EXPORT_TMPDIR}
@@ -342,7 +367,7 @@ if [[ "${BROWSER_CDP_PREFER}" == "1" ]]; then
     connect | install | paths | skills | help | --help | -h | --version | -V)
       ;;
     *)
-      # 临时测试默认优先尝试 CDP，失败时自动回退到本地模式。
+      # 只有显式启用时才探测 CDP，失败后回退到项目本地 profile。
       if cdp_endpoint="$(resolve_cdp_target "${BROWSER_CDP_TARGET}" 2>/dev/null)"; then
         exec env -u AGENT_BROWSER_PROFILE agent-browser --cdp "${cdp_endpoint}" "$@"
       fi

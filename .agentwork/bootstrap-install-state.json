@@ -111,6 +111,36 @@
       "type": "file"
     },
     {
+      "path": ".pi/prompts/aw-session.md",
+      "sha256": "40c2cbe47979a9576bfac47ccda34789b9b1045ef716f763a9a04b7215cb5f07",
+      "type": "file"
+    },
+    {
+      "path": ".pi/prompts/brain.md",
+      "sha256": "ffeedf9c65bcf403d3e2d7370b3f3a364067bbdb3328ea5dbd2d8620eb990ba2",
+      "type": "file"
+    },
+    {
+      "path": ".pi/prompts/commit.md",
+      "sha256": "339ab8806ba7a39af205ca88d83b91c36738b93c7e0d15278aca031cdcefd4d2",
+      "type": "file"
+    },
+    {
+      "path": ".pi/prompts/exec.md",
+      "sha256": "e472c70254624e8d87a54454ef9685bb330b913516d13ee848e9c2020fd9ec9c",
+      "type": "file"
+    },
+    {
+      "path": ".pi/prompts/plan.md",
+      "sha256": "86301c482e0cd536c982a43a68a26b5434869a6160c19ca63deb49607e127a86",
+      "type": "file"
+    },
+    {
+      "path": ".pi/prompts/review.md",
+      "sha256": "f83d13c46d582457672f58711cdbf65d430f0bf76c6ba8443145577a437081d7",
+      "type": "file"
+    },
+    {
       "path": ".shared/INDEX.md",
       "sha256": "bc0d099c661d2f407afb03589deda9dd6d3e41cdcbbcabdd421e6bdc8d776608",
       "type": "file"
@@ -162,7 +192,7 @@
     },
     {
       "path": ".shared/patterns/platform-adapter.md",
-      "sha256": "b7923cd7d133ef9900153d24c6e8e0653a9740482c183eecaf0921cbfcebf2b0",
+      "sha256": "0f11539bcb595f82048c715c916eb88914c8a9b52119275b8a97d8631794927b",
       "type": "file"
     },
     {
@@ -232,7 +262,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "befefd2d9dedc580ad93f2bcf88c8e8e9475cacab7ffbd8ff0fb049e183529fd",
+      "sha256": "8dcde1807ce66ac1e07133fbda6ab2b1189085d43fe4ee4110a447454e8f97a3",
       "type": "file"
     }
   ],

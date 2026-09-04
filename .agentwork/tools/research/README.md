@@ -9,10 +9,12 @@
 ## 内容
 
 - 共享研究契约
-- Codex / Claude / Cursor 薄入口
+- Codex / Claude / Cursor / Pi 薄入口
 - source-only 评测契约和用例（不安装到目标项目）
 
-OpenCode 通过 `.claude/skills` 兼容发现，不维护独立正文副本。
+OpenCode 通过 `.claude/skills` 兼容发现，不维护独立正文副本。Pi 通过
+项目级 `.pi/skills/research/SKILL.md` 自动发现，不要求或生成
+`.pi/settings.json`。
 
 ## 单一入口
 

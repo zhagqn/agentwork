@@ -23,12 +23,29 @@ Run browser commands through the project wrapper:
 .shared/skills/browser/scripts/browser-run.sh <command> [arguments]
 ```
 
-The wrapper keeps browser artifacts under `.tmp/browser`, chooses the
-project's configured CDP target when available, and falls back to a local
-browser process when CDP discovery fails. Ephemeral daemon sockets use a short,
+The wrapper keeps browser artifacts under `.tmp/browser` and uses a local
+project profile by default. CDP discovery is opt-in, so an unrelated browser on
+port 9222 is never attached implicitly. Ephemeral daemon sockets use a short,
 project-isolated runtime directory under `/tmp` so named sessions remain usable
 when the project path is deep. Set `AGENT_BROWSER_SOCKET_DIR` only when the
 runtime environment requires an explicit alternative.
+
+## Task-Scoped Session
+
+Before the first stateful browser command, choose one short session name for
+the current task. Prefix every wrapper invocation in that task with the same
+value:
+
+```bash
+AGENT_BROWSER_SESSION=task-4f8a2c \
+  .shared/skills/browser/scripts/browser-run.sh tab list
+```
+
+The wrapper rejects stateful commands without an explicit session. Do not
+reuse a session across unrelated tasks or agents. Session names must be 1-64
+characters, start with a letter or digit, and contain only letters, digits,
+periods, underscores, or hyphens. `default` and `unscoped` are reserved and
+cannot be used for stateful commands.
 
 ## Discover Installed Capabilities
 
@@ -78,8 +95,9 @@ guessing.
 ## Wrapper Configuration
 
 - `BROWSER_TMP_ROOT` changes the project-local artifact root.
-- `BROWSER_CDP_TARGET` selects the preferred CDP port or endpoint.
-- `BROWSER_CDP_PREFER=0` disables automatic CDP preference.
+- `AGENT_BROWSER_SESSION` selects the required task-scoped browser session.
+- `BROWSER_CDP_PREFER=1` enables automatic CDP discovery; the default is `0`.
+- `BROWSER_CDP_TARGET` selects the CDP port or endpoint used when discovery is enabled.
 - `AGENT_BROWSER_SOCKET_DIR` overrides the short project-isolated daemon
   runtime directory; it does not change project artifact paths.
 

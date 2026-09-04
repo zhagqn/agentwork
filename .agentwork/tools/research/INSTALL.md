@@ -3,7 +3,7 @@
 ## What gets installed
 
 - `.shared/skills/research/SKILL.md`
-- thin wrappers for Codex / Claude / Cursor
+- thin wrappers for Codex / Claude / Cursor / Pi
 
 评测用例、provider、二进制、密钥和平台 MCP 配置不会安装到目标项目。
 

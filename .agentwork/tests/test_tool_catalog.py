@@ -145,6 +145,7 @@ class ToolCatalogTest(unittest.TestCase):
                 '.shared/skills/browser/scripts/browser-run.sh',
                 '.codex/skills/browser/SKILL.md',
                 '.claude/skills/browser/SKILL.md',
+                '.pi/skills/browser',
                 '.cursor/rules/browser.mdc',
             },
         )
@@ -163,6 +164,7 @@ class ToolCatalogTest(unittest.TestCase):
         wrappers = (
             BROWSER_ROOT / 'codex/skills/browser/SKILL.md',
             BROWSER_ROOT / 'claude/skills/browser/SKILL.md',
+            BROWSER_ROOT / 'pi/skills/browser/SKILL.md',
             BROWSER_ROOT / 'cursor/rules/browser.mdc',
         )
         for wrapper in wrappers:
@@ -288,6 +290,8 @@ class BrowserWrapperTest(unittest.TestCase):
             if '=' in line
         )
         socket_dir = Path(paths['SOCKET_DIR'])
+        self.assertEqual(paths['BROWSER_CDP_PREFER'], '0')
+        self.assertEqual(paths['AGENT_BROWSER_SESSION'], 'route12')
         self.assertFalse(socket_dir.is_relative_to(self.project))
         self.assertTrue(
             socket_dir.is_relative_to(Path(f'/tmp/agentwork-browser-{os.getuid()}'))
@@ -361,6 +365,46 @@ class BrowserWrapperTest(unittest.TestCase):
             capture,
             r'ARGS\tscreenshot\t.+/\.tmp/browser/screenshot-\d{8}-\d{6}\.png',
         )
+
+    def test_stateful_commands_require_a_safe_explicit_session(self) -> None:
+        no_session = self.env.copy()
+        no_session.pop('AGENT_BROWSER_SESSION')
+        result = subprocess.run(
+            [str(self.wrapper), 'open', 'http://127.0.0.1/test'],
+            cwd=self.project,
+            env=no_session,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('任务级 AGENT_BROWSER_SESSION', result.stderr)
+
+        invalid_session = self.env | {'AGENT_BROWSER_SESSION': '../escape'}
+        result = subprocess.run(
+            [str(self.wrapper), 'open', 'http://127.0.0.1/test'],
+            cwd=self.project,
+            env=invalid_session,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('AGENT_BROWSER_SESSION 必须', result.stderr)
+
+        reserved_session = self.env | {'AGENT_BROWSER_SESSION': 'default'}
+        result = subprocess.run(
+            [str(self.wrapper), 'open', 'http://127.0.0.1/test'],
+            cwd=self.project,
+            env=reserved_session,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('不能使用保留名', result.stderr)
+
+        self.run_wrapper('--help', env=no_session)
 
     def test_cleanup_is_scoped_to_the_current_session(self) -> None:
         paths = dict(

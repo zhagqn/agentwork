@@ -49,7 +49,8 @@
       "name": "codegraph",
       "dir": "codegraph",
       "kind": [
-        "mcp"
+        "mcp",
+        "skill"
       ]
     },
     {

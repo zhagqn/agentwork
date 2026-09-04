@@ -4,11 +4,11 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 import hashlib
+import importlib.util
 import json
 import os
 import re
 import shutil
-import subprocess
 import sys
 import tempfile
 import tomllib
@@ -74,6 +74,7 @@ RETIRED_ADAPTER_PATHS = RETIRED_BOOTSTRAP_PATHS + tuple(RETIRED_TOOL_SIGNATURES)
 RECEIPT_SCHEMA_VERSION = 1
 RECEIPT_REL = Path('.agentwork/bootstrap-install-state.json')
 SHA256_PATTERN = re.compile(r'^[0-9a-f]{64}$')
+COMMAND_NAME_PATTERN = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*$')
 
 
 @dataclass(frozen=True)
@@ -108,13 +109,56 @@ def is_python_cache_artifact(rel: Path) -> bool:
     return '__pycache__' in rel.parts or rel.suffix in {'.pyc', '.pyo'}
 
 
+def atomic_write_bytes(
+    path: Path,
+    content: bytes,
+    *,
+    mode_source: Path | None = None,
+) -> None:
+    """Replace a managed file without following a destination hardlink.
+
+    Writing through ``Path.write_bytes`` mutates the destination inode in place.
+    A project-owned hardlink could therefore make an installer update a file
+    outside the project.  A same-directory temporary file followed by
+    ``os.replace`` changes the directory entry instead and keeps that external
+    inode untouched.  Existing/source modes are retained where available;
+    newly-created files use the normal repository-document mode.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    mode: int | None = None
+    if path.exists() and not path.is_symlink() and path.is_file():
+        mode = path.stat().st_mode & 0o7777
+    elif mode_source is not None and mode_source.is_file() and not mode_source.is_symlink():
+        mode = mode_source.stat().st_mode & 0o7777
+
+    temp_name: str | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            prefix=f'.{path.name}.',
+            dir=path.parent,
+            delete=False,
+        ) as handle:
+            temp_name = handle.name
+            os.chmod(temp_name, mode if mode is not None else 0o644)
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temp_name, path)
+        temp_name = None
+    finally:
+        if temp_name is not None:
+            try:
+                Path(temp_name).unlink()
+            except FileNotFoundError:
+                pass
+
+
 def copy_file(src: Path, dst: Path) -> None:
     if src.resolve() == dst.resolve():
         return
     if dst.exists() and dst.is_dir():
         raise SystemExit(f'target path is a directory, expected file: {dst}')
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src, dst)
+    atomic_write_bytes(dst, src.read_bytes(), mode_source=src)
 
 
 def prune_empty_parents(path: Path, project_root: Path) -> None:
@@ -161,10 +205,26 @@ def remove_retired_adapters(target: Path, paths: tuple[Path, ...]) -> None:
         prune_empty_parents(path.parent, target)
 
 
-def refresh_generated_bootstrap() -> None:
+def load_bootstrap_renderer():
     renderer = BOOTSTRAP / 'render_bootstrap.py'
-    if renderer.exists():
-        subprocess.run([sys.executable, str(renderer)], check=True)
+    if not renderer.is_file():
+        raise SystemExit(f'bootstrap renderer is missing: {renderer}')
+    module_name = 'agentwork_bootstrap_renderer'
+    spec = importlib.util.spec_from_file_location(module_name, renderer)
+    if spec is None or spec.loader is None:
+        raise SystemExit(f'cannot load bootstrap renderer: {renderer}')
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    previous_bytecode_setting = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True
+    try:
+        spec.loader.exec_module(module)
+    except (Exception, KeyboardInterrupt, SystemExit):
+        sys.modules.pop(module_name, None)
+        raise
+    finally:
+        sys.dont_write_bytecode = previous_bytecode_setting
+    return module
 
 
 def load_tool_registry() -> dict:
@@ -224,27 +284,46 @@ def collect_core_shared_writes(target: Path):
 
 
 def collect_writes(target: Path):
+    spec = load_bootstrap_spec()
+    wrappers = load_wrapper_specs(spec)
     writes = []
     writes.extend(collect_core_shared_writes(target))
     root_bootstrap = ROOT / 'AGENTS.md' if target.resolve() == ROOT.resolve() else BOOTSTRAP / 'root' / 'AGENTS.md'
     writes.append((root_bootstrap, target / 'AGENTS.md', 'file', 'root bootstrap file'))
-    writes.append((BOOTSTRAP / 'claude' / 'CLAUDE.md', target / '.claude' / 'CLAUDE.md', 'file', 'Claude bootstrap file'))
-    for src in sorted((BOOTSTRAP / 'claude' / 'commands').glob('*.md')):
+    writes.append(
+        (
+            BOOTSTRAP / 'claude' / 'CLAUDE.md',
+            target / '.claude' / 'CLAUDE.md',
+            'file',
+            'Claude bootstrap file',
+        )
+    )
+    for wrapper in wrappers:
+        src = BOOTSTRAP / 'claude' / 'commands' / f"{wrapper['name']}.md"
         writes.append((src, target / '.claude' / 'commands' / src.name, 'file', 'Claude wrapper'))
-    writes.append((BOOTSTRAP / 'cursor' / 'rules' / 'agentwork-bootstrap.mdc', target / '.cursor' / 'rules' / 'agentwork-bootstrap.mdc', 'file', 'Cursor rule'))
-    codex_skills = BOOTSTRAP / 'codex' / 'skills'
-    for src in sorted(path for path in codex_skills.rglob('*') if path.is_file()):
-        if is_python_cache_artifact(src.relative_to(codex_skills)):
-            continue
-        writes.append((src, target / '.codex' / 'skills' / src.relative_to(codex_skills), 'file', 'Codex skill wrapper'))
-    for agent in load_codex_agents():
+    writes.append(
+        (
+            BOOTSTRAP / 'cursor' / 'rules' / 'agentwork-bootstrap.mdc',
+            target / '.cursor' / 'rules' / 'agentwork-bootstrap.mdc',
+            'file',
+            'Cursor rule',
+        )
+    )
+    for wrapper in wrappers:
+        src = BOOTSTRAP / 'codex' / 'skills' / wrapper['name'] / 'SKILL.md'
+        writes.append((src, target / '.codex' / 'skills' / wrapper['name'] / src.name, 'file', 'Codex skill wrapper'))
+    for agent in load_codex_agents(spec):
         src = BOOTSTRAP / 'codex' / 'agents' / agent['file']
         writes.append((src, target / '.codex' / 'agents' / src.name, 'file', 'Codex agent'))
-    for src in sorted((BOOTSTRAP / 'opencode' / 'commands').glob('*.md')):
+    for wrapper in wrappers:
+        src = BOOTSTRAP / 'opencode' / 'commands' / f"{wrapper['name']}.md"
         writes.append((src, target / '.opencode' / 'commands' / src.name, 'file', 'OpenCode command wrapper'))
     opencode_gitignore = BOOTSTRAP / 'opencode' / '.gitignore'
     if opencode_gitignore.exists():
         writes.append((opencode_gitignore, target / '.opencode' / '.gitignore', 'file', 'OpenCode dir gitignore'))
+    for name in load_pi_prompt_names(spec, wrappers):
+        src = BOOTSTRAP / 'pi' / 'prompts' / f'{name}.md'
+        writes.append((src, target / '.pi' / 'prompts' / src.name, 'file', 'Pi prompt wrapper'))
     return writes
 
 
@@ -280,9 +359,62 @@ def strip_managed_codex_config_block(text: str) -> tuple[str, bool]:
     return text[:start_idx] + text[end_idx:], True
 
 
-def load_codex_agents() -> list[dict]:
-    spec = json.loads((BOOTSTRAP / 'spec.json').read_text(encoding='utf-8'))
-    return spec['codex_agents']
+def load_bootstrap_spec() -> dict:
+    return json.loads((BOOTSTRAP / 'spec.json').read_text(encoding='utf-8'))
+
+
+def load_wrapper_specs(spec: dict | None = None) -> tuple[dict, ...]:
+    data = spec if spec is not None else load_bootstrap_spec()
+    wrappers = data.get('wrappers')
+    if not isinstance(wrappers, list):
+        raise SystemExit('invalid bootstrap wrapper specification')
+    seen: set[str] = set()
+    result: list[dict] = []
+    for wrapper in wrappers:
+        if not isinstance(wrapper, dict):
+            raise SystemExit('invalid bootstrap wrapper specification')
+        name = wrapper.get('name')
+        if not isinstance(name, str) or not COMMAND_NAME_PATTERN.fullmatch(name):
+            raise SystemExit(f'invalid bootstrap wrapper name: {name!r}')
+        folded = name.casefold()
+        if folded in seen:
+            raise SystemExit(f'duplicate bootstrap wrapper name: {name}')
+        seen.add(folded)
+        result.append(wrapper)
+    return tuple(result)
+
+
+def load_codex_agents(spec: dict | None = None) -> list[dict]:
+    data = spec if spec is not None else load_bootstrap_spec()
+    return data['codex_agents']
+
+
+def load_pi_prompt_names(
+    spec: dict | None = None,
+    wrappers: tuple[dict, ...] | None = None,
+) -> tuple[str, ...]:
+    data = spec if spec is not None else load_bootstrap_spec()
+    wrapper_specs = wrappers if wrappers is not None else load_wrapper_specs(data)
+    pi = data.get('pi')
+    if not isinstance(pi, dict):
+        raise SystemExit('invalid Pi bootstrap specification')
+    reserved = pi.get('tui_reserved_commands')
+    if not isinstance(reserved, list) or not all(isinstance(name, str) for name in reserved):
+        raise SystemExit('invalid Pi TUI reserved command list')
+    names: list[str] = []
+    seen: set[str] = set()
+    for wrapper in wrapper_specs:
+        name = wrapper.get('pi_name', wrapper.get('name'))
+        if not isinstance(name, str) or not COMMAND_NAME_PATTERN.fullmatch(name):
+            raise SystemExit(f'invalid Pi prompt name: {name!r}')
+        folded = name.casefold()
+        if folded in seen:
+            raise SystemExit(f'duplicate Pi prompt name: {name}')
+        seen.add(folded)
+        if name in reserved:
+            raise SystemExit(f'Pi prompt name conflicts with a TUI command: {name}')
+        names.append(name)
+    return tuple(names)
 
 
 def reject_symlink_path(path: Path, target: Path, label: str) -> None:
@@ -342,7 +474,17 @@ def load_receipt(target: Path) -> dict[str, str]:
     return result
 
 
-def build_receipt(target: Path, writes) -> bytes:
+def read_source_bytes(src: Path, source_contents: dict[Path, bytes] | None = None) -> bytes:
+    if source_contents is not None and src in source_contents:
+        return source_contents[src]
+    return src.read_bytes()
+
+
+def build_receipt(
+    target: Path,
+    writes,
+    source_contents: dict[Path, bytes] | None = None,
+) -> bytes:
     entries = []
     seen: set[str] = set()
     for src, dst, kind, _ in writes:
@@ -355,7 +497,13 @@ def build_receipt(target: Path, writes) -> bytes:
         if rel in seen:
             raise SystemExit(f'duplicate bootstrap write target: {rel}')
         seen.add(rel)
-        entries.append({'path': rel, 'type': 'file', 'sha256': sha256_bytes(src.read_bytes())})
+        entries.append(
+            {
+                'path': rel,
+                'type': 'file',
+                'sha256': sha256_bytes(read_source_bytes(src, source_contents)),
+            }
+        )
     data = {'schema_version': RECEIPT_SCHEMA_VERSION, 'files': sorted(entries, key=lambda entry: entry['path'])}
     return (json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + '\n').encode('utf-8')
 
@@ -371,6 +519,7 @@ def write_receipt(target: Path, content: bytes) -> None:
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temp_name, path)
+        temp_name = None
     finally:
         if temp_name is not None:
             try:
@@ -393,18 +542,23 @@ def has_matching_generated_marker(source: bytes, existing: bytes) -> bool:
     return any(marker in source and marker in existing for marker in markers)
 
 
-def preflight_writes(target: Path, writes, previous: dict[str, str]) -> None:
+def preflight_writes(
+    target: Path,
+    writes,
+    previous: dict[str, str],
+    source_contents: dict[Path, bytes] | None = None,
+) -> None:
     conflicts: list[tuple[str, str]] = []
     for src, dst, kind, _ in writes:
         if kind != 'file':
             conflicts.append((target_rel(target, dst), f'unsupported managed type: {kind}'))
             continue
-        if src.resolve() == dst.resolve():
-            continue
         rel = target_rel(target, dst)
         symlink = symlink_in_path(dst, target)
         if symlink is not None:
             conflicts.append((rel, f'path contains symlink: {target_rel(target, symlink)}'))
+            continue
+        if src.resolve() == dst.resolve():
             continue
         if not dst.exists():
             continue
@@ -412,7 +566,7 @@ def preflight_writes(target: Path, writes, previous: dict[str, str]) -> None:
             conflicts.append((rel, 'target is not a regular file'))
             continue
         try:
-            source = src.read_bytes()
+            source = read_source_bytes(src, source_contents)
             existing = dst.read_bytes()
         except OSError as exc:
             conflicts.append((rel, f'cannot read source or target: {exc}'))
@@ -433,7 +587,10 @@ def preflight_writes(target: Path, writes, previous: dict[str, str]) -> None:
         raise SystemExit(f'bootstrap ownership conflicts:\n{details}')
 
 
-def prepare_codex_config(target: Path) -> tuple[Path, bytes]:
+def prepare_codex_config(
+    target: Path,
+    source_contents: dict[Path, bytes] | None = None,
+) -> tuple[Path, bytes]:
     config = target / '.codex' / 'config.toml'
     reject_symlink_path(config, target, 'Codex config')
     if config.exists() and not config.is_file():
@@ -456,7 +613,11 @@ def prepare_codex_config(target: Path) -> tuple[Path, bytes]:
         raise SystemExit(f'Codex config already defines agentwork-managed role outside its managed block: {names}')
 
     newline = '\r\n' if '\r\n' in original else '\n'
-    block = CODEX_CONFIG_BLOCK.read_text(encoding='utf-8').rstrip('\n').replace('\n', newline)
+    try:
+        block = read_source_bytes(CODEX_CONFIG_BLOCK, source_contents).decode('utf-8')
+    except UnicodeDecodeError as exc:
+        raise SystemExit(f'generated Codex config block is not UTF-8: {CODEX_CONFIG_BLOCK}') from exc
+    block = block.rstrip('\n').replace('\n', newline)
     if had_block:
         start_idx = original.find(CODEX_CONFIG_BLOCK_START)
         end_idx = original.find(CODEX_CONFIG_BLOCK_END) + len(CODEX_CONFIG_BLOCK_END)
@@ -515,8 +676,7 @@ def prepare_managed_indexes(target: Path) -> tuple[PreparedFile, ...]:
 
 
 def write_prepared_file(prepared: PreparedFile) -> None:
-    prepared.path.parent.mkdir(parents=True, exist_ok=True)
-    prepared.path.write_bytes(prepared.content)
+    atomic_write_bytes(prepared.path, prepared.content)
 
 
 def write_managed_indexes(prepared: tuple[PreparedFile, ...]) -> None:
@@ -659,12 +819,12 @@ def run_transaction(target: Path, paths: tuple[Path, ...], operation: Callable[[
 
         try:
             operation()
-        except (Exception, KeyboardInterrupt) as exc:
+        except (Exception, KeyboardInterrupt, SystemExit) as exc:
             rollback_errors: list[str] = []
             for snapshot in reversed(snapshots):
                 try:
                     restore_snapshot(snapshot)
-                except Exception as rollback_exc:
+                except (Exception, KeyboardInterrupt, SystemExit) as rollback_exc:
                     rollback_errors.append(f'{target_rel(target, snapshot.path)}: {rollback_exc}')
             for path in new_parents:
                 try:
@@ -689,14 +849,18 @@ def target_rel(target: Path, path: Path) -> str:
         return str(path)
 
 
-def prepare_bootstrap_plan(target: Path) -> BootstrapPlan:
+def prepare_bootstrap_plan(
+    target: Path,
+    *,
+    source_contents: dict[Path, bytes] | None = None,
+) -> BootstrapPlan:
     if target.exists() and not target.is_dir():
         raise SystemExit(f'project root must be a directory: {target}')
     writes = tuple(collect_writes(target))
     previous_receipt = load_receipt(target)
-    preflight_writes(target, writes, previous_receipt)
-    next_receipt = build_receipt(target, writes)
-    config_path, config_content = prepare_codex_config(target)
+    preflight_writes(target, writes, previous_receipt, source_contents)
+    next_receipt = build_receipt(target, writes, source_contents)
+    config_path, config_content = prepare_codex_config(target, source_contents)
     managed_indexes = prepare_managed_indexes(target)
     gitignore, gitignore_status, gitignore_changed = prepare_gitignore(target)
     retired_removed, retired_preserved = classify_retired_adapters(target)
@@ -764,6 +928,27 @@ def apply_bootstrap_plan(plan: BootstrapPlan) -> None:
     print('- left existing installed tool files in place')
 
 
+def run_source_self_host(target: Path) -> None:
+    renderer = load_bootstrap_renderer()
+    rendered = renderer.prepare_rendered_bootstrap()
+    renderer.preflight_rendered_bootstrap(rendered)
+    source_contents = {item.path: item.content for item in rendered}
+    plan = prepare_bootstrap_plan(target, source_contents=source_contents)
+    transaction_paths = collect_transaction_paths(
+        target,
+        [*(item.path for item in rendered), *plan.transaction_paths],
+    )
+
+    def operation() -> None:
+        renderer.apply_rendered_bootstrap(rendered)
+        for item in rendered:
+            if item.path.read_bytes() != item.content:
+                raise OSError(f'bootstrap renderer output verification failed: {item.path}')
+        apply_bootstrap_plan(plan)
+
+    run_transaction(target, transaction_paths, operation)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description='Install agentwork bootstrap into a target project, or refresh the source repo in place.')
     parser.add_argument('-p', '--project-root', required=True, help='target project root (required)')
@@ -771,14 +956,14 @@ def main() -> int:
 
     target = Path(args.project_root).resolve()
     if target == ROOT:
-        prepare_bootstrap_plan(target)
-        refresh_generated_bootstrap()
-    plan = prepare_bootstrap_plan(target)
-    run_transaction(
-        target,
-        plan.transaction_paths,
-        lambda: apply_bootstrap_plan(plan),
-    )
+        run_source_self_host(target)
+    else:
+        plan = prepare_bootstrap_plan(target)
+        run_transaction(
+            target,
+            plan.transaction_paths,
+            lambda: apply_bootstrap_plan(plan),
+        )
     return 0
 
 

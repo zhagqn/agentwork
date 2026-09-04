@@ -3,7 +3,7 @@
 ## What gets installed
 - `.shared/skills/browser/SKILL.md`
 - `.shared/skills/browser/scripts/browser-run.sh`
-- thin wrappers for Codex / Claude / Cursor
+- thin wrappers for Codex / Claude / Cursor / Pi
 
 ## Install
 ```bash
@@ -23,6 +23,8 @@ python3 install-tool.py -u browser -p <path>
 - verify the selected executable with `agent-browser --version`
 - follow the upstream installation steps if a browser runtime is also needed
 - browser outputs default to project `.tmp/browser`
+- choose a task-scoped `AGENT_BROWSER_SESSION` and reuse it for each wrapper call in that task
+- CDP auto-discovery is disabled by default; set `BROWSER_CDP_PREFER=1` only when the selected target is intentional
 
 The agentwork tool pack does not install or distribute the external CLI, its
 source, its documentation, or a copy of its license. `agent-browser` remains

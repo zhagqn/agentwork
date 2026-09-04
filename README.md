@@ -2,7 +2,7 @@
 
 agentwork is a repository-native workflow layer for coding agents. It turns
 ambiguous work into explicit `brain`, `plan`, `exec`, and `review` artifacts
-that can move across Codex, Claude Code, OpenCode, and Cursor.
+that can move across Codex, Claude Code, OpenCode, Cursor, and Pi.
 
 Coding agents are good at producing changes, but sustained work also needs
 clear decision gates, recoverable task state, review boundaries, and a way to
@@ -21,8 +21,8 @@ repository instead of relying on one provider's private conversation state.
   because it exists. See the
   [session workflow](.shared/patterns/session-workflow.md).
 - **One shared contract, thin platform adapters.** The durable workflow lives
-  in [`.shared/`](.shared/INDEX.md). Codex, Claude Code, OpenCode, and Cursor
-  receive small native entry points instead of separate copies of the core
+  in [`.shared/`](.shared/INDEX.md). Codex, Claude Code, OpenCode, Cursor, and
+  Pi receive small native entry points instead of separate copies of the core
   rules. See the
   [platform adapter model](.shared/patterns/platform-adapter.md).
 - **A conservative Codex integration.** The bootstrap installs project-level
@@ -52,7 +52,8 @@ repository's bootstrap and optional tool sources.
 
 - Python 3.11 or newer
 - Git
-- At least one supported coding agent: Codex, Claude Code, OpenCode, or Cursor
+- At least one supported coding agent: Codex, Claude Code, OpenCode, Cursor, or
+  Pi
 
 The core bootstrap has no package installation step. Optional tool packs may
 have their own runtime, authentication, or MCP requirements.
@@ -86,9 +87,17 @@ review  Check both the resulting work and the workflow artifacts.
 
 Use the platform's native syntax. Codex discovers these as project skills such
 as `$brain`, `$plan`, `$exec`, and `$review`; Claude Code and OpenCode expose
-slash commands. Cursor uses its project rule and can follow the same shared
-command files directly. Use `session` only when the task needs an explicit,
-repository-backed handoff or recovery point.
+slash commands. Pi exposes `/brain`, `/plan`, `/exec`, `/review`, `/commit`,
+and `/aw-session` as project prompt templates. Cursor uses its project rule and
+can follow the same shared command files directly.
+
+Start Pi from the target repository root and approve project trust before using
+the `.pi/prompts/` entry points. Non-interactive Pi modes do not display a trust
+prompt; use `--approve` only after deciding the project is trusted. That flag is
+a one-run project-resource trust override, not a sandbox or tool-command
+approval. Pi's built-in `/session` describes its native conversation session;
+use `/aw-session` for agentwork's explicit repository-backed handoff and
+recovery workflow. Other platforms continue to use the shared `session` entry.
 
 The core bootstrap deliberately does **not** install optional tools, configure
 MCP servers or providers, or import existing session state.
@@ -138,7 +147,9 @@ failures or interruption.
 The optional [browser tool pack](.agentwork/tools/browser/README.md) integrates
 with a separately installed `agent-browser >= 0.26.0`; it does not bundle that
 CLI, its source, its documentation, or its license. The external CLI remains
-subject to its own Apache-2.0 license.
+subject to its own Apache-2.0 license. Browser commands require an explicit
+task-scoped `AGENT_BROWSER_SESSION`; automatic CDP discovery is disabled unless
+the project deliberately sets `BROWSER_CDP_PREFER=1`.
 
 ## Repository model
 
@@ -149,6 +160,8 @@ subject to its own Apache-2.0 license.
 | [`.agentwork/tools/`](.agentwork/tools/README.md) | Optional capability-pack sources, manifests, and installation guidance. |
 | [`.codex/`](.codex) | Self-hosted Codex skills, configuration, and bounded custom agent for this source repository. |
 | [`.claude/`](.claude), [`.opencode/`](.opencode), [`.cursor/`](.cursor) | Self-hosted thin platform adapters generated from the bootstrap source. |
+| `.pi/prompts/` | Self-hosted Pi project prompt templates generated from the bootstrap source. |
+| `.pi/skills/` | Pi entry points from optional tool packs explicitly installed in this source checkout; not part of the core bootstrap. |
 | [`docs/architecture/`](docs/architecture/README.md) | Example and generated output for the optional `arch` tool, not the architecture of an agentwork business service. |
 
 The source repository self-hosts the same bootstrap layout it distributes.
@@ -164,6 +177,7 @@ belongs in `.shared/`.
 | Claude Code | `CLAUDE.md`, project commands, optional skills | Thin commands delegate to the shared workflow; runtime loops and permissions remain platform concerns. |
 | OpenCode | `AGENTS.md`, generated project commands | Commands inject shared definitions; provider, model, plugin, MCP, and permission configuration remain project-owned. |
 | Cursor | Project rule plus `AGENTS.md` fallback | Uses native editing and diagnostics while shared command files provide the portable workflow contract. |
+| Pi | `AGENTS.md`, six project prompts under `.pi/prompts/` | Static adapter contract is based on Pi `v0.84.4`; start from the repository root and trust the project. The core bootstrap does not install Pi, extensions, subagents, or optional tools; Browser, Research, and CodeGraph can add explicit project skills through their own tool packs. |
 
 Platform discovery, permissions, sandbox behavior, and runtime orchestration can
 change independently. The
@@ -194,6 +208,9 @@ investigations. They are not hidden requirements for the core workflow.
   as a Python package.
 - Core workflow behavior is provider-neutral, but native command discovery and
   runtime behavior still depend on each supported agent.
+- Pi compatibility currently records the `v0.84.4` prompt and trust structure;
+  live runtime discovery is tracked as a separate compatibility smoke rather
+  than implied by deterministic bootstrap tests.
 - Optional tool packs may reference external projects or require separately
   installed CLIs, credentials, or MCP configuration.
 - Bootstrap updates preserve project-owned files where ownership is ambiguous

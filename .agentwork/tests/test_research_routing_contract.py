@@ -62,7 +62,7 @@ class ResearchRoutingContractTest(unittest.TestCase):
         self.assertEqual(research['kind'], ['skill'])
         self.assertEqual(
             {entry['surface'] for entry in research['entries']},
-            {'shared', 'codex', 'claude', 'cursor'},
+            {'shared', 'codex', 'claude', 'pi', 'cursor'},
         )
         self.assertFalse(any('/mcp/' in entry['to'] for entry in research['entries']))
         self.assertFalse(any('/scripts/' in entry['to'] for entry in research['entries']))
@@ -152,6 +152,7 @@ class ResearchRoutingContractTest(unittest.TestCase):
                     '.shared/skills/research/SKILL.md',
                     '.codex/skills/research/SKILL.md',
                     '.claude/skills/research/SKILL.md',
+                    '.pi/skills/research/SKILL.md',
                 },
             )
             self.assertEqual(

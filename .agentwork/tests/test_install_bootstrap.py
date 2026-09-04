@@ -29,6 +29,7 @@ SESSION_END = '<!-- AGENTWORK:SESSION-README:END -->'
 GITIGNORE_START = '# >>> AGENTWORK bootstrap: tmp artifacts >>>'
 GITIGNORE_END = '# <<< AGENTWORK bootstrap: tmp artifacts <<<'
 RECEIPT_REL = Path('.agentwork/bootstrap-install-state.json')
+PI_PROMPTS = ('aw-session', 'brain', 'commit', 'exec', 'plan', 'review')
 
 
 def tree_snapshot(path: Path) -> dict[str, tuple[str, bytes | str | None]]:
@@ -72,9 +73,9 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
     def receipt(self, project: Path | None = None) -> dict:
         return json.loads(((project or self.project) / RECEIPT_REL).read_text(encoding='utf-8'))
 
-    def load_installer(self):
-        module_name = f'agentwork_install_bootstrap_{id(self)}'
-        spec = importlib.util.spec_from_file_location(module_name, INSTALLER)
+    def load_installer(self, installer: Path = INSTALLER):
+        module_name = f'agentwork_install_bootstrap_{id(self)}_{abs(hash(installer))}'
+        spec = importlib.util.spec_from_file_location(module_name, installer)
         if spec is None or spec.loader is None:
             self.fail('cannot load bootstrap installer module')
         module = importlib.util.module_from_spec(spec)
@@ -85,6 +86,20 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
 
     def prepared_plan(self, module):
         return module.prepare_bootstrap_plan(self.project.resolve())
+
+    def source_fixture(self, name: str, *, include_pi_source: bool = True) -> Path:
+        source = Path(self.temp.name) / name
+        source.mkdir()
+        shutil.copy2(INSTALLER, source / 'install-bootstrap.py')
+        shutil.copytree(BOOTSTRAP, source / '.agentwork/bootstrap')
+        tools = source / '.agentwork/tools'
+        tools.mkdir(parents=True)
+        (tools / 'registry.json').write_text('{"tools": []}\n', encoding='utf-8')
+        shutil.copytree(REPO_ROOT / '.shared', source / '.shared')
+        shutil.copy2(REPO_ROOT / 'AGENTS.md', source / 'AGENTS.md')
+        if not include_pi_source:
+            shutil.rmtree(source / '.agentwork/bootstrap/pi')
+        return source
 
     def assert_plan_rollback(self, module, plan, pattern: str = 'failed and rolled back') -> None:
         before = tree_snapshot(self.project)
@@ -129,6 +144,31 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
             hashlib.sha256(source_command.read_bytes()).hexdigest(),
         )
         self.assertNotIn(str(self.project), (self.project / RECEIPT_REL).read_text())
+
+    def test_fresh_install_registers_exact_pi_prompts_in_receipt(self) -> None:
+        self.run_installer()
+
+        installed_dir = self.project / '.pi/prompts'
+        self.assertEqual(
+            {path.name for path in installed_dir.iterdir()},
+            {f'{name}.md' for name in PI_PROMPTS},
+        )
+        records = {entry['path']: entry for entry in self.receipt()['files']}
+        self.assertEqual(
+            {path for path in records if path.startswith('.pi/prompts/')},
+            {f'.pi/prompts/{name}.md' for name in PI_PROMPTS},
+        )
+        for name in PI_PROMPTS:
+            with self.subTest(prompt=name):
+                source = BOOTSTRAP / 'pi/prompts' / f'{name}.md'
+                installed = installed_dir / source.name
+                receipt_path = f'.pi/prompts/{source.name}'
+                self.assertEqual(installed.read_bytes(), source.read_bytes())
+                self.assertEqual(
+                    records[receipt_path]['sha256'],
+                    hashlib.sha256(source.read_bytes()).hexdigest(),
+                )
+        self.assertNotIn('.pi/prompts/session.md', records)
 
     def test_reinstall_preserves_other_config_and_agents(self) -> None:
         codex = self.project / '.codex'
@@ -194,6 +234,41 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
         self.assertEqual(optional_file.read_text(encoding='utf-8'), 'project optional tool\n')
         self.assertEqual(receipt_outside_file.read_text(encoding='utf-8'), 'project notes\n')
 
+    def test_reinstall_preserves_unmanaged_pi_content_and_receipt(self) -> None:
+        settings = self.project / '.pi/settings.json'
+        extension = self.project / '.pi/extensions/project-extension.ts'
+        native_session = self.project / '.pi/prompts/session.md'
+        custom_prompt = self.project / '.pi/prompts/project-command.md'
+        for path, content in (
+            (settings, '{"project": true}\n'),
+            (extension, 'export default function projectExtension() {}\n'),
+            (native_session, 'project-owned session prompt\n'),
+            (custom_prompt, 'project-owned custom prompt\n'),
+        ):
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding='utf-8')
+
+        self.run_installer()
+        receipt = (self.project / RECEIPT_REL).read_bytes()
+        after_first = tree_snapshot(self.project)
+        self.run_installer()
+
+        self.assertEqual(tree_snapshot(self.project), after_first)
+        self.assertEqual((self.project / RECEIPT_REL).read_bytes(), receipt)
+        self.assertEqual(settings.read_text(encoding='utf-8'), '{"project": true}\n')
+        self.assertEqual(
+            extension.read_text(encoding='utf-8'),
+            'export default function projectExtension() {}\n',
+        )
+        self.assertEqual(
+            native_session.read_text(encoding='utf-8'),
+            'project-owned session prompt\n',
+        )
+        self.assertEqual(
+            custom_prompt.read_text(encoding='utf-8'),
+            'project-owned custom prompt\n',
+        )
+
     def test_malformed_managed_blocks_fail_without_writes(self) -> None:
         targets = (
             ('.shared/project/index.md', PROJECT_START, PROJECT_END),
@@ -250,6 +325,7 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
                 source = Path(self.temp.name) / f'renderer-source-{index}'
                 bootstrap = source / '.agentwork/bootstrap'
                 shutil.copytree(BOOTSTRAP, bootstrap)
+                shutil.copytree(REPO_ROOT / '.shared/commands', source / '.shared/commands')
                 project_index = source / '.shared/project/index.md'
                 project_index.parent.mkdir(parents=True)
                 project_index.write_bytes(content)
@@ -270,18 +346,188 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
                 self.assertNotIn('Traceback (most recent call last)', result.stderr)
                 self.assertEqual(tree_snapshot(source), before)
 
+    def test_source_self_host_preflights_new_pi_target_before_rendering(self) -> None:
+        source = self.source_fixture('source-target-conflict', include_pi_source=False)
+        custom = source / '.pi/prompts/brain.md'
+        custom.parent.mkdir(parents=True)
+        custom.write_text('project-owned Pi prompt\n', encoding='utf-8')
+        before = tree_snapshot(source)
+
+        result = subprocess.run(
+            ['python3', str(source / 'install-bootstrap.py'), '-p', str(source)],
+            cwd=source,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('bootstrap ownership conflicts', result.stderr)
+        self.assertIn('.pi/prompts/brain.md', result.stderr)
+        self.assertEqual(tree_snapshot(source), before)
+        self.assertFalse((source / '.agentwork/bootstrap/pi').exists())
+
+    def test_source_self_host_preserves_new_generated_source_conflict(self) -> None:
+        source = self.source_fixture('source-generator-conflict', include_pi_source=False)
+        custom = source / '.agentwork/bootstrap/pi/prompts/brain.md'
+        custom.parent.mkdir(parents=True)
+        custom.write_text('project-owned generated source\n', encoding='utf-8')
+        before = tree_snapshot(source)
+
+        result = subprocess.run(
+            ['python3', str(source / 'install-bootstrap.py'), '-p', str(source)],
+            cwd=source,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('bootstrap source ownership conflicts', result.stderr)
+        self.assertIn('.agentwork/bootstrap/pi/prompts/brain.md', result.stderr)
+        self.assertEqual(tree_snapshot(source), before)
+        self.assertEqual(custom.read_text(encoding='utf-8'), 'project-owned generated source\n')
+
+    def test_source_self_host_installs_new_wrapper_on_first_run(self) -> None:
+        source = self.source_fixture('source-new-wrapper')
+        spec_path = source / '.agentwork/bootstrap/spec.json'
+        data = json.loads(spec_path.read_text(encoding='utf-8'))
+        data['wrappers'].append(
+            {
+                'name': 'probe',
+                'title': '/probe [args]',
+                'target': '.shared/commands/brain.md',
+            }
+        )
+        spec_path.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2) + '\n',
+            encoding='utf-8',
+        )
+
+        result = subprocess.run(
+            ['python3', str(source / 'install-bootstrap.py'), '-p', str(source)],
+            cwd=source,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        pairs = (
+            (
+                '.agentwork/bootstrap/claude/commands/probe.md',
+                '.claude/commands/probe.md',
+            ),
+            (
+                '.agentwork/bootstrap/codex/skills/probe/SKILL.md',
+                '.codex/skills/probe/SKILL.md',
+            ),
+            (
+                '.agentwork/bootstrap/opencode/commands/probe.md',
+                '.opencode/commands/probe.md',
+            ),
+            (
+                '.agentwork/bootstrap/pi/prompts/probe.md',
+                '.pi/prompts/probe.md',
+            ),
+        )
+        for canonical, installed in pairs:
+            with self.subTest(platform=installed):
+                self.assertEqual(
+                    (source / installed).read_bytes(),
+                    (source / canonical).read_bytes(),
+                )
+        receipt_paths = {
+            entry['path']
+            for entry in json.loads(
+                (source / RECEIPT_REL).read_text(encoding='utf-8')
+            )['files']
+        }
+        self.assertTrue({installed for _, installed in pairs} <= receipt_paths)
+
+        before_second_run = tree_snapshot(source)
+        second = subprocess.run(
+            ['python3', str(source / 'install-bootstrap.py'), '-p', str(source)],
+            cwd=source,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(second.returncode, 0, second.stderr + second.stdout)
+        self.assertEqual(tree_snapshot(source), before_second_run)
+
+    def test_source_self_host_rolls_back_renderer_and_target_writes(self) -> None:
+        for index, failure in enumerate((OSError('injected copy failure'), KeyboardInterrupt())):
+            with self.subTest(failure=type(failure).__name__):
+                source = self.source_fixture(f'source-rollback-{index}')
+                module = self.load_installer(source / 'install-bootstrap.py')
+                original = module.copy_file
+                calls = 0
+
+                def fail_after_copy(src: Path, dst: Path) -> None:
+                    nonlocal calls
+                    original(src, dst)
+                    calls += 1
+                    if calls == 1:
+                        raise failure
+
+                module.copy_file = fail_after_copy
+                before = tree_snapshot(source)
+                with redirect_stdout(io.StringIO()):
+                    with self.assertRaisesRegex(SystemExit, 'failed and rolled back'):
+                        module.run_source_self_host(source.resolve())
+                self.assertEqual(tree_snapshot(source), before)
+
     def test_external_install_does_not_refresh_source_checkout(self) -> None:
         module = self.load_installer()
 
-        def unexpected_refresh() -> None:
-            raise AssertionError('external install must not refresh the source checkout')
+        def unexpected_renderer_load():
+            raise AssertionError('external install must not load the source renderer')
 
-        module.refresh_generated_bootstrap = unexpected_refresh
+        module.load_bootstrap_renderer = unexpected_renderer_load
         with patch.object(sys, 'argv', ['install-bootstrap.py', '-p', str(self.project)]):
             with redirect_stdout(io.StringIO()):
                 self.assertEqual(module.main(), 0)
 
         self.assertTrue((self.project / 'AGENTS.md').is_file())
+
+    def test_external_install_ignores_stale_generated_source_prompts(self) -> None:
+        source = self.source_fixture('external-stale-pi-source')
+        stale_dir = source / '.agentwork/bootstrap/pi/prompts'
+        (stale_dir / 'session.md').write_text(
+            '<!-- AUTO-GENERATED by agentwork bootstrap -->\n# stale session\n',
+            encoding='utf-8',
+        )
+        (stale_dir / 'other.md').write_text(
+            '<!-- AUTO-GENERATED by agentwork bootstrap -->\n# stale other\n',
+            encoding='utf-8',
+        )
+        target = Path(self.temp.name) / 'external-stale-target'
+        target.mkdir()
+        source_before = tree_snapshot(source)
+
+        result = subprocess.run(
+            ['python3', str(source / 'install-bootstrap.py'), '-p', str(target)],
+            cwd=source,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        self.assertEqual(tree_snapshot(source), source_before)
+        self.assertEqual(
+            {path.name for path in (target / '.pi/prompts').iterdir()},
+            {f'{name}.md' for name in PI_PROMPTS},
+        )
+        receipt_paths = {
+            entry['path']
+            for entry in json.loads(
+                (target / RECEIPT_REL).read_text(encoding='utf-8')
+            )['files']
+        }
+        self.assertNotIn('.pi/prompts/session.md', receipt_paths)
+        self.assertNotIn('.pi/prompts/other.md', receipt_paths)
 
     def test_receipt_allows_refresh_of_an_unchanged_prior_version(self) -> None:
         self.run_installer()
@@ -321,6 +567,7 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
             '.claude/commands/brain.md',
             '.cursor/rules/agentwork-bootstrap.mdc',
             '.opencode/commands/brain.md',
+            '.pi/prompts/brain.md',
             '.codex/skills/brain/SKILL.md',
             '.codex/agents/luna-worker.toml',
             '.shared/commands/brain.md',
@@ -353,6 +600,19 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
         self.assertIn('target is not a regular file', result.stderr)
         self.assertEqual(tree_snapshot(self.project), before)
 
+    def test_pi_prompt_directory_conflict_fails_without_writes(self) -> None:
+        conflict = self.project / '.pi/prompts/brain.md'
+        conflict.mkdir(parents=True)
+        (conflict / 'project-file.md').write_text('keep\n', encoding='utf-8')
+        before = tree_snapshot(self.project)
+
+        result = self.run_installer(check=False)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('.pi/prompts/brain.md', result.stderr)
+        self.assertIn('target is not a regular file', result.stderr)
+        self.assertEqual(tree_snapshot(self.project), before)
+
     def test_codex_skill_refresh_preserves_extra_files(self) -> None:
         self.run_installer()
         extra = self.project / '.codex/skills/brain/project-notes.md'
@@ -374,6 +634,25 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('.codex/skills/brain/SKILL.md', result.stderr)
+        self.assertEqual(tree_snapshot(self.project), before)
+
+    def test_modified_managed_pi_prompt_fails_without_writes(self) -> None:
+        self.run_installer()
+        prompt = self.project / '.pi/prompts/brain.md'
+        prompt.write_text(
+            prompt.read_text(encoding='utf-8') + '\nproject edit\n',
+            encoding='utf-8',
+        )
+        before = tree_snapshot(self.project)
+
+        result = self.run_installer(check=False)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('.pi/prompts/brain.md', result.stderr)
+        self.assertIn(
+            'content changed since the last successful bootstrap install',
+            result.stderr,
+        )
         self.assertEqual(tree_snapshot(self.project), before)
 
     def test_legacy_equal_content_and_generated_marker_can_refresh(self) -> None:
@@ -479,6 +758,130 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
         self.assertEqual(list(external.iterdir()), [])
         self.assertFalse((self.project / 'AGENTS.md').exists())
 
+    def test_pi_symlink_boundaries_are_rejected_without_external_writes(self) -> None:
+        for index, variant in enumerate(('pi-root', 'prompts-dir', 'prompt-file')):
+            with self.subTest(variant=variant):
+                project = Path(self.temp.name) / f'pi-symlink-{index}'
+                project.mkdir()
+                external = Path(self.temp.name) / f'pi-symlink-external-{index}'
+                external.mkdir()
+                if variant == 'pi-root':
+                    (project / '.pi').symlink_to(external, target_is_directory=True)
+                elif variant == 'prompts-dir':
+                    (project / '.pi').mkdir()
+                    (project / '.pi/prompts').symlink_to(
+                        external,
+                        target_is_directory=True,
+                    )
+                else:
+                    (project / '.pi/prompts').mkdir(parents=True)
+                    external_prompt = external / 'brain.md'
+                    external_prompt.write_text('external prompt\n', encoding='utf-8')
+                    (project / '.pi/prompts/brain.md').symlink_to(external_prompt)
+                project_before = tree_snapshot(project)
+                external_before = tree_snapshot(external)
+
+                result = self.run_installer(project=project, check=False)
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('.pi/prompts/', result.stderr)
+                self.assertIn('path contains symlink', result.stderr)
+                self.assertEqual(tree_snapshot(project), project_before)
+                self.assertEqual(tree_snapshot(external), external_before)
+
+    def test_pi_symlinks_to_canonical_source_are_rejected_without_writes(self) -> None:
+        canonical = BOOTSTRAP / 'pi/prompts'
+        for index, variant in enumerate(('prompts-dir', 'prompt-file')):
+            with self.subTest(variant=variant):
+                project = Path(self.temp.name) / f'pi-canonical-symlink-{index}'
+                if variant == 'prompts-dir':
+                    (project / '.pi').mkdir(parents=True)
+                    (project / '.pi/prompts').symlink_to(
+                        canonical,
+                        target_is_directory=True,
+                    )
+                else:
+                    (project / '.pi/prompts').mkdir(parents=True)
+                    (project / '.pi/prompts/brain.md').symlink_to(
+                        canonical / 'brain.md'
+                    )
+                project_before = tree_snapshot(project)
+                canonical_before = tree_snapshot(canonical)
+
+                result = self.run_installer(project=project, check=False)
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('.pi/prompts/', result.stderr)
+                self.assertIn('path contains symlink', result.stderr)
+                self.assertEqual(tree_snapshot(project), project_before)
+                self.assertEqual(tree_snapshot(canonical), canonical_before)
+                self.assertFalse((project / 'AGENTS.md').exists())
+
+    def test_hardlinked_managed_file_is_replaced_without_external_write(self) -> None:
+        target = (self.project / '.pi/prompts/brain.md').resolve()
+        target.parent.mkdir(parents=True)
+        canonical = BOOTSTRAP / 'pi/prompts/brain.md'
+        external = Path(self.temp.name) / 'external-hardlink.md'
+        original = canonical.read_bytes()
+        external_content = original.replace(b'# /brain', b'# project-owned brain')
+        external.write_bytes(external_content)
+        os.link(external, target)
+
+        result = self.run_installer(check=False)
+
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        self.assertEqual(external.read_bytes(), external_content)
+        self.assertEqual(target.read_bytes(), original)
+        self.assertNotEqual(target.stat().st_ino, external.stat().st_ino)
+
+    def test_hardlinked_managed_file_stays_external_on_rollback(self) -> None:
+        module = self.load_installer()
+        target = (self.project / '.pi/prompts/brain.md').resolve()
+        target.parent.mkdir(parents=True)
+        canonical = BOOTSTRAP / 'pi/prompts/brain.md'
+        external = Path(self.temp.name) / 'external-hardlink-rollback.md'
+        original = canonical.read_bytes()
+        external_content = original.replace(b'# /brain', b'# project-owned brain')
+        external.write_bytes(external_content)
+        os.link(external, target)
+        plan = self.prepared_plan(module)
+        original_copy = module.copy_file
+
+        def fail_after_hardlink_copy(src: Path, dst: Path) -> None:
+            original_copy(src, dst)
+            if dst == target:
+                raise OSError('injected hardlink copy failure')
+
+        module.copy_file = fail_after_hardlink_copy
+        before = tree_snapshot(self.project)
+        with redirect_stdout(io.StringIO()):
+            with self.assertRaisesRegex(SystemExit, 'failed and rolled back'):
+                module.run_transaction(
+                    plan.target,
+                    plan.transaction_paths,
+                    lambda: module.apply_bootstrap_plan(plan),
+                )
+
+        self.assertEqual(tree_snapshot(self.project), before)
+        self.assertEqual(external.read_bytes(), external_content)
+        self.assertEqual(target.read_bytes(), external_content)
+        self.assertNotEqual(target.stat().st_ino, external.stat().st_ino)
+
+    def test_hardlinked_managed_config_is_replaced_without_external_write(self) -> None:
+        target = (self.project / '.codex/config.toml').resolve()
+        target.parent.mkdir(parents=True)
+        external = Path(self.temp.name) / 'external-config-hardlink.toml'
+        external_content = b'model = "project-model"\n'
+        external.write_bytes(external_content)
+        os.link(external, target)
+
+        result = self.run_installer(check=False)
+
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        self.assertEqual(external.read_bytes(), external_content)
+        self.assertIn(CONFIG_START.encode('utf-8'), target.read_bytes())
+        self.assertNotEqual(target.stat().st_ino, external.stat().st_ino)
+
     def test_direct_copy_failure_rolls_back_complete_tree(self) -> None:
         module = self.load_installer()
         plan = self.prepared_plan(module)
@@ -560,6 +963,34 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
 
         module.copy_file = interrupt_after_copy
         self.assert_plan_rollback(module, plan)
+
+    def test_pi_prompt_copy_failure_or_interrupt_rolls_back_complete_tree(self) -> None:
+        for index, failure in enumerate(
+            (OSError('injected Pi prompt copy failure'), KeyboardInterrupt())
+        ):
+            with self.subTest(failure=type(failure).__name__):
+                project = Path(self.temp.name) / f'pi-copy-rollback-{index}'
+                project.mkdir()
+                module = self.load_installer()
+                plan = module.prepare_bootstrap_plan(project.resolve())
+                original = module.copy_file
+
+                def fail_after_pi_copy(src: Path, dst: Path) -> None:
+                    original(src, dst)
+                    if dst == plan.target / '.pi/prompts/brain.md':
+                        raise failure
+
+                module.copy_file = fail_after_pi_copy
+                before = tree_snapshot(project)
+                with redirect_stdout(io.StringIO()):
+                    with self.assertRaisesRegex(SystemExit, 'failed and rolled back'):
+                        module.run_transaction(
+                            plan.target,
+                            plan.transaction_paths,
+                            lambda: module.apply_bootstrap_plan(plan),
+                        )
+                self.assertEqual(tree_snapshot(project), before)
+                self.assertFalse((project / '.pi').exists())
 
     def test_retired_adapter_is_restored_and_custom_adapter_is_preserved(self) -> None:
         owned = self.project / '.agent/workflows/brain.md'

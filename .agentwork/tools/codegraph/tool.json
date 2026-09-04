@@ -1,14 +1,20 @@
 {
   "name": "codegraph",
   "kind": [
-    "mcp"
+    "mcp",
+    "skill"
   ],
-  "description": "Reference-only optional tool pack for colbymchenry/codegraph: local semantic code-graph MCP server install guidance (no vendored upstream source).",
+  "description": "Reference and Pi skill entry for colbymchenry/codegraph: local semantic code-graph CLI/MCP guidance with no vendored upstream source.",
   "entries": [
     {
       "surface": "shared",
       "from": "shared/mcp/codegraph.md",
       "to": ".shared/mcp/codegraph.md"
+    },
+    {
+      "surface": "pi",
+      "from": "pi/skills/codegraph",
+      "to": ".pi/skills/codegraph"
     }
   ]
 }

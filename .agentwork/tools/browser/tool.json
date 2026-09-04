@@ -26,6 +26,11 @@
       "to": ".claude/skills/browser/SKILL.md"
     },
     {
+      "surface": "pi",
+      "from": "pi/skills/browser",
+      "to": ".pi/skills/browser"
+    },
+    {
       "surface": "cursor",
       "from": "cursor/rules/browser.mdc",
       "to": ".cursor/rules/browser.mdc"
