@@ -5,6 +5,7 @@ import argparse
 from collections.abc import Callable
 from dataclasses import dataclass
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -218,6 +219,42 @@ def build_tool_entries(
     return tuple(entries)
 
 
+def atomic_write_bytes(
+    path: Path,
+    content: bytes,
+    *,
+    mode_source: Path | None = None,
+) -> None:
+    """Replace a managed file without following a destination hardlink."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    mode: int | None = None
+    if mode_source is not None and mode_source.is_file() and not mode_source.is_symlink():
+        mode = mode_source.stat().st_mode & 0o7777
+    elif path.exists() and not path.is_symlink() and path.is_file():
+        mode = path.stat().st_mode & 0o7777
+
+    temp_name: str | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            prefix=f'.{path.name}.',
+            dir=path.parent,
+            delete=False,
+        ) as handle:
+            temp_name = handle.name
+            os.chmod(temp_name, mode if mode is not None else 0o644)
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temp_name, path)
+        temp_name = None
+    finally:
+        if temp_name is not None:
+            try:
+                Path(temp_name).unlink()
+            except FileNotFoundError:
+                pass
+
+
 def copy_entry(src: Path, dst: Path) -> str:
     dst.parent.mkdir(parents=True, exist_ok=True)
     if src.is_dir():
@@ -225,7 +262,7 @@ def copy_entry(src: Path, dst: Path) -> str:
             shutil.rmtree(dst)
         shutil.copytree(src, dst, ignore=COPY_IGNORE)
         return 'dir'
-    shutil.copy2(src, dst)
+    atomic_write_bytes(dst, src.read_bytes(), mode_source=src)
     return 'file'
 
 
@@ -448,7 +485,7 @@ def append_gitignore_rule(project_root: Path) -> None:
     if after and not after.endswith((b'\n', b'\r')):
         after += newline
     after += b'.env' + newline
-    path.write_bytes(after)
+    atomic_write_bytes(path, after)
 
 
 def apply_env_plan(project_root: Path, plan: EnvPlan) -> None:
@@ -456,7 +493,7 @@ def apply_env_plan(project_root: Path, plan: EnvPlan) -> None:
         append_gitignore_rule(project_root)
         print('- [gitignore] .env')
     if plan.after != plan.before:
-        plan.path.write_bytes(plan.after)
+        atomic_write_bytes(plan.path, plan.after)
     for key_name, status in plan.statuses:
         print(f'- [env:{status}] {key_name}')
 
@@ -482,7 +519,11 @@ def restore_snapshot(snapshot: PathSnapshot) -> None:
         return
     snapshot.path.parent.mkdir(parents=True, exist_ok=True)
     if snapshot.kind == 'file':
-        shutil.copy2(snapshot.backup, snapshot.path)
+        atomic_write_bytes(
+            snapshot.path,
+            snapshot.backup.read_bytes(),
+            mode_source=snapshot.backup,
+        )
         return
     if snapshot.kind == 'dir':
         shutil.copytree(snapshot.backup, snapshot.path, symlinks=True)

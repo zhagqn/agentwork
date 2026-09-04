@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -177,6 +178,42 @@ class InstallToolEnvTest(unittest.TestCase):
         self.assertEqual(first_env.count(b'TEST_API_KEY='), 1)
         self.assertEqual(first_env.count(b'# agentwork:env:alpha'), 1)
 
+    def test_hardlinked_entry_env_and_gitignore_are_replaced_without_external_writes(self) -> None:
+        shared = self.project / '.shared'
+        shared.mkdir()
+        paths = {
+            'entry': (shared / 'alpha.txt', b'project-owned entry\n'),
+            'env': (self.project / '.env', b'OTHER=1\n'),
+            'gitignore': (self.project / '.gitignore', b'# keep\n'),
+        }
+        external_paths: dict[str, Path] = {}
+        for name, (target, content) in paths.items():
+            external = Path(self.temp.name) / f'external-{name}'
+            external.write_bytes(content)
+            os.link(external, target)
+            external_paths[name] = external
+
+        self.run_installer('install', 'alpha')
+
+        self.assertEqual((shared / 'alpha.txt').read_bytes(), b'alpha\n')
+        self.assertEqual((self.project / '.env').read_bytes(), b'OTHER=1\n# agentwork:env:alpha\nTEST_API_KEY=\n')
+        self.assertEqual((self.project / '.gitignore').read_bytes(), b'# keep\n.env\n')
+        for name, (target, original) in paths.items():
+            external = external_paths[name]
+            self.assertEqual(external.read_bytes(), original)
+            self.assertNotEqual(target.stat().st_ino, external.stat().st_ino)
+
+    def test_reinstall_restores_source_file_mode(self) -> None:
+        source = self.source / '.agentwork/tools/alpha/shared/alpha.txt'
+        source.chmod(0o755)
+        self.run_installer('install', 'alpha')
+        target = self.project / '.shared/alpha.txt'
+        target.chmod(0o644)
+
+        self.run_installer('install', 'alpha')
+
+        self.assertEqual(target.stat().st_mode & 0o7777, 0o755)
+
     def test_uninstall_removes_untouched_empty_managed_key_only(self) -> None:
         original = b'# keep\nOTHER=1\n'
         (self.project / '.env').write_bytes(original)
@@ -286,6 +323,52 @@ class InstallToolEnvTest(unittest.TestCase):
         self.assertFalse((self.project / '.shared').exists())
         self.assertFalse((self.project / '.env').exists())
         self.assertFalse((self.project / '.gitignore').exists())
+
+    def test_hardlinked_files_stay_external_on_install_rollback(self) -> None:
+        shared = self.project / '.shared'
+        shared.mkdir()
+        paths = {
+            'entry': (shared / 'alpha.txt', b'project-owned entry\n'),
+            'env': (self.project / '.env', b'OTHER=1\n'),
+            'gitignore': (self.project / '.gitignore', b'# keep\n'),
+        }
+        external_paths: dict[str, Path] = {}
+        for name, (target, content) in paths.items():
+            external = Path(self.temp.name) / f'external-rollback-{name}'
+            external.write_bytes(content)
+            os.link(external, target)
+            external_paths[name] = external
+
+        module = self.load_installer()
+        _, tools = module.load_tools()
+        project_root = self.project.resolve()
+        seen_targets: set[Path] = set()
+        tool = tools['alpha']
+        entries = module.build_tool_entries(project_root, 'alpha', tool, seen_targets)
+        grouped = [('alpha', entries)]
+        env_keys = [('alpha', env_key) for env_key in tool['env_keys']]
+        env_plan = module.prepare_install_env(project_root, env_keys)
+        original_apply_env_plan = module.apply_env_plan
+
+        def fail_after_env_write(root: Path, plan) -> None:
+            original_apply_env_plan(root, plan)
+            raise OSError('injected hardlink write failure')
+
+        module.apply_env_plan = fail_after_env_write
+        before = self.project_snapshot()
+        with self.assertRaisesRegex(SystemExit, 'transaction failed and rolled back'):
+            module.run_transaction(
+                project_root,
+                module.transaction_paths(grouped, env_plan),
+                lambda: module.apply_tool_changes(project_root, 'install', grouped, env_plan),
+            )
+
+        self.assertEqual(self.project_snapshot(), before)
+        for name, (target, original) in paths.items():
+            external = external_paths[name]
+            self.assertEqual(external.read_bytes(), original)
+            self.assertEqual(target.read_bytes(), original)
+            self.assertNotEqual(target.stat().st_ino, external.stat().st_ino)
 
     def test_uninstall_runtime_failure_restores_installed_state(self) -> None:
         self.run_installer('install', 'alpha')
