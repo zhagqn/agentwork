@@ -48,4 +48,4 @@
 
 ## 下一步建议
 - `/plan`：{交给 plan 的已确认设计、非目标、验收标准和仍待确认事项}
-- `/session plan`：{如果需要 session 快照，确认后使用哪个 brain/plan 工件作为来源}
+- `/case plan`：{如果需要 Case 快照，确认后使用哪个 brain/plan 工件作为来源}

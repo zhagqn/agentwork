@@ -1,8 +1,9 @@
 # agentwork
 
 agentwork is a repository-native workflow layer for coding agents. It turns
-ambiguous work into explicit `brain`, `plan`, `exec`, and `review` artifacts
-that can move across Codex, Claude Code, OpenCode, Cursor, and Pi.
+ambiguous work into an explicit `brain`, `plan`, `exec`, and `review` delivery
+flow, with repository-backed Case snapshots that can move across Codex, Claude
+Code, OpenCode, Cursor, and Pi.
 
 Coding agents are good at producing changes, but sustained work also needs
 clear decision gates, recoverable task state, review boundaries, and a way to
@@ -16,10 +17,10 @@ repository instead of relying on one provider's private conversation state.
   breakdown, [`exec`](.shared/commands/exec.md) advances a bounded batch, and
   [`review`](.shared/commands/review.md) checks both the work and its workflow
   artifacts.
-- **Recoverable, opt-in task state.** Sessions are repository files with
+- **Recoverable, opt-in task state.** Cases are repository files with
   explicit load and update rules; old task context is never loaded merely
   because it exists. See the
-  [session workflow](.shared/patterns/session-workflow.md).
+  [Case workflow](.shared/patterns/case-workflow.md).
 - **One shared contract, thin platform adapters.** The durable workflow lives
   in [`.shared/`](.shared/INDEX.md). Codex, Claude Code, OpenCode, Cursor, and
   Pi receive small native entry points instead of separate copies of the core
@@ -81,14 +82,16 @@ workflow:
 ```text
 brain   Clarify the goal, constraints, alternatives, and success criteria.
 plan    Turn the confirmed design into bounded, verifiable tasks.
+case    Create, load, or sync an explicit repository-backed task snapshot.
 exec    Execute a small batch from the plan after explicit authorization.
 review  Check both the resulting work and the workflow artifacts.
+commit  Commit only the reviewed Git boundary selected by the user.
 ```
 
 Use the platform's native syntax. Codex discovers these as project skills such
 as `$brain`, `$plan`, `$exec`, and `$review`; Claude Code and OpenCode expose
 slash commands. Pi exposes `/brain`, `/plan`, `/exec`, `/review`, `/commit`,
-and `/aw-session` as project prompt templates. Cursor uses its project rule and
+and `/case` as project prompt templates. Cursor uses its project rule and
 can follow the same shared command files directly.
 
 Start Pi from the target repository root and approve project trust before using
@@ -96,11 +99,11 @@ the `.pi/prompts/` entry points. Non-interactive Pi modes do not display a trust
 prompt; use `--approve` only after deciding the project is trusted. That flag is
 a one-run project-resource trust override, not a sandbox or tool-command
 approval. Pi's built-in `/session` describes its native conversation session;
-use `/aw-session` for agentwork's explicit repository-backed handoff and
-recovery workflow. Other platforms continue to use the shared `session` entry.
+use `/case` for agentwork's explicit repository-backed handoff and recovery
+workflow. Other platforms use the same shared Case entry.
 
 The core bootstrap deliberately does **not** install optional tools, configure
-MCP servers or providers, or import existing session state.
+MCP servers or providers, or import existing task state.
 
 ### Updating an existing project
 
@@ -111,7 +114,7 @@ then inspect the resulting diff after the command finishes.
 The bootstrap records its directly copied files in
 `.agentwork/bootstrap-install-state.json`. On later runs, it refreshes a file
 only when ownership can be established from the current source, an agentwork
-generated marker, or the previous receipt. Project and session indexes,
+generated marker, or the previous receipt. Project and Case indexes,
 `.gitignore`, and Codex configuration use bounded managed blocks so content
 outside those blocks remains project-owned. Partial, reversed, duplicated, or
 conflicting managed state stops the install before target writes begin.
@@ -215,7 +218,7 @@ investigations. They are not hidden requirements for the core workflow.
   installed CLIs, credentials, or MCP configuration.
 - Bootstrap updates preserve project-owned files where ownership is ambiguous
   and stop on conflicts that cannot be resolved conservatively.
-- Plans and sessions are coordination artifacts, not automatic permission to
+- Plans and Cases are coordination artifacts, not automatic permission to
   modify code, external systems, Git history, or staged changes.
 
 ## Contributing

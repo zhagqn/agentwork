@@ -2,12 +2,12 @@
 
 按当前任务的计划执行当前批次工作。
 
-> `exec-source` 指的是**输入来源 / 引用对象**，通常是 session 或 plan 文件路径，不是自然语言任务描述。
+> `exec-source` 指的是**输入来源 / 引用对象**，通常是 Case 或 plan 文件路径，不是自然语言任务描述。
 
 ## 输入来源
-### 当前 session
-- 来源：当前 session
-- 执行后：更新 session 中的任务状态、当前批次工作集、产出批次、风险 / 阻塞
+### 当前 Case
+- 来源：当前 Case
+- 执行后：更新 Case 中的任务状态、当前批次工作集、产出批次、风险 / 阻塞
 - 当前批次工作集必须保留 `## 当前批次工作集（可选）` 小节；每条使用 `- 范围: `path` | 主题: ...`，不要用 `- 已完成:`、命令流水或临时过程记录替代
 - 完成状态写在任务列表 checkbox；本轮产出写在产出批次；当前批次工作集表达本轮可恢复的范围和主题
 - 最小同步顺序：更新任务 checkbox → 收敛当前批次工作集到本轮仍需恢复的范围 → 记录本轮产出批次摘要 → 记录新增风险 / 阻塞
@@ -35,5 +35,5 @@
 
 ## 命令自检
 - Plan 工件：更新 plan 后运行 `.shared/scripts/agentwork-check.py exec <plan-file>`；未显式路径时可用 `.shared/scripts/agentwork-check.py exec` 检查最新 plan
-- 当前 session：同步 session 后运行 `.shared/scripts/agentwork-check.py session <session-ref> --strict-flow`
+- 当前 Case：同步 Case 后运行 `.shared/scripts/agentwork-check.py case <case-ref> --strict-flow`
 - 自检通过只代表 workflow 工件形态合格；业务正确性仍以本轮实际验证、测试、构建或人工取证为准

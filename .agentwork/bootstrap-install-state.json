@@ -2,12 +2,17 @@
   "files": [
     {
       "path": ".claude/CLAUDE.md",
-      "sha256": "45d59059d011a99adca55ddb155410a44a3bfca77078344d6b7d7bff0256cae0",
+      "sha256": "f821182813e123e10dea574b1ba253471437c6f85aab1d83100090b86e73d508",
       "type": "file"
     },
     {
       "path": ".claude/commands/brain.md",
       "sha256": "b1d907b931220ffa9600e5d880630d75f0396613dfec8f132e6554d7dfc80855",
+      "type": "file"
+    },
+    {
+      "path": ".claude/commands/case.md",
+      "sha256": "6aaab9e8dd5c6deb0b9fd2ee392101a66e5b74e7ab5b6df7a22d1fdaa20063df",
       "type": "file"
     },
     {
@@ -31,11 +36,6 @@
       "type": "file"
     },
     {
-      "path": ".claude/commands/session.md",
-      "sha256": "ebd25b00645c2109cfa5a32ec3b27ae7718f388a7ea98f6e6a811d5ac341c744",
-      "type": "file"
-    },
-    {
       "path": ".codex/agents/luna-worker.toml",
       "sha256": "d2dd50b5e303be8b199da8680544ce32408540cf7691976848fb13d59a53d14b",
       "type": "file"
@@ -43,6 +43,11 @@
     {
       "path": ".codex/skills/brain/SKILL.md",
       "sha256": "b07aeee9849a586b7f592cb8101e2232e1bc0ed2857f3ee0079c6f54be464802",
+      "type": "file"
+    },
+    {
+      "path": ".codex/skills/case/SKILL.md",
+      "sha256": "18e23c2fdf3ed834f29f623aeeec580a81088f03bb45fa768282929b52da4511",
       "type": "file"
     },
     {
@@ -66,13 +71,8 @@
       "type": "file"
     },
     {
-      "path": ".codex/skills/session/SKILL.md",
-      "sha256": "5d2f70aa5c9e4f08b3cd78467da48985f1680abba8068fc6176e6a43b726950d",
-      "type": "file"
-    },
-    {
       "path": ".cursor/rules/agentwork-bootstrap.mdc",
-      "sha256": "73cfe3e9c39f07842c7a7f5b7488d44aae9254f48d326a950a3ec25d3151b5e5",
+      "sha256": "ed011e54a8b1f7a01358a7052ac1aa7b67beba2fab090a8598e480c9ce653a5f",
       "type": "file"
     },
     {
@@ -83,6 +83,11 @@
     {
       "path": ".opencode/commands/brain.md",
       "sha256": "be90a3aa423bccdd67b1fe1d7a544697767aa877e2750995124ac36a5cacee3a",
+      "type": "file"
+    },
+    {
+      "path": ".opencode/commands/case.md",
+      "sha256": "57464b6f64ec94dafea266289f7201c7b19d481311f03603c2c26c008bb872e6",
       "type": "file"
     },
     {
@@ -106,18 +111,13 @@
       "type": "file"
     },
     {
-      "path": ".opencode/commands/session.md",
-      "sha256": "11b20454d33ae6814f7b1468df86c2347eeb9e77c9f8ee243e70115c52fc8414",
-      "type": "file"
-    },
-    {
-      "path": ".pi/prompts/aw-session.md",
-      "sha256": "40c2cbe47979a9576bfac47ccda34789b9b1045ef716f763a9a04b7215cb5f07",
-      "type": "file"
-    },
-    {
       "path": ".pi/prompts/brain.md",
       "sha256": "ffeedf9c65bcf403d3e2d7370b3f3a364067bbdb3328ea5dbd2d8620eb990ba2",
+      "type": "file"
+    },
+    {
+      "path": ".pi/prompts/case.md",
+      "sha256": "14d273eb027d6a138354473806365efe9c4db5579b0ab971569e1a5aff948171",
       "type": "file"
     },
     {
@@ -142,37 +142,37 @@
     },
     {
       "path": ".shared/INDEX.md",
-      "sha256": "bc0d099c661d2f407afb03589deda9dd6d3e41cdcbbcabdd421e6bdc8d776608",
+      "sha256": "08e192f404742fe5cc4cd022669d8dd59dfb60a5bffb47f4ff3e8ee6dbb70a12",
       "type": "file"
     },
     {
       "path": ".shared/commands/brain.md",
-      "sha256": "f39198cdb8e0f107ab4bcc9516c842f80a0a2bba6d268ac932a656b383a75d81",
+      "sha256": "f5a5257d7d295447778c8e0378729b29566dbb9e01758c047abcc3f4b5e57ff9",
+      "type": "file"
+    },
+    {
+      "path": ".shared/commands/case.md",
+      "sha256": "c7c9fa8af7853d5fc8543ab06e86e5118f5d829396d7dd757d7c51913f8aad19",
       "type": "file"
     },
     {
       "path": ".shared/commands/commit.md",
-      "sha256": "9e58a6a76a34288518cca0337743274d120242e7b7da6aa0e4131d4a02fecd95",
+      "sha256": "55f3712185f69770252a25f388c1f3b169c599c0bf65580c2d617dc0e5d0fdf9",
       "type": "file"
     },
     {
       "path": ".shared/commands/exec.md",
-      "sha256": "a0c9cb4bbced54edc51d5019b00d9334fbe58a3c011f941a2a52271be8756a43",
+      "sha256": "93b66f4d9c7588f4ee7227a5ac924d713447ea33cb77bb1c52268605210edc03",
       "type": "file"
     },
     {
       "path": ".shared/commands/plan.md",
-      "sha256": "b1e4d4e909817bee70c3c8f9244535bd71fc3454dd4b54d980ea17b5c8c9f3ef",
+      "sha256": "b0608528ee8319b3e20cd06a6bd3ce41937facc20de7b05d19ffe0651a3e0740",
       "type": "file"
     },
     {
       "path": ".shared/commands/review.md",
-      "sha256": "da759eaf52c81f611e17b960570b16f1b72b5034bcbe9bc2a007a556db41058d",
-      "type": "file"
-    },
-    {
-      "path": ".shared/commands/session.md",
-      "sha256": "8b97fa073660d3105ff8a46db6ba6f9f10edbd3b8b38783c39f7964278b52928",
+      "sha256": "9eb7da80e6a971f2ef0ffa597851d2f393f5729f7c781a29d278519e875509cf",
       "type": "file"
     },
     {
@@ -187,17 +187,22 @@
     },
     {
       "path": ".shared/constraints/placeholder-naming.md",
-      "sha256": "a2e6cb8fbbed2f7fdc51798082a7059419a6a2170b1f02c268dea90b76596d42",
+      "sha256": "db0d31906065a09ea9c53288dd4281ea166e129b57c8cd1548f0299b25d5dd86",
+      "type": "file"
+    },
+    {
+      "path": ".shared/patterns/case-workflow.md",
+      "sha256": "c85ffb2cf5e0b4be95245ea4cfc67cc78825fc31468243322842a08cf114a3e5",
       "type": "file"
     },
     {
       "path": ".shared/patterns/platform-adapter.md",
-      "sha256": "0f11539bcb595f82048c715c916eb88914c8a9b52119275b8a97d8631794927b",
+      "sha256": "921149d39ef6a2eaf98b9308ac1dbf35d544427d26aad500b7c57e2c19fb4f07",
       "type": "file"
     },
     {
       "path": ".shared/patterns/project-management.md",
-      "sha256": "7961cfe744ba404dbe6a16f848ffa2f97366433d76d7c93c43077e6fd4bfce6e",
+      "sha256": "9d1605c9cc0d1d91ba8543982ddfc94807441ddb367598c94baf784ea6a0bf3e",
       "type": "file"
     },
     {
@@ -206,23 +211,23 @@
       "type": "file"
     },
     {
-      "path": ".shared/patterns/session-workflow.md",
-      "sha256": "1b93a87eaaf3058e7492379f2da37118f1f99bb5108e70cbcfc861c21b5feb0c",
-      "type": "file"
-    },
-    {
       "path": ".shared/patterns/subagent-workflow.md",
-      "sha256": "7c1a9b4470b771957c9d93c3347faad8ec35829bbee39aa11125c08ad1dcdb7c",
+      "sha256": "e75452acb277e38f248f2444ff2d319ed3181459db3dd177df63371345d8e468",
       "type": "file"
     },
     {
       "path": ".shared/scripts/README.md",
-      "sha256": "64cbf08a70272f5d9c4d0d81d07a173a7b1f66a95e158191faad60bf8a585ae0",
+      "sha256": "85b74ba59fbdce1f9f4b8a3650644c88d6351fb63c39a406e09003767b6e5a5a",
       "type": "file"
     },
     {
       "path": ".shared/scripts/agentwork-check.py",
-      "sha256": "78fa3dd210620f3bab81ea53610e8977cf26c9fcdb175f74ac3f991313825bd9",
+      "sha256": "b49e6695af46c4b323c25c74ca1309f15bc314ee620578e18fb10d4750778cf3",
+      "type": "file"
+    },
+    {
+      "path": ".shared/scripts/case-review.sh",
+      "sha256": "9d4beacb7a31d02a7304439dc124905419ac07eb5cc9f09cbbce811fa8a89fc1",
       "type": "file"
     },
     {
@@ -231,18 +236,18 @@
       "type": "file"
     },
     {
-      "path": ".shared/scripts/session-review.sh",
-      "sha256": "4845f477f703d4927b6333f336b39860f1eada3e9a0bca8748b970d5566b5ad8",
+      "path": ".shared/templates/brain.md",
+      "sha256": "08debe322b3f90e3045d779a5af4790b563187619c14362b9b482a75ce2eaed5",
       "type": "file"
     },
     {
-      "path": ".shared/templates/brain.md",
-      "sha256": "d788bc9dbbabad5b597164e9e73fc1d75094207c8cd001846f3a17790e0c4c99",
+      "path": ".shared/templates/case.md",
+      "sha256": "00b1d87a4cc323d4e018f4bc88d794fecbd7919eb4cefcc5635b6412a606d5bd",
       "type": "file"
     },
     {
       "path": ".shared/templates/plan.md",
-      "sha256": "a413153ad0219f256fee53db313932d17d90a39db9f9befe906b9b474c62be55",
+      "sha256": "87442abba1fae8009b9a16713f7b7200f355a77d3c7a2ed39c90f21f0a0beb44",
       "type": "file"
     },
     {
@@ -252,17 +257,12 @@
     },
     {
       "path": ".shared/templates/review.md",
-      "sha256": "a290ef7de5bd28a0f18e37fb4fecf3e4e468419bf3f41cae170efc7cb5022170",
-      "type": "file"
-    },
-    {
-      "path": ".shared/templates/session.md",
-      "sha256": "2f9d6bf84b5832bf5b2cc7375d39dded8c92143368036da0b3fa5b6a93154bf2",
+      "sha256": "d894369265edc8e090a6266aa8da4c6b42356ab9b4abc8bd4a63e936b671a47d",
       "type": "file"
     },
     {
       "path": "AGENTS.md",
-      "sha256": "8dcde1807ce66ac1e07133fbda6ab2b1189085d43fe4ee4110a447454e8f97a3",
+      "sha256": "25391faafcc3af3ad582370fcf87ed7775b56b3262fa7ee3944172abc320a820",
       "type": "file"
     }
   ],

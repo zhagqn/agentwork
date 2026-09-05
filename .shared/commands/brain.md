@@ -10,15 +10,15 @@
 - 需要比较 2-3 个方案
 - 任务虽不大，但边界/成功标准还没锁定
 - 用户意图、影响边界、长期维护成本或取舍依据还不明确
-- 准备进入 `/plan`，或准备后续通过 `/session plan` 写入 session
+- 准备进入 `/plan`，或准备后续通过 `/case plan` 写入 Case
 
 ## 输出
 
-- `/brain` 不创建或更新 `.shared/session/*.md`
+- `/brain` 不创建或更新 `.shared/case/*.md`
 - 输出写到：`.tmp/agentwork/brain/{YYYYMMDD-HHMM-slug}.md`
 - 使用模板：`.shared/templates/brain.md`
 - 不修改项目源码、README、脚本、配置、测试或业务文档；唯一允许写入的项目内工件是 `.tmp/agentwork/brain/*.md`
-- 如果需要把已确认结论写入 session，后续显式调用 `/session plan [plan-source]`
+- 如果需要把已确认结论写入 Case，后续显式调用 `/case plan [plan-source]`
 
 ## 最小产出
 
@@ -44,12 +44,12 @@
 5. 做推荐并请求确认
    - 若差异会影响架构、数据格式、公共 API、边界、成本、长期维护或后续提交拆分，默认先确认再进入 `/plan`
    - 若存在明显优选且用户意图已足够清晰，可带着显式假设继续，但仍要先展示对比和推荐理由
-   - 确认问题必须写清：确认后的下一步是 `/plan`，或由 `/session plan [plan-source]` 写入 session，不是直接执行
+   - 确认问题必须写清：确认后的下一步是 `/plan`，或由 `/case plan [plan-source]` 写入 Case，不是直接执行
 6. 落文档，只沉淀最终态
-   - 按模板写 brain note；不要把讨论过程直接写入 session
+   - 按模板写 brain note；不要把讨论过程直接写入 Case
 7. 运行命令自检
    - 运行 `.shared/scripts/agentwork-check.py brain <brain-note>`；未显式路径时可用 `.shared/scripts/agentwork-check.py brain` 检查最新 brain note
-8. 停在方案收敛结果；需要继续时进入 `/plan` 或 `/session plan [plan-source]`。只有计划已明确，且用户显式调用 `/exec` / `/session exec` 或明确要求“现在开始修改”后，才可进入执行
+8. 停在方案收敛结果；需要继续时进入 `/plan` 或 `/case plan [plan-source]`。只有计划已明确，且用户显式调用 `/exec` / `/case exec` 或明确要求“现在开始修改”后，才可进入执行
 
 ## 禁止事项
 
@@ -62,4 +62,4 @@
 - 运行实现、格式化、构建、测试、安装依赖、启动服务等执行型命令；`rg`、`sed`、`git status`、`git diff`、`git log` 这类只读检查和读取上下文除外
 - 对 `tsc --noEmit`、编译检查、测试 dry-run 等边界不清的命令，先停下来确认，不把它们默认为 `/brain` 可执行范围
 - 将用户需求中的“实现 / 新增 / 修改”直接当作当前步骤的执行许可；必须转写为后续 `/plan` / `/exec` 的范围与验收标准
-- 创建或更新 `.shared/session/*.md`
+- 创建或更新 `.shared/case/*.md`

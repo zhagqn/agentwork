@@ -12,7 +12,7 @@ TEXT_GLOBS = {
     'brain': '.tmp/agentwork/brain/*.md',
     'plan': '.tmp/agentwork/plan/*.md',
     'review': '.tmp/agentwork/review/*.md',
-    'session': '.shared/session/*.md',
+    'case': '.shared/case/*.md',
 }
 
 TEMPLATE_PLACEHOLDERS = [
@@ -20,11 +20,11 @@ TEMPLATE_PLACEHOLDERS = [
     '{YYYY-MM-DD HH:MM}',
     '{desc}',
     '{brain-topic-summary}',
-    '{session-desc}',
+    '{case-desc}',
     '{plan-source}',
     '{review-source}',
     '{exec-source}',
-    '{session-or-plan-ref}',
+    '{case-or-plan-ref}',
     '{brain-note-or-other-source}',
     '{已经明确的目标/事实/约束/成功标准/非目标}',
     '{当前最需要确认的问题；若没有可写“无”}',
@@ -40,7 +40,7 @@ TEMPLATE_PLACEHOLDERS = [
     '{必要的定义或流程}',
     '{如仍存在}',
     '{交给 plan 的已确认设计、非目标、验收标准和仍待确认事项}',
-    '{如果需要 session 快照，确认后使用哪个 brain/plan 工件作为来源}',
+    '{如果需要 Case 快照，确认后使用哪个 brain/plan 工件作为来源}',
     '{一句话目标}',
     '{范围}',
     '{非目标}',
@@ -52,15 +52,15 @@ TEMPLATE_PLACEHOLDERS = [
     '{达到什么状态才算完成这一轮}',
     '{当前阻塞或风险}',
     '{执行时可补充简短状态}',
-    '{如果不写入 session，说明执行入口}',
-    '{如果需要 session，说明要写入的 plan-source}',
+    '{如果不写入 Case，说明执行入口}',
+    '{如果需要 Case，说明要写入的 plan-source}',
     '{严重问题；如无可写 none}',
     '{重要问题；如无可写 none}',
     '{次要问题；如无可写 none}',
     '{采纳了什么，为什么}',
     '{拒绝了什么，为什么}',
     '{当前验证状态}',
-    '{建议回到 /brain /plan /exec /session 中哪一步}',
+    '{建议回到 /brain /plan /exec /case 中哪一步}',
     '{当前任务目标}',
     '{本轮纳入范围}',
     '{本轮不做什么}',
@@ -68,8 +68,8 @@ TEMPLATE_PLACEHOLDERS = [
     '{当前已确认方案}',
     '{只记录会影响后续恢复的已否决方案、兼容取舍或迁移前提；重复讨论留在 brain/review 工件}',
     '{尚未确认的推荐方案；确认前不要写成已选方案}',
-    '{需要用户确认后才能进入 /plan 或 /session exec 的关键问题}',
-    '{需要用户确认后才能进入 /session plan 或 /session exec 的关键问题}',
+    '{需要用户确认后才能进入 /plan 或 /case exec 的关键问题}',
+    '{需要用户确认后才能进入 /case plan 或 /case exec 的关键问题}',
     '{仅保留继续推进所必需的定义或流程}',
     '{下一步要做的事}',
     '{会修改哪些文件、哪些边界不能碰}',
@@ -93,8 +93,8 @@ TEMPLATE_PLACEHOLDERS = [
     '{如果出现长期稳定事实，列在这里等待确认}',
 ]
 
-SESSION_BASE_REQUIRED = [
-    '# Session:',
+CASE_BASE_REQUIRED = [
+    '# Case:',
     '## 任务列表（按优先级）',
     '## 已确认结论（工作快照）',
     '### 目标',
@@ -105,7 +105,7 @@ SESSION_BASE_REQUIRED = [
     '## 审查记录',
 ]
 
-SESSION_STRICT_REQUIRED = [
+CASE_STRICT_REQUIRED = [
     '## 计划摘要（可选）',
     '### 关键文件 / 边界',
     '### 执行批次 / 优先级',
@@ -115,7 +115,7 @@ SESSION_STRICT_REQUIRED = [
     '## 产出批次（提交锚点）',
 ]
 
-BANNED_SESSION_HEADINGS = [
+BANNED_CASE_HEADINGS = [
     '## Goal',
     '## Scope',
     '## Findings',
@@ -266,17 +266,17 @@ SELF_TEST_FIXTURES = {
 ### Important
 - 缺少关键验证证据。
 """,
-    '.shared/session/20260101-0000-fixture.md': """# Session: fixture
+    '.shared/case/20260101-0000-fixture.md': """# Case: fixture
 
 > 创建: 2026-01-01 00:00
 > 简述: command harness fixture
 
 ## 任务列表（按优先级）
-- [x] 验证 session 自检。
+- [x] 验证 Case 自检。
 
 ## 已确认结论（工作快照）
 ### 目标
-- 验证 session 工件形态。
+- 验证 Case 工件形态。
 ### 边界
 - In Scope: `.shared/scripts/agentwork-check.py`
 - Out of Scope: provider E2E
@@ -289,24 +289,24 @@ SELF_TEST_FIXTURES = {
 ### 关键文件 / 边界
 - `.shared/scripts/agentwork-check.py`
 ### 执行批次 / 优先级
-- 验证 strict-flow session。
+- 验证 strict-flow Case。
 ### 验证策略
-- 运行 `.shared/scripts/agentwork-check.py session --strict-flow`。
+- 运行 `.shared/scripts/agentwork-check.py case --strict-flow`。
 ### 完成标准（可选）
-- session strict-flow 检查通过。
+- Case strict-flow 检查通过。
 
 ## 当前批次工作集（可选）
 - 范围: `.shared/scripts/agentwork-check.py` | 主题: 命令自检入口
 
 ## 产出批次（提交锚点）
-- 提交: `-` | 范围: `.shared/scripts/agentwork-check.py` | 验证: session strict-flow 检查通过。
+- 提交: `-` | 范围: `.shared/scripts/agentwork-check.py` | 验证: Case strict-flow 检查通过。
 
 ## 风险 / 阻塞
 - 无。
 
 ## 审查记录
 ### 2026-01-01 00:00
-- 变更：创建 fixture session。
+- 变更：创建 fixture Case。
 - 验证：本地 harness 检查通过。
 - 风险/待办：无。
 """,
@@ -320,7 +320,7 @@ def read_text(path: Path) -> str:
 def latest_path(kind: str) -> Path | None:
     pattern = TEXT_GLOBS[kind]
     paths = [path for path in Path.cwd().glob(pattern) if path.is_file()]
-    if kind == 'session':
+    if kind == 'case':
         paths = [path for path in paths if path.name != 'README.md']
     if not paths:
         return None
@@ -330,8 +330,8 @@ def latest_path(kind: str) -> Path | None:
 def resolve_path(kind: str, value: str | None) -> Path | None:
     if value:
         path = Path(value)
-        if kind == 'session' and not path.exists() and path.suffix != '.md' and '/' not in value:
-            return Path('.shared/session') / f'{value}.md'
+        if kind == 'case' and not path.exists() and path.suffix != '.md' and '/' not in value:
+            return Path('.shared/case') / f'{value}.md'
         return path
     return latest_path(kind)
 
@@ -444,10 +444,10 @@ def check_plan(path: Path | None) -> tuple[Path | None, list[str]]:
         ],
         failures,
     )
-    if re.search(r'^# Session:', text, flags=re.MULTILINE):
-        add_once(failures, 'session_heading_leak:# Session:')
+    if re.search(r'^# Case:', text, flags=re.MULTILINE):
+        add_once(failures, 'case_heading_leak:# Case:')
     if re.search(r'^## 已确认结论（工作快照）', text, flags=re.MULTILINE):
-        add_once(failures, 'session_heading_leak:## 已确认结论（工作快照）')
+        add_once(failures, 'case_heading_leak:## 已确认结论（工作快照）')
     if not re.search(r'^- \[[ x]\] .+', text, flags=re.MULTILINE):
         add_once(failures, 'missing_task_checkbox')
     check_any_group(
@@ -695,15 +695,15 @@ def check_review_history(review_lines: list[str], failures: list[str]) -> None:
             add_once(failures, f'incomplete_recent_review:{event["title"]}:{",".join(missing)}')
 
 
-def check_session(path: Path | None, strict_flow: bool) -> tuple[Path | None, list[str]]:
+def check_case(path: Path | None, strict_flow: bool) -> tuple[Path | None, list[str]]:
     failures: list[str] = []
-    path = check_exists(path, 'session', failures)
+    path = check_exists(path, 'case', failures)
     if path is None:
         return None, failures
     text = read_text(path)
     check_no_placeholders(text, failures)
-    check_required_headings(text, SESSION_BASE_REQUIRED + (SESSION_STRICT_REQUIRED if strict_flow else []), failures)
-    for heading in BANNED_SESSION_HEADINGS:
+    check_required_headings(text, CASE_BASE_REQUIRED + (CASE_STRICT_REQUIRED if strict_flow else []), failures)
+    for heading in BANNED_CASE_HEADINGS:
         if re.search(rf'^{re.escape(heading)}(?:\s|[（(/]|$)', text, flags=re.MULTILINE):
             add_once(failures, f'temporary_heading_leak:{heading}')
     if not re.search(r'^- \[[ x]\] .+', text, flags=re.MULTILINE):
@@ -754,64 +754,64 @@ def run_self_test(root: Path) -> list[str]:
     for rel, content in SELF_TEST_FIXTURES.items():
         write_text(root / rel, content)
 
-    session_path = root / '.shared/session/20260101-0000-fixture.md'
-    session_text = read_text(session_path)
-    deliverable = '- 提交: `-` | 范围: `.shared/scripts/agentwork-check.py` | 验证: session strict-flow 检查通过。'
-    duplicate_text = session_text.replace(
+    case_path = root / '.shared/case/20260101-0000-fixture.md'
+    case_text = read_text(case_path)
+    deliverable = '- 提交: `-` | 范围: `.shared/scripts/agentwork-check.py` | 验证: Case strict-flow 检查通过。'
+    duplicate_text = case_text.replace(
         deliverable,
         '- 提交: `abcdef1 feat: first` | 范围: `.shared/scripts/agentwork-check.py` | 验证: first。\n'
         '- 提交: `abcdef1 fix: second` | 范围: `.shared/scripts/agentwork-check.py` | 验证: second。',
     )
 
-    def session_with_reviews(review_text: str) -> str:
-        return session_text.split('## 审查记录', maxsplit=1)[0] + '## 审查记录\n' + review_text
+    def case_with_reviews(review_text: str) -> str:
+        return case_text.split('## 审查记录', maxsplit=1)[0] + '## 审查记录\n' + review_text
 
     complete_review = (
-        '- 变更：更新 session。\n'
+        '- 变更：更新 Case。\n'
         '- 验证：本地检查通过。\n'
         '- 风险/待办：无。\n'
     )
-    out_of_order_text = session_with_reviews(
+    out_of_order_text = case_with_reviews(
         '### 2026-01-01 first\n'
         f'{complete_review}\n'
         '### 2026-01-02 second\n'
         f'{complete_review}'
     )
-    incomplete_review_text = session_with_reviews(
+    incomplete_review_text = case_with_reviews(
         '### 2026-01-02 incomplete\n'
-        '- 变更：更新 session。\n'
+        '- 变更：更新 Case。\n'
         '- 验证：本地检查通过。\n'
     )
-    undated_review_text = session_with_reviews(
+    undated_review_text = case_with_reviews(
         '### review without date\n'
         f'{complete_review}'
     )
-    invalid_review_date_text = session_with_reviews(
+    invalid_review_date_text = case_with_reviews(
         '### 2026-02-30 invalid date\n'
         f'{complete_review}'
     )
-    history_before_detail_text = session_with_reviews(
+    history_before_detail_text = case_with_reviews(
         '### 历史审查摘要（2025-01-01—2025-12-31）\n'
         '- 2025：历史摘要。\n\n'
         '### 2025-01-01 detail\n'
         f'{complete_review}'
     )
-    empty_history_text = session_with_reviews(
+    empty_history_text = case_with_reviews(
         '### 2026-01-01 detail\n'
         f'{complete_review}\n'
         '### 历史审查摘要（2025-01-01—2025-12-31）\n'
     )
-    many_reviews_text = session_with_reviews(
+    many_reviews_text = case_with_reviews(
         ''.join(f'### 2026-01-0{day} review {day}\n{complete_review}\n' for day in range(4, 0, -1))
     )
-    same_day_text = session_with_reviews(
+    same_day_text = case_with_reviews(
         '### 2026-01-01 review A\n'
         f'{complete_review}\n'
         '### 2026-01-01 review B\n'
         f'{complete_review}'
     )
 
-    session_fixtures = {
+    case_fixtures = {
         'duplicate-anchor': duplicate_text,
         'out-of-order': out_of_order_text,
         'incomplete-review': incomplete_review_text,
@@ -822,55 +822,55 @@ def run_self_test(root: Path) -> list[str]:
         'many-reviews': many_reviews_text,
         'same-day': same_day_text,
     }
-    for name, content in session_fixtures.items():
-        write_text(root / f'.shared/session/20260101-0000-{name}.md', content)
+    for name, content in case_fixtures.items():
+        write_text(root / f'.shared/case/20260101-0000-{name}.md', content)
 
     checks = [
         ('brain', check_brain(root / '.tmp/agentwork/brain/20260101-0000-fixture.md'), None),
         ('plan', check_plan(root / '.tmp/agentwork/plan/20260101-0000-fixture.md'), None),
         ('exec', check_exec(root / '.tmp/agentwork/plan/20260101-0001-exec-fixture.md'), None),
         ('review', check_review(root / '.tmp/agentwork/review/20260101-0000-fixture.md', True), None),
-        ('session', check_session(session_path, True), None),
-        ('session-many-reviews', check_session(root / '.shared/session/20260101-0000-many-reviews.md', True), None),
-        ('session-same-day', check_session(root / '.shared/session/20260101-0000-same-day.md', True), None),
+        ('case', check_case(case_path, True), None),
+        ('case-many-reviews', check_case(root / '.shared/case/20260101-0000-many-reviews.md', True), None),
+        ('case-same-day', check_case(root / '.shared/case/20260101-0000-same-day.md', True), None),
         (
             'review-important',
             check_review(root / '.tmp/agentwork/review/20260101-0001-important-fixture.md', True),
             'review_has_important_findings',
         ),
         (
-            'session-duplicate-anchor',
-            check_session(root / '.shared/session/20260101-0000-duplicate-anchor.md', True),
+            'case-duplicate-anchor',
+            check_case(root / '.shared/case/20260101-0000-duplicate-anchor.md', True),
             'duplicate_commit_anchor',
         ),
         (
-            'session-out-of-order',
-            check_session(root / '.shared/session/20260101-0000-out-of-order.md', True),
+            'case-out-of-order',
+            check_case(root / '.shared/case/20260101-0000-out-of-order.md', True),
             'review_events_out_of_order',
         ),
         (
-            'session-incomplete-review',
-            check_session(root / '.shared/session/20260101-0000-incomplete-review.md', True),
+            'case-incomplete-review',
+            check_case(root / '.shared/case/20260101-0000-incomplete-review.md', True),
             'incomplete_recent_review',
         ),
         (
-            'session-undated-review',
-            check_session(root / '.shared/session/20260101-0000-undated-review.md', True),
+            'case-undated-review',
+            check_case(root / '.shared/case/20260101-0000-undated-review.md', True),
             'missing_valid_review_date',
         ),
         (
-            'session-invalid-review-date',
-            check_session(root / '.shared/session/20260101-0000-invalid-review-date.md', True),
+            'case-invalid-review-date',
+            check_case(root / '.shared/case/20260101-0000-invalid-review-date.md', True),
             'missing_valid_review_date',
         ),
         (
-            'session-history-before-detail',
-            check_session(root / '.shared/session/20260101-0000-history-before-detail.md', True),
+            'case-history-before-detail',
+            check_case(root / '.shared/case/20260101-0000-history-before-detail.md', True),
             'review_detail_after_history',
         ),
         (
-            'session-empty-history',
-            check_session(root / '.shared/session/20260101-0000-empty-history.md', True),
+            'case-empty-history',
+            check_case(root / '.shared/case/20260101-0000-empty-history.md', True),
             'empty_review_history',
         ),
     ]
@@ -906,9 +906,9 @@ def main() -> int:
     review.add_argument('path', nargs='?')
     review.add_argument('--fail-on-major', action='store_true', help='fail when Critical or Important findings are present')
 
-    session = subparsers.add_parser('session', help='check a session snapshot')
-    session.add_argument('path', nargs='?')
-    session.add_argument('--strict-flow', action='store_true', help='require plan/workset/deliverable sections')
+    case = subparsers.add_parser('case', help='check a Case snapshot')
+    case.add_argument('path', nargs='?')
+    case.add_argument('--strict-flow', action='store_true', help='require plan/workset/deliverable sections')
 
     self_test = subparsers.add_parser('self-test', help='run deterministic built-in fixture checks')
     self_test.add_argument('--root', help='write fixture files under this root; default uses .tmp/agentwork-check-self-test/<timestamp>')
@@ -941,8 +941,8 @@ def main() -> int:
         path, failures = check_exec(resolve_path('plan', args.path))
     elif args.command == 'review':
         path, failures = check_review(resolve_path('review', args.path), args.fail_on_major)
-    elif args.command == 'session':
-        path, failures = check_session(resolve_path('session', args.path), args.strict_flow)
+    elif args.command == 'case':
+        path, failures = check_case(resolve_path('case', args.path), args.strict_flow)
     else:
         raise AssertionError(args.command)
 

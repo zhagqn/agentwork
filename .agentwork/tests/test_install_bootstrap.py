@@ -24,12 +24,24 @@ CONFIG_START = '# >>> AGENTWORK bootstrap: Codex agents >>>'
 CONFIG_END = '# <<< AGENTWORK bootstrap: Codex agents <<<'
 PROJECT_START = '<!-- AGENTWORK:PROJECT-INDEX:START -->'
 PROJECT_END = '<!-- AGENTWORK:PROJECT-INDEX:END -->'
-SESSION_START = '<!-- AGENTWORK:SESSION-README:START -->'
-SESSION_END = '<!-- AGENTWORK:SESSION-README:END -->'
+CASE_START = '<!-- AGENTWORK:CASE-README:START -->'
+CASE_END = '<!-- AGENTWORK:CASE-README:END -->'
+RETIRED_SESSION_START = '<!-- AGENTWORK:SESSION-README:START -->'
+RETIRED_SESSION_END = '<!-- AGENTWORK:SESSION-README:END -->'
 GITIGNORE_START = '# >>> AGENTWORK bootstrap: tmp artifacts >>>'
 GITIGNORE_END = '# <<< AGENTWORK bootstrap: tmp artifacts <<<'
 RECEIPT_REL = Path('.agentwork/bootstrap-install-state.json')
-PI_PROMPTS = ('aw-session', 'brain', 'commit', 'exec', 'plan', 'review')
+PI_PROMPTS = ('brain', 'case', 'commit', 'exec', 'plan', 'review')
+RETIRED_SESSION_FILES = (
+    '.claude/commands/session.md',
+    '.codex/skills/session/SKILL.md',
+    '.opencode/commands/session.md',
+    '.pi/prompts/aw-session.md',
+    '.shared/commands/session.md',
+    '.shared/patterns/session-workflow.md',
+    '.shared/scripts/session-review.sh',
+    '.shared/templates/session.md',
+)
 
 
 def tree_snapshot(path: Path) -> dict[str, tuple[str, bytes | str | None]]:
@@ -169,6 +181,7 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
                     hashlib.sha256(source.read_bytes()).hexdigest(),
                 )
         self.assertNotIn('.pi/prompts/session.md', records)
+        self.assertNotIn('.pi/prompts/aw-session.md', records)
 
     def test_reinstall_preserves_other_config_and_agents(self) -> None:
         codex = self.project / '.codex'
@@ -200,17 +213,215 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
         self.run_installer()
         self.assertEqual((self.project / RECEIPT_REL).read_bytes(), first)
 
+    def test_source_session_data_is_excluded_from_installs(self) -> None:
+        relative = Path('.shared/session/local-task.md')
+        source_content = b'source-owned legacy task\n\xff\n'
+        project_content = b'project-owned legacy task\n\xfe\n'
+        for scenario in ('fresh', 'existing', 'self-host'):
+            with self.subTest(scenario=scenario):
+                source = self.source_fixture(f'source-session-data-{scenario}')
+                source_data = source / relative
+                source_data.parent.mkdir(parents=True)
+                source_data.write_bytes(source_content)
+                target = source if scenario == 'self-host' else self.project / scenario
+                target.mkdir(parents=True, exist_ok=True)
+                target_data = target / relative
+                if scenario == 'existing':
+                    target_data.parent.mkdir(parents=True)
+                    target_data.write_bytes(project_content)
+
+                after_first = None
+                for run in range(2):
+                    result = subprocess.run(
+                        ['python3', str(source / 'install-bootstrap.py'), '-p', str(target)],
+                        cwd=source,
+                        text=True,
+                        capture_output=True,
+                        check=False,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+                    self.assertEqual(source_data.read_bytes(), source_content)
+                    if scenario == 'fresh':
+                        self.assertFalse(target_data.parent.exists())
+                    else:
+                        expected = source_content if scenario == 'self-host' else project_content
+                        self.assertEqual(target_data.read_bytes(), expected)
+                    receipt_paths = {entry['path'] for entry in self.receipt(target)['files']}
+                    self.assertFalse(any(path.startswith('.shared/session/') for path in receipt_paths))
+                    self.assertIn('.shared/commands/case.md', receipt_paths)
+                    self.assertIn('.pi/prompts/case.md', receipt_paths)
+                    if run == 0:
+                        after_first = tree_snapshot(target)
+                    else:
+                        self.assertEqual(tree_snapshot(target), after_first)
+
+    def test_prior_session_receipt_retires_owned_contract_without_touching_data(self) -> None:
+        receipt_files = []
+        for index, relative in enumerate(RETIRED_SESSION_FILES):
+            path = self.project / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            content = f'prior agentwork Session contract {index}\n'.encode()
+            path.write_bytes(content)
+            receipt_files.append(
+                {
+                    'path': relative,
+                    'type': 'file',
+                    'sha256': hashlib.sha256(content).hexdigest(),
+                }
+            )
+
+        retired_readme = self.project / '.shared/session/README.md'
+        retired_readme.parent.mkdir(parents=True, exist_ok=True)
+        retired_readme_content = (
+            '# Session 目录说明\n\n'
+            '## 本项目补充说明\n\n'
+            f'{RETIRED_SESSION_START}\n'
+            'prior managed instructions\n'
+            f'{RETIRED_SESSION_END}\n'
+        ).encode()
+        retired_readme.write_bytes(retired_readme_content)
+        receipt_files.append(
+            {
+                'path': '.shared/session/README.md',
+                'type': 'file',
+                'sha256': hashlib.sha256(retired_readme_content).hexdigest(),
+            }
+        )
+        legacy_data = self.project / '.shared/session/keep.md'
+        legacy_data.write_bytes(b'project legacy data\n\xff\n')
+        legacy_data_before = legacy_data.read_bytes()
+        receipt_path = self.project / RECEIPT_REL
+        receipt_path.parent.mkdir(parents=True, exist_ok=True)
+        receipt_path.write_text(
+            json.dumps(
+                {'schema_version': 1, 'files': receipt_files},
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + '\n',
+            encoding='utf-8',
+        )
+
+        self.run_installer()
+
+        for relative in RETIRED_SESSION_FILES:
+            self.assertFalse((self.project / relative).exists(), relative)
+        self.assertFalse(retired_readme.exists())
+        self.assertEqual(legacy_data.read_bytes(), legacy_data_before)
+        self.assertTrue((self.project / '.shared/case/README.md').is_file())
+        receipt_paths = {entry['path'] for entry in self.receipt()['files']}
+        self.assertFalse(set(RETIRED_SESSION_FILES) & receipt_paths)
+        self.assertNotIn('.shared/session/README.md', receipt_paths)
+        self.assertIn('.shared/commands/case.md', receipt_paths)
+        self.assertIn('.pi/prompts/case.md', receipt_paths)
+
+    def test_modified_receipted_retired_wrapper_is_preserved_across_reinstall(self) -> None:
+        retired_wrapper = self.project / '.claude/commands/session.md'
+        retired_wrapper.parent.mkdir(parents=True, exist_ok=True)
+        prior_content = b'<!-- AUTO-GENERATED by agentwork bootstrap -->\n# prior Session wrapper\n'
+        customized_content = prior_content + b'\nProject customization\n'
+        retired_wrapper.write_bytes(customized_content)
+        receipt_path = self.project / RECEIPT_REL
+        receipt_path.parent.mkdir(parents=True, exist_ok=True)
+        receipt_path.write_text(
+            json.dumps(
+                {
+                    'schema_version': 1,
+                    'files': [
+                        {
+                            'path': '.claude/commands/session.md',
+                            'type': 'file',
+                            'sha256': hashlib.sha256(prior_content).hexdigest(),
+                        }
+                    ],
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+            + '\n',
+            encoding='utf-8',
+        )
+
+        first = self.run_installer()
+        self.assertEqual(retired_wrapper.read_bytes(), customized_content)
+        self.assertIn('- [keep] .claude/commands/session.md', first.stdout)
+        self.assertNotIn(
+            '.claude/commands/session.md',
+            {entry['path'] for entry in self.receipt()['files']},
+        )
+
+        second = self.run_installer()
+        self.assertEqual(retired_wrapper.read_bytes(), customized_content)
+        self.assertIn('- [keep] .claude/commands/session.md', second.stdout)
+
+    def test_retired_session_custom_content_is_preserved_and_block_is_stripped(self) -> None:
+        custom_command = self.project / '.shared/commands/session.md'
+        custom_command.parent.mkdir(parents=True, exist_ok=True)
+        custom_command.write_text('# Project-owned legacy command\n', encoding='utf-8')
+        legacy_data = self.project / '.shared/session/keep.md'
+        legacy_data.parent.mkdir(parents=True, exist_ok=True)
+        legacy_data.write_bytes(b'project-owned legacy data\n')
+        retired_readme = self.project / '.shared/session/README.md'
+        retired_readme.write_text(
+            '# Project legacy notes\n\n'
+            f'{RETIRED_SESSION_START}\n'
+            'prior managed instructions\n'
+            f'{RETIRED_SESSION_END}\n\n'
+            'Project legacy suffix\n',
+            encoding='utf-8',
+        )
+        old_pi_prompt = self.project / '.pi/prompts/aw-session.md'
+        old_pi_prompt.parent.mkdir(parents=True, exist_ok=True)
+        old_pi_prompt.symlink_to('../../.shared/session/keep.md')
+
+        self.run_installer()
+        after_first = tree_snapshot(self.project)
+        self.run_installer()
+
+        self.assertEqual(tree_snapshot(self.project), after_first)
+        self.assertEqual(
+            custom_command.read_text(encoding='utf-8'),
+            '# Project-owned legacy command\n',
+        )
+        self.assertTrue(old_pi_prompt.is_symlink())
+        self.assertEqual(os.readlink(old_pi_prompt), '../../.shared/session/keep.md')
+        self.assertEqual(legacy_data.read_bytes(), b'project-owned legacy data\n')
+        readme_text = retired_readme.read_text(encoding='utf-8')
+        self.assertIn('# Project legacy notes', readme_text)
+        self.assertIn('Project legacy suffix', readme_text)
+        self.assertNotIn(RETIRED_SESSION_START, readme_text)
+        self.assertNotIn(RETIRED_SESSION_END, readme_text)
+
+    def test_unrecognized_retired_session_readme_is_ignored(self) -> None:
+        variants = (
+            f'project data\n{RETIRED_SESSION_START}\nincomplete\n'.encode(),
+            b'\xff\xfe',
+        )
+        for index, content in enumerate(variants):
+            with self.subTest(variant=index):
+                project = Path(self.temp.name) / f'retired-session-readme-{index}'
+                readme = project / '.shared/session/README.md'
+                readme.parent.mkdir(parents=True)
+                readme.write_bytes(content)
+
+                self.run_installer(project=project)
+
+                self.assertEqual(readme.read_bytes(), content)
+                self.assertTrue((project / '.shared/case/README.md').is_file())
+
     def test_reinstall_preserves_managed_block_context_and_unmanaged_files(self) -> None:
         project_index = self.project / '.shared/project/index.md'
-        session_readme = self.project / '.shared/session/README.md'
+        case_readme = self.project / '.shared/case/README.md'
         project_index.parent.mkdir(parents=True)
-        session_readme.parent.mkdir(parents=True)
+        case_readme.parent.mkdir(parents=True)
         project_index.write_text('# Project-owned prefix\n', encoding='utf-8')
-        session_readme.write_text('# Session-owned prefix\n', encoding='utf-8')
+        case_readme.write_text('# Case-owned prefix\n', encoding='utf-8')
         (self.project / '.gitignore').write_text('node_modules/\n/.tmp/\n', encoding='utf-8')
         self.run_installer()
 
-        for path in (project_index, session_readme):
+        for path in (project_index, case_readme):
             path.write_text(path.read_text(encoding='utf-8') + '\nProject-owned suffix\n', encoding='utf-8')
         optional_file = self.project / '.shared/skills/browser/SKILL.md'
         optional_file.parent.mkdir(parents=True)
@@ -225,7 +436,7 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
         self.assertEqual(tree_snapshot(self.project), after_second)
         for path, prefix in (
             (project_index, '# Project-owned prefix\n'),
-            (session_readme, '# Session-owned prefix\n'),
+            (case_readme, '# Case-owned prefix\n'),
         ):
             text = path.read_text(encoding='utf-8')
             self.assertTrue(text.startswith(prefix))
@@ -272,7 +483,7 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
     def test_malformed_managed_blocks_fail_without_writes(self) -> None:
         targets = (
             ('.shared/project/index.md', PROJECT_START, PROJECT_END),
-            ('.shared/session/README.md', SESSION_START, SESSION_END),
+            ('.shared/case/README.md', CASE_START, CASE_END),
             ('.gitignore', GITIGNORE_START, GITIGNORE_END),
         )
         variants = (
@@ -299,7 +510,7 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
                     self.assertEqual(tree_snapshot(project), before)
 
     def test_non_utf8_managed_files_fail_without_writes_or_traceback(self) -> None:
-        for index, rel in enumerate(('.shared/project/index.md', '.shared/session/README.md', '.gitignore')):
+        for index, rel in enumerate(('.shared/project/index.md', '.shared/case/README.md', '.gitignore')):
             with self.subTest(path=rel):
                 project = Path(self.temp.name) / f'non-utf8-{index}'
                 path = project / rel
@@ -494,8 +705,8 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
     def test_external_install_ignores_stale_generated_source_prompts(self) -> None:
         source = self.source_fixture('external-stale-pi-source')
         stale_dir = source / '.agentwork/bootstrap/pi/prompts'
-        (stale_dir / 'session.md').write_text(
-            '<!-- AUTO-GENERATED by agentwork bootstrap -->\n# stale session\n',
+        (stale_dir / 'aw-session.md').write_text(
+            '<!-- AUTO-GENERATED by agentwork bootstrap -->\n# stale aw-session\n',
             encoding='utf-8',
         )
         (stale_dir / 'other.md').write_text(
@@ -526,7 +737,7 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
                 (target / RECEIPT_REL).read_text(encoding='utf-8')
             )['files']
         }
-        self.assertNotIn('.pi/prompts/session.md', receipt_paths)
+        self.assertNotIn('.pi/prompts/aw-session.md', receipt_paths)
         self.assertNotIn('.pi/prompts/other.md', receipt_paths)
 
     def test_receipt_allows_refresh_of_an_unchanged_prior_version(self) -> None:
@@ -1001,10 +1212,22 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
         )
         custom = self.project / '.agent/workflows/plan.md'
         custom.write_text('# project-owned plan\n', encoding='utf-8')
+        retired_readme = self.project / '.shared/session/README.md'
+        retired_readme.parent.mkdir(parents=True)
+        retired_readme.write_text(
+            '# Project legacy notes\n\n'
+            f'{RETIRED_SESSION_START}\nmanaged\n{RETIRED_SESSION_END}\n\n'
+            'Project suffix\n',
+            encoding='utf-8',
+        )
         module = self.load_installer()
         plan = self.prepared_plan(module)
         self.assertIn(Path('.agent/workflows/brain.md'), plan.retired_removed)
         self.assertIn(Path('.agent/workflows/plan.md'), plan.retired_preserved)
+        self.assertEqual(
+            tuple(item.path for item in plan.retired_managed),
+            (retired_readme.resolve(),),
+        )
         original = module.copy_file
         calls = 0
 

@@ -1,13 +1,13 @@
 # Subagent Workflow
 
-> 目的：定义使用 subagent 时的委派契约、输出格式和验收责任。本文是可选执行 pattern，不是 `/exec` 或 `/review` 的必做流程；触发读取规则见 `.shared/commands/exec.md`、`.shared/commands/review.md` 与 `.shared/patterns/session-workflow.md`。
+> 目的：定义使用 subagent 时的委派契约、输出格式和验收责任。本文是可选执行 pattern，不是 `/exec` 或 `/review` 的必做流程；触发读取规则见 `.shared/commands/exec.md`、`.shared/commands/review.md` 与 `.shared/patterns/case-workflow.md`。
 
 ## 基本边界
 
 - Subagent 是执行过程中的可选协作机制，可用于并行调查、局部实现、重复比对或独立复核
 - Subagent 不改变主 agent 的责任边界
 - Subagent 输出是候选证据或候选改动，不自动等同于任务完成
-- 最终整合、验证、提交判断和 session 更新由主 agent 完成
+- 最终整合、验证、提交判断和 Case 更新由主 agent 完成
 
 ## 适用场景
 
@@ -57,4 +57,4 @@
 
 - 委派前：写清边界、目标、判断标准、写入权限和输出格式
 - 返回后：核验证据，处理冲突或不确定项，决定是否采纳
-- 采纳后：运行必要验证，只把高信号结论、范围和风险写入 session
+- 采纳后：运行必要验证，只把高信号结论、范围和风险写入 Case

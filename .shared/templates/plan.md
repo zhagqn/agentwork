@@ -31,5 +31,5 @@
 - {执行时可补充简短状态}
 
 ## 下一步（可选）
-- `/exec`：{如果不写入 session，说明执行入口}
-- `/session plan`：{如果需要 session，说明要写入的 plan-source}
+- `/exec`：{如果不写入 Case，说明执行入口}
+- `/case plan`：{如果需要 Case，说明要写入的 plan-source}

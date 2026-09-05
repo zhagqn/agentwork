@@ -396,9 +396,9 @@ def prepare_root_shared_data() -> tuple[tuple[Path, str], ...]:
             '# Project 索引\n\n## 本项目自定义内容\n',
         ),
         prepare_block(
-            ROOT / '.shared/session/README.md',
-            DATA / 'session-readme.block.md',
-            '# Session 目录说明\n\n## 本项目补充说明\n',
+            ROOT / '.shared/case/README.md',
+            DATA / 'case-readme.block.md',
+            '# Case 目录说明\n\n## 本项目补充说明\n',
         ),
     )
 
@@ -520,7 +520,7 @@ def preflight_rendered_bootstrap(rendered: tuple[RenderedFile, ...]) -> None:
     validate_rendered_paths(rendered)
     managed_paths = {
         ROOT / '.shared' / 'project' / 'index.md',
-        ROOT / '.shared' / 'session' / 'README.md',
+        ROOT / '.shared' / 'case' / 'README.md',
     }
     conflicts: list[tuple[str, str]] = []
     for item in rendered:

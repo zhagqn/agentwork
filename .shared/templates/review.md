@@ -28,4 +28,4 @@
 - {当前验证状态}
 
 ## Next Recommendation
-- {建议回到 /brain /plan /exec /session 中哪一步}
+- {建议回到 /brain /plan /exec /case 中哪一步}

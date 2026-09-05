@@ -17,17 +17,17 @@
 - 临时 workaround
 - 只对本轮有效的实施细节
 
-## 与 Session 的边界
-- **Session**：当前任务快照
+## 与 Case 的边界
+- **Case**：当前任务快照
 - **Project**：长期稳定事实
 
 简单判断：
 > 下次做类似任务时，你是否希望助手“自动先读到它”？
-> 如果是，倾向写入 Project；否则留在 Session。
+> 如果是，倾向写入 Project；否则留在 Case。
 
 ## 推荐流程
-1. 任务进行中：只写 Session
-2. 任务收敛后：`/review`（或 `/session review`）
+1. 任务进行中：只写 Case
+2. 任务收敛后：`/review`（或 `/case review`）
 3. 识别稳定结论
 4. 用户确认后，再写入 `.shared/project/*`
 
@@ -92,4 +92,4 @@
 4. **内容范围**
    - 只写少量但重要的长期稳定事实
    - 不写当次任务过程、方案对比、临时 workaround、最近一次执行日志
-   - 若结论还未稳定，先留在 session，等 `/review` 后再写入 project
+   - 若结论还未稳定，先留在 Case，等 `/review` 后再写入 project

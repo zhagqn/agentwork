@@ -9,16 +9,16 @@
 - `.shared/constraints/placeholder-naming.md`
 
 ## 1) 核心工作流
-- Session 命令：`.shared/commands/session.md`
+- Case 命令：`.shared/commands/case.md`
 - Brain 命令：`.shared/commands/brain.md`
 - Plan 命令：`.shared/commands/plan.md`
 - Exec 命令：`.shared/commands/exec.md`
 - Review 命令：`.shared/commands/review.md`
 - Commit 流程：`.shared/commands/commit.md`
-- Session 工作流：`.shared/patterns/session-workflow.md`
+- Case 工作流：`.shared/patterns/case-workflow.md`
 - Subagent 协作：`.shared/patterns/subagent-workflow.md`
-- Session 模板：`.shared/templates/session.md`
-- Session 目录说明：`.shared/session/README.md`
+- Case 模板：`.shared/templates/case.md`
+- Case 目录说明：`.shared/case/README.md`
 - Brain / Plan / Review 模板：`.shared/templates/brain.md`、`.shared/templates/plan.md`、`.shared/templates/review.md`
 - Project 管理：`.shared/patterns/project-management.md`
 - Project 索引：`.shared/project/index.md`
@@ -32,8 +32,8 @@
 - `/plan`：计划落地，输出 `.tmp/agentwork/plan/*.md`
 - `/exec`：任务执行
 - `/review`：工件 + 工作双层审查
-- `/session plan`：把已确认 brain / plan 工件写入 session
-- `/session exec` / `/session review`：围绕当前 session 执行和审查
+- `/case plan`：把已确认 brain / plan 工件写入 Case
+- `/case exec` / `/case review`：围绕当前 Case 执行和审查
 
 ## 3) Temporary Artifacts
 - `.tmp/agentwork/brain/*.md`

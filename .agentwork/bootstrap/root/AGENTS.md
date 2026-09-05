@@ -5,7 +5,7 @@
 
 本仓库协作规范集中在 `.shared/`，此文件为启动时必读的引导规则。
 
-> 启动入口仅承载稳定入口和长期约束；当前任务上下文写入 `.shared/session/*.md`，并且只在显式引用时加载。
+> 启动入口仅承载稳定入口和长期约束；当前任务上下文写入 `.shared/case/*.md`，并且只在显式引用时加载。
 
 ## 核心安全约束（必须遵守）
 
@@ -27,7 +27,7 @@
 - 默认使用简体中文沟通
 - 仅在用户明确要求或必须原样输出代码/命令时使用其他语言
 - 高风险操作必须确认
-- 不自动加载 `.shared/session/*`
+- 不自动加载 `.shared/case/*`
 - 不要预读全部 `.shared/project/*.md`；当任务涉及具体项目或目录时，先根据 `.shared/project/index.md` 读取对应的轻量 project 文档
 - 当第一次确定将读取或修改的目标路径后，必须立即对照 `.shared/project/index.md` 的读取映射；若命中条目，先读取对应 `project/*.md` 再继续工作；若目标路径扩大，重新对照一次
 - 预览未知或可能很大的命令输出时，优先使用 `.shared/scripts/command-preview.sh -- COMMAND ...`，避免直接把大段输出送入上下文
@@ -45,7 +45,7 @@
 
 ## 复杂任务
 
-- 当任务涉及多步骤/跨文件/需要调研时，参考：`.shared/patterns/session-workflow.md`
+- 当任务涉及多步骤/跨文件/需要调研时，参考：`.shared/patterns/case-workflow.md`
 - 如需确认跨平台（Codex / Claude / OpenCode / Cursor / Pi）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`
 
 ## 代码导航默认策略

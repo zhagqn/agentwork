@@ -37,12 +37,13 @@
 - source repo 自身也按目标项目结构自承载 bootstrap；相同路径的核心 `.shared` 文件应跳过复制，只刷新根目录适配层与 managed block
 - `install-bootstrap.py` 只同步核心工作流；已安装的可选工具文件不会随着 bootstrap 自动扩散到目标项目
 - 外部项目 bootstrap 不加载 renderer，也不刷新 agentwork source checkout；只有 source repo self-host (`-p .`) 才预计算 renderer 输出和 prospective 目标计划，并将 canonical 生成与目标安装放入同一可回滚事务
-- project/session/`.gitignore` managed block 只接受“完全不存在”或“唯一且有序”的 marker；残缺、逆序、重复 marker 与非 UTF-8 内容在首个目标写入前停止
+- project、Case 与 `.gitignore` 的 managed block 只接受“完全不存在”或“唯一且有序”的 marker；残缺、逆序、重复 marker 与非 UTF-8 内容在首个目标写入前停止
 - bootstrap 与 optional tool 安装器不新增或改写目标项目许可文件；agentwork 根 `LICENSE` 是 source repo 的许可事实源
 - 退役平台入口只在内容可识别为 agentwork 生成物时自动删除；同路径的项目自定义文件和符号链接必须保留并报告
+- 曾由 core bootstrap receipt 管理的退役入口以 receipt 为优先所有权证据：receipt 存在时只有路径哈希匹配才可删除，路径未记录或哈希变化必须持续保留；仅在整个历史 receipt 不存在时使用生成标记兜底
 - source repo 根目录适配层产物属于正式版本基线：bootstrap 生成的 `AGENTS.md`、`.claude/`、`.opencode/commands/*`、`.cursor/`、`.codex/skills/*`、`.codex/agents/*`、`.codex/config.toml` 受管块与 `.pi/prompts/*` 应与 `.agentwork/bootstrap/*` 保持一致；必要时通过命令自检或安装态人工 smoke 做诊断，可选工具安装态允许额外存在，不视为 bootstrap 漂移
 - bootstrap 默认安装并注册 `luna_worker` Codex 执行子代理；安装器只维护 agentwork 受管配置块和受管 agent 文件，遇到同名项目自定义定义时停止，不静默覆盖
-- Pi 核心适配精确安装 `/brain`、`/plan`、`/exec`、`/review`、`/commit` 与 `/aw-session` 六个项目 prompt；只有 `/aw-session` 映射共享 `/session`，Pi 内置 `/session` 和用户目录 JSONL 不作为 agentwork 跨平台状态
+- Pi 核心适配精确安装 `/brain`、`/plan`、`/exec`、`/review`、`/case` 与 `/commit` 六个项目 prompt；`/case` 映射共享 Case，Pi 内置 `/session` 和用户目录 JSONL 不作为 agentwork 跨平台状态
 - Pi 结构兼容基线为 `v0.84.4`：项目 prompt 需从仓库根 cwd 启动并通过 project trust 才能发现；trust 与 headless `--approve` 都不是 sandbox 或工具级审批
 - 核心 bootstrap 不安装 Pi runtime、settings、package、extension、plan-mode、subagent 或 optional tool；Browser、Research、CodeGraph 可由各自 manifest 显式安装 `.pi/skills/**`，但不创建 `.pi/settings.json`、安装外部 CLI 或假设 MCP 已连接；官方 plan-mode 示例占用 `/plan` 时属于用户安装的外部命令冲突，应回退共享命令或调整其一
 - optional tool 可通过 `tool.json.env_keys` 声明项目级凭据名；安装器只在 Git ignored 的根 `.env` 中追加缺失的空占位，不覆盖、执行或回显值，卸载时保留用户原有或已填写的 assignment
@@ -61,4 +62,4 @@
 
 ## 更新记录
 - 创建: 2026-04-15
-- 最近更新: 2026-09-02
+- 最近更新: 2026-09-04

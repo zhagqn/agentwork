@@ -1,37 +1,37 @@
 #!/usr/bin/env bash
-# Session 审查工具 - 对照 session 的“当前批次工作集”范围与工作区改动，并检查聚合后的“产出批次”锚点
+# Case 审查工具 - 对照 Case 的“当前批次工作集”范围与工作区改动，并检查聚合后的“产出批次”锚点
 
 set -euo pipefail
 
-SESSION_DIR=".shared/session"
+CASE_DIR=".shared/case"
 
 usage() {
     cat >&2 << 'EOF'
 用法:
-  .shared/scripts/session-review.sh                # 审查最新 session
-  .shared/scripts/session-review.sh <session-ref> # 审查指定 session id 或文件路径
+  .shared/scripts/case-review.sh            # 审查最新 Case
+  .shared/scripts/case-review.sh <case-ref> # 审查指定 Case id 或文件路径
 EOF
 }
 
-pick_latest_session() {
-    if [[ ! -d "$SESSION_DIR" ]]; then
-        echo "暂无 Session 记录（目录不存在）" >&2
+pick_latest_case() {
+    if [[ ! -d "$CASE_DIR" ]]; then
+        echo "暂无 Case 记录（目录不存在）" >&2
         return 1
     fi
 
     local latest
-    latest=$(find "$SESSION_DIR" -maxdepth 1 -name "*.md" -type f 2>/dev/null | sort -r | head -n 1 || true)
+    latest=$(find "$CASE_DIR" -maxdepth 1 -name "*.md" -type f 2>/dev/null | sort -r | head -n 1 || true)
     if [[ -z "$latest" ]]; then
-        echo "暂无 Session 记录" >&2
+        echo "暂无 Case 记录" >&2
         return 1
     fi
 
     echo "$latest"
 }
 
-resolve_session_file() {
+resolve_case_file() {
     if [[ $# -eq 0 ]]; then
-        pick_latest_session
+        pick_latest_case
         return
     fi
 
@@ -46,7 +46,7 @@ resolve_session_file() {
         return
     fi
 
-    echo "$SESSION_DIR/$arg.md"
+    echo "$CASE_DIR/$arg.md"
 }
 
 git_root() {
@@ -54,7 +54,7 @@ git_root() {
 }
 
 extract_current_workset() {
-    local session_file="$1"
+    local case_file="$1"
     local section
 
     section=$(awk '
@@ -62,7 +62,7 @@ extract_current_workset() {
         /^##[[:space:]]+当前批次工作集([（(].*[)）])?[[:space:]]*$/ { in_section=1; next }
         /^##[[:space:]]+/ { if (in_section) exit }
         { if (in_section) print }
-    ' "$session_file")
+    ' "$case_file")
 
     if [[ -n "$section" ]]; then
         local range_entries
@@ -87,23 +87,10 @@ extract_current_workset() {
         return
     fi
 
-    # fallback：兼容 legacy 的“产出物（含提交锚点）”逐文件格式
-    awk '
-        BEGIN { in_deliverables=0 }
-        /^##[[:space:]]+产出物([（(].*[)）])?[[:space:]]*$/ { in_deliverables=1; next }
-        /^##[[:space:]]+/ { if (in_deliverables) exit }
-        { if (in_deliverables) print }
-    ' "$session_file" | \
-        sed -E 's/^.*文件:[[:space:]]*//; s/[[:space:]]*\|[[:space:]]*提交:.*$//' | \
-        grep -oE '`[^`]+`' | \
-        tr -d '`' | \
-        sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | \
-        sed '/^$/d' | \
-        sort -u
 }
 
 extract_deliverable_section() {
-    local session_file="$1"
+    local case_file="$1"
     local section
 
     section=$(awk '
@@ -111,31 +98,20 @@ extract_deliverable_section() {
         /^##[[:space:]]+产出批次([（(].*[)）])?[[:space:]]*$/ { in_section=1; next }
         /^##[[:space:]]+/ { if (in_section) exit }
         { if (in_section) print }
-    ' "$session_file")
+    ' "$case_file")
 
-    if [[ -n "$section" ]]; then
-        printf '%s\n' "$section"
-        return
-    fi
-
-    # fallback：兼容 legacy 的“产出物（含提交锚点）”
-    awk '
-        BEGIN { in_deliverables=0 }
-        /^##[[:space:]]+产出物([（(].*[)）])?[[:space:]]*$/ { in_deliverables=1; next }
-        /^##[[:space:]]+/ { if (in_deliverables) exit }
-        { if (in_deliverables) print }
-    ' "$session_file"
+    printf '%s\n' "$section"
 }
 
 extract_commit_hashes() {
-    local session_file="$1"
-    extract_commit_hash_occurrences "$session_file" | sort -u
+    local case_file="$1"
+    extract_commit_hash_occurrences "$case_file" | sort -u
 }
 
 extract_commit_hash_occurrences() {
-    local session_file="$1"
+    local case_file="$1"
     local section
-    section="$(extract_deliverable_section "$session_file")"
+    section="$(extract_deliverable_section "$case_file")"
 
     # 一个“提交:”字段可以聚合多个相关 hash；只解析字段本身，避免把日期或文件名当成 hash。
     printf '%s\n' "$section" |
@@ -146,14 +122,14 @@ extract_commit_hash_occurrences() {
 }
 
 extract_duplicate_commit_hashes() {
-    local session_file="$1"
-    extract_commit_hash_occurrences "$session_file" | sort | uniq -d
+    local case_file="$1"
+    extract_commit_hash_occurrences "$case_file" | sort | uniq -d
 }
 
 extract_external_commit_hashes() {
-    local session_file="$1"
+    local case_file="$1"
     local section
-    section="$(extract_deliverable_section "$session_file")"
+    section="$(extract_deliverable_section "$case_file")"
 
     # 独立仓/外部仓锚点不在当前仓 Git object database 中，仍保留但不误报为无效。
     # 混合记录只把来源标记之后的 hash 视为外部；范围中标记为外部仓时整条均视为外部。
@@ -265,11 +241,11 @@ extract_git_status_paths() {
 }
 
 main() {
-    local session_file
-    session_file="$(resolve_session_file "$@")" || exit $?
+    local case_file
+    case_file="$(resolve_case_file "$@")" || exit $?
 
-    if [[ ! -f "$session_file" ]]; then
-        echo "Session 文件不存在: $session_file"
+    if [[ ! -f "$case_file" ]]; then
+        echo "Case 文件不存在: $case_file"
         echo ""
         usage
         exit 1
@@ -278,9 +254,9 @@ main() {
     local root
     root="$(git_root)"
 
-    echo "Session Review（脚本辅助）"
+    echo "Case Review（脚本辅助）"
     echo ""
-    echo "Session: $session_file"
+    echo "Case: $case_file"
 
     if [[ -n "$root" ]]; then
         echo "Git Root: $root"
@@ -291,14 +267,14 @@ main() {
     echo ""
 
     local workset
-    workset="$(extract_current_workset "$session_file" || true)"
+    workset="$(extract_current_workset "$case_file" || true)"
 
     local workset_count=0
     if [[ -n "$workset" ]]; then
         workset_count=$(echo "$workset" | wc -l | tr -d ' ')
     fi
 
-    echo "当前批次工作集条目（可为精确路径、目录范围或 glob；若不存在则回退 legacy 产出物）：$workset_count"
+    echo "当前批次工作集条目（可为精确路径、目录范围或 glob）：$workset_count"
 
     if [[ -n "$workset" ]]; then
         echo "$workset" | sed 's/.*/- `&`/'
@@ -309,20 +285,20 @@ main() {
     echo ""
 
     local commit_hashes
-    commit_hashes="$(extract_commit_hashes "$session_file" || true)"
+    commit_hashes="$(extract_commit_hashes "$case_file" || true)"
 
     local external_commit_hashes
-    external_commit_hashes="$(extract_external_commit_hashes "$session_file" || true)"
+    external_commit_hashes="$(extract_external_commit_hashes "$case_file" || true)"
 
     local duplicate_commit_hashes
-    duplicate_commit_hashes="$(extract_duplicate_commit_hashes "$session_file" || true)"
+    duplicate_commit_hashes="$(extract_duplicate_commit_hashes "$case_file" || true)"
 
     local commit_hash_count=0
     if [[ -n "$commit_hashes" ]]; then
         commit_hash_count=$(echo "$commit_hashes" | wc -l | tr -d ' ')
     fi
 
-    echo "产出批次锚点（优先从“## 产出批次（提交锚点）”解析；若不存在则回退 legacy 产出物）：$commit_hash_count"
+    echo "产出批次锚点（从“## 产出批次（提交锚点）”解析）：$commit_hash_count"
     if [[ -n "$commit_hashes" ]]; then
         echo "$commit_hashes" | sed 's/.*/- &/'
     else
@@ -455,7 +431,7 @@ main() {
     fi
 
     echo "下一步建议："
-    echo "- 在对话中执行：/review  # 让助手先做双层 review，再整理 session 文档"
+    echo "- 在对话中执行：/review  # 让助手先做双层 review，再整理 Case 文档"
 }
 
 main "$@"

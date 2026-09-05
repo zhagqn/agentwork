@@ -24,7 +24,7 @@ REGISTRY = TOOLS_ROOT / 'registry.json'
 
 BLOCK_TARGETS = [
     (Path('.shared/project/index.md'), DATA / 'project-index.block.md', '# Project 索引\n\n## 本项目自定义内容\n'),
-    (Path('.shared/session/README.md'), DATA / 'session-readme.block.md', '# Session 目录说明\n\n## 本项目补充说明\n'),
+    (Path('.shared/case/README.md'), DATA / 'case-readme.block.md', '# Case 目录说明\n\n## 本项目补充说明\n'),
 ]
 GITIGNORE_BLOCK_START = '# >>> AGENTWORK bootstrap: tmp artifacts >>>'
 GITIGNORE_BLOCK_END = '# <<< AGENTWORK bootstrap: tmp artifacts <<<'
@@ -57,6 +57,14 @@ RETIRED_BOOTSTRAP_PATHS = (
     Path('.agent/workflows/review.md'),
     Path('.agent/workflows/session.md'),
     Path('.github/copilot-instructions.md'),
+    Path('.claude/commands/session.md'),
+    Path('.codex/skills/session/SKILL.md'),
+    Path('.opencode/commands/session.md'),
+    Path('.pi/prompts/aw-session.md'),
+    Path('.shared/commands/session.md'),
+    Path('.shared/patterns/session-workflow.md'),
+    Path('.shared/scripts/session-review.sh'),
+    Path('.shared/templates/session.md'),
 )
 RETIRED_TOOL_SIGNATURES = {
     Path('.agent/skills/browser/SKILL.md'): ('# browser', '.shared/skills/browser/SKILL.md'),
@@ -71,6 +79,10 @@ RETIRED_TOOL_SIGNATURES = {
     Path('.github/prompts/godot.instructions.md'): ('# Godot Tool Instructions', '.shared/commands/godot.md'),
 }
 RETIRED_ADAPTER_PATHS = RETIRED_BOOTSTRAP_PATHS + tuple(RETIRED_TOOL_SIGNATURES)
+RETIRED_SESSION_README_REL = Path('.shared/session/README.md')
+RETIRED_SESSION_README_START = '<!-- AGENTWORK:SESSION-README:START -->'
+RETIRED_SESSION_README_END = '<!-- AGENTWORK:SESSION-README:END -->'
+RETIRED_SESSION_README_SCAFFOLD = '# Session 目录说明\n\n## 本项目补充说明'
 RECEIPT_SCHEMA_VERSION = 1
 RECEIPT_REL = Path('.agentwork/bootstrap-install-state.json')
 SHA256_PATTERN = re.compile(r'^[0-9a-f]{64}$')
@@ -96,6 +108,7 @@ class BootstrapPlan:
     writes: tuple[tuple[Path, Path, str, str], ...]
     retired_removed: tuple[Path, ...]
     retired_preserved: tuple[Path, ...]
+    retired_managed: tuple[PreparedFile, ...]
     managed_indexes: tuple[PreparedFile, ...]
     codex_config: PreparedFile
     gitignore: PreparedFile
@@ -171,31 +184,78 @@ def prune_empty_parents(path: Path, project_root: Path) -> None:
         current = current.parent
 
 
-def is_agentwork_owned_retired_adapter(rel: Path, path: Path) -> bool:
+def is_agentwork_owned_retired_adapter(
+    rel: Path,
+    path: Path,
+    previous: dict[str, str],
+    previous_receipt_exists: bool,
+) -> bool:
     if path.is_symlink() or not path.is_file():
         return False
     try:
-        text = path.read_text(encoding='utf-8')
+        content = path.read_bytes()
+        text = content.decode('utf-8')
     except (OSError, UnicodeError):
         return False
     if rel in RETIRED_BOOTSTRAP_PATHS:
-        return AGENTWORK_BOOTSTRAP_MARKER in text
+        prior_digest = previous.get(rel.as_posix())
+        if prior_digest is not None:
+            return sha256_bytes(content) == prior_digest
+        return not previous_receipt_exists and AGENTWORK_BOOTSTRAP_MARKER in text
     signatures = RETIRED_TOOL_SIGNATURES.get(rel, ())
     return bool(signatures) and all(signature in text for signature in signatures)
 
 
-def classify_retired_adapters(target: Path) -> tuple[tuple[Path, ...], tuple[Path, ...]]:
+def classify_retired_adapters(
+    target: Path,
+    previous: dict[str, str],
+    previous_receipt_exists: bool,
+) -> tuple[tuple[Path, ...], tuple[Path, ...]]:
     removed = []
     preserved = []
     for rel in RETIRED_ADAPTER_PATHS:
         path = target / rel
         if not path.is_file() and not path.is_symlink():
             continue
-        if not is_agentwork_owned_retired_adapter(rel, path):
+        if not is_agentwork_owned_retired_adapter(
+            rel,
+            path,
+            previous,
+            previous_receipt_exists,
+        ):
             preserved.append(rel)
             continue
         removed.append(rel)
     return tuple(removed), tuple(preserved)
+
+
+def prepare_retired_session_readme(
+    target: Path,
+) -> tuple[PreparedFile | None, bool, bool]:
+    path = target / RETIRED_SESSION_README_REL
+    if not path.exists() and not path.is_symlink():
+        return None, False, False
+    if path.is_symlink() or not path.is_file():
+        return None, False, True
+    try:
+        text = path.read_bytes().decode('utf-8')
+    except (OSError, UnicodeError):
+        return None, False, True
+
+    if (
+        text.count(RETIRED_SESSION_README_START) != 1
+        or text.count(RETIRED_SESSION_README_END) != 1
+    ):
+        return None, False, True
+    start = text.find(RETIRED_SESSION_README_START)
+    end = text.find(RETIRED_SESSION_README_END)
+    if start >= end:
+        return None, False, True
+
+    remaining = text[:start] + text[end + len(RETIRED_SESSION_README_END):]
+    if remaining.strip() in {'', RETIRED_SESSION_README_SCAFFOLD}:
+        return None, True, False
+    return PreparedFile(path, remaining.encode('utf-8')), False, False
 
 
 def remove_retired_adapters(target: Path, paths: tuple[Path, ...]) -> None:
@@ -275,7 +335,8 @@ def collect_core_shared_writes(target: Path):
         rel = src.relative_to(SHARED_ROOT)
         if is_python_cache_artifact(rel):
             continue
-        if rel.parts and rel.parts[0] in {'project', 'session'}:
+        # Session 已退役，但源端残留任务数据仍不可作为核心文件分发。
+        if rel.parts and rel.parts[0] in {'project', 'case', 'session'}:
             continue
         if is_path_covered(rel, optional_shared_relpaths):
             continue
@@ -858,12 +919,23 @@ def prepare_bootstrap_plan(
         raise SystemExit(f'project root must be a directory: {target}')
     writes = tuple(collect_writes(target))
     previous_receipt = load_receipt(target)
+    previous_receipt_exists = receipt_path(target).exists()
     preflight_writes(target, writes, previous_receipt, source_contents)
     next_receipt = build_receipt(target, writes, source_contents)
     config_path, config_content = prepare_codex_config(target, source_contents)
     managed_indexes = prepare_managed_indexes(target)
     gitignore, gitignore_status, gitignore_changed = prepare_gitignore(target)
-    retired_removed, retired_preserved = classify_retired_adapters(target)
+    retired_removed, retired_preserved = classify_retired_adapters(
+        target,
+        previous_receipt,
+        previous_receipt_exists,
+    )
+    retired_readme, remove_retired_readme, preserve_retired_readme = prepare_retired_session_readme(target)
+    if remove_retired_readme:
+        retired_removed += (RETIRED_SESSION_README_REL,)
+    if preserve_retired_readme:
+        retired_preserved += (RETIRED_SESSION_README_REL,)
+    retired_managed = (retired_readme,) if retired_readme is not None else ()
     receipt = PreparedFile(receipt_path(target), next_receipt)
 
     transaction_paths = collect_transaction_paths(
@@ -871,6 +943,7 @@ def prepare_bootstrap_plan(
         [
             *(dst for src, dst, _, _ in writes if src.resolve() != dst.resolve()),
             *(target / rel for rel in retired_removed),
+            *(item.path for item in retired_managed),
             *(item.path for item in managed_indexes),
             config_path,
             *([gitignore.path] if gitignore_changed else []),
@@ -882,6 +955,7 @@ def prepare_bootstrap_plan(
         writes=writes,
         retired_removed=retired_removed,
         retired_preserved=retired_preserved,
+        retired_managed=retired_managed,
         managed_indexes=managed_indexes,
         codex_config=PreparedFile(config_path, config_content),
         gitignore=gitignore,
@@ -903,6 +977,9 @@ def apply_bootstrap_plan(plan: BootstrapPlan) -> None:
         print('- no agentwork-managed retired adapter files found')
     for rel in plan.retired_preserved:
         print(f'- [keep] {rel} (not recognized as agentwork-managed)')
+    for item in plan.retired_managed:
+        write_prepared_file(item)
+        print(f'- [remove-block] {target_rel(target, item.path)}')
     print()
 
     print('== Installing bootstrap ==')
@@ -916,7 +993,7 @@ def apply_bootstrap_plan(plan: BootstrapPlan) -> None:
 
     print('== Updating managed data layer ==')
     write_managed_indexes(plan.managed_indexes)
-    print('- refreshed managed project/session index blocks')
+    print('- refreshed managed project/Case index blocks')
     write_prepared_file(plan.codex_config)
     print('- refreshed managed Codex agent registration block')
     if plan.gitignore_changed:
@@ -924,7 +1001,7 @@ def apply_bootstrap_plan(plan: BootstrapPlan) -> None:
     print(f'- {plan.gitignore_status}')
     write_receipt(target, plan.receipt.content)
     print(f'- refreshed bootstrap receipt: {RECEIPT_REL}')
-    print('- left existing local project/session files in place')
+    print('- left existing project-owned data files in place')
     print('- left existing installed tool files in place')
 
 

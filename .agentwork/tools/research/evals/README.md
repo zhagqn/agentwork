@@ -19,7 +19,7 @@
 3. `exa`：增加受限 Exa search/fetch。
 4. `octocode`：只对仓库类用例增加 Octocode。
 
-结果写入 `.tmp/agentwork/research-eval/<mode>.json`。原始大输出只保留在 `.tmp/`，不得进入 skill 或 session。
+结果写入 `.tmp/agentwork/research-eval/<mode>.json`。原始大输出只保留在 `.tmp/`，不得进入 skill 或 Case。
 
 ## 计数规则
 
