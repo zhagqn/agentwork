@@ -15,6 +15,11 @@ DOWNLOAD_DIR="${BROWSER_TMP_ROOT}/downloads"
 BROWSER_CDP_PREFER="${BROWSER_CDP_PREFER:-0}"
 BROWSER_CDP_TARGET="${BROWSER_CDP_TARGET:-9222}"
 OS_NAME="$(uname -s)"
+# Darwin 与 procps 对混用 BSD/Unix 选择参数的解析不同。
+PS_ALL=(-ax)
+if [[ "${OS_NAME}" == "Linux" ]]; then
+  PS_ALL=(ax)
+fi
 
 PROJECT_KEY="$(python3 - "${PROJECT_ROOT}" <<'PY'
 import hashlib
@@ -47,7 +52,7 @@ session_runtime_is_live() {
 
   [[ -S "${socket_dir}/${session}.sock" ]] || return 1
 
-  ps eww -ax -o command= | awk \
+  ps eww "${PS_ALL[@]}" -o command= | awk \
     -v project_root="${PROJECT_ROOT}" \
     -v project_key="${PROJECT_KEY}" \
     -v socket_dir="${socket_dir}" \
@@ -161,7 +166,7 @@ cleanup_orphaned_daemons() {
   fi
 
   pids="$(
-    ps eww -ax -o pid=,command= | awk \
+    ps eww "${PS_ALL[@]}" -o pid=,command= | awk \
       -v project_root="${PROJECT_ROOT}" \
       -v project_key="${PROJECT_KEY}" \
       -v socket_dir="${SOCKET_DIR}" \
