@@ -172,7 +172,7 @@
     },
     {
       "path": ".shared/commands/review.md",
-      "sha256": "9eb7da80e6a971f2ef0ffa597851d2f393f5729f7c781a29d278519e875509cf",
+      "sha256": "2cdeb7edddcaec8396a6f6845dee4cd21a5a94290815e6035a1924dee7a3f496",
       "type": "file"
     },
     {
@@ -217,17 +217,17 @@
     },
     {
       "path": ".shared/scripts/README.md",
-      "sha256": "85b74ba59fbdce1f9f4b8a3650644c88d6351fb63c39a406e09003767b6e5a5a",
+      "sha256": "b33154743a1ace944523656d858e912c7213810ce2bbd92cdff6b01d7bc53e35",
       "type": "file"
     },
     {
       "path": ".shared/scripts/agentwork-check.py",
-      "sha256": "b49e6695af46c4b323c25c74ca1309f15bc314ee620578e18fb10d4750778cf3",
+      "sha256": "3e0979ccd4106f687db218ada051f0b509fd44806edb996cbe40b146c337629d",
       "type": "file"
     },
     {
       "path": ".shared/scripts/case-review.sh",
-      "sha256": "9d4beacb7a31d02a7304439dc124905419ac07eb5cc9f09cbbce811fa8a89fc1",
+      "sha256": "17453c4a867219e0227a5d106ffef6896f38c9d6fc8a5c3d48825bc50eb5f3e3",
       "type": "file"
     },
     {

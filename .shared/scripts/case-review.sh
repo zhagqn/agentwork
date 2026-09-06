@@ -20,7 +20,15 @@ pick_latest_case() {
     fi
 
     local latest
-    latest=$(find "$CASE_DIR" -maxdepth 1 -name "*.md" -type f 2>/dev/null | sort -r | head -n 1 || true)
+    latest=$(python3 - "$CASE_DIR" <<'PY'
+from pathlib import Path
+import sys
+
+paths = [p for p in Path(sys.argv[1]).glob('*.md') if p.is_file() and p.name != 'README.md']
+if paths:
+    print(max(paths, key=lambda p: (p.stat().st_mtime_ns, str(p))))
+PY
+)
     if [[ -z "$latest" ]]; then
         echo "暂无 Case 记录" >&2
         return 1
@@ -150,96 +158,6 @@ extract_external_commit_hashes() {
     printf '%s\n' "$candidates" | tr 'A-F' 'a-f' | sed '/^$/d' | sort -u
 }
 
-is_glob_scope() {
-    local scope="$1"
-    [[ "$scope" == *"*"* || "$scope" == *"?"* || "$scope" == *"["* ]]
-}
-
-path_matches_scope() {
-    local path="$1"
-    local scope="$2"
-
-    [[ -z "$path" || -z "$scope" ]] && return 1
-
-    if is_glob_scope "$scope"; then
-        [[ "$path" == $scope ]]
-        return
-    fi
-
-    if [[ "$scope" == */ ]]; then
-        [[ "$path" == "$scope"* ]]
-        return
-    fi
-
-    [[ "$path" == "$scope" ]]
-}
-
-path_covered_by_workset() {
-    local path="$1"
-    local workset="$2"
-    local scope
-
-    [[ -z "$workset" ]] && return 1
-
-    while IFS= read -r scope; do
-        [[ -z "$scope" ]] && continue
-        if path_matches_scope "$path" "$scope"; then
-            return 0
-        fi
-    done <<< "$workset"
-
-    return 1
-}
-
-workset_scope_has_changed_path() {
-    local scope="$1"
-    local changed="$2"
-    local path
-
-    [[ -z "$changed" ]] && return 1
-
-    while IFS= read -r path; do
-        [[ -z "$path" ]] && continue
-        if path_matches_scope "$path" "$scope"; then
-            return 0
-        fi
-    done <<< "$changed"
-
-    return 1
-}
-
-extract_git_changed_files() {
-    # 解析 git status --porcelain 输出，覆盖新增/修改/重命名/未跟踪
-    # 关闭 Git 对非 ASCII 路径的转义输出，避免中文文件名匹配失败
-    git -c core.quotepath=false status --porcelain 2>/dev/null | awk '
-        {
-            path = substr($0, 4)
-            # 处理 rename/copy: "old -> new"
-            arrow = index(path, " -> ")
-            if (arrow > 0) {
-                path = substr(path, arrow + 4)
-            }
-            print path
-        }
-    ' | sed '/^$/d' | sort -u
-}
-
-extract_git_status_paths() {
-    # 用于存在性检查：rename/copy 同时保留来源路径和目标路径。
-    git -c core.quotepath=false status --porcelain 2>/dev/null | awk '
-        {
-            path = substr($0, 4)
-            arrow = index(path, " -> ")
-            if (arrow > 0) {
-                print substr(path, 1, arrow - 1)
-                print substr(path, arrow + 4)
-            } else {
-                print path
-            }
-        }
-    ' | sed '/^$/d' | sort -u
-}
-
 main() {
     local case_file
     case_file="$(resolve_case_file "$@")" || exit $?
@@ -315,26 +233,6 @@ main() {
         exit 0
     fi
 
-    local changed
-    changed="$(extract_git_changed_files || true)"
-
-    local status_paths
-    status_paths="$(extract_git_status_paths || true)"
-
-    local changed_count=0
-    if [[ -n "$changed" ]]; then
-        changed_count=$(echo "$changed" | wc -l | tr -d ' ')
-    fi
-
-    echo "工作区改动（git status --porcelain）：$changed_count"
-    if [[ -n "$changed" ]]; then
-        echo "$changed" | sed 's/.*/- `&`/'
-    else
-        echo "- （无）"
-    fi
-
-    echo ""
-
     # 提交锚点可验证性检查。不可见的历史 hash 不能据此删除，可能来自旧分支、历史重写或其他仓。
     local unavailable_hashes=()
     if [[ -n "$commit_hashes" ]]; then
@@ -366,69 +264,75 @@ main() {
         echo ""
     fi
 
-    # 当前批次工作集缺失检查（相对 git root）。
-    # 删除或重命名来源路径会在 git status 中体现，即使路径已不存在，也不应误报为过期条目。
-    local missing=()
-    if [[ -n "$workset" ]]; then
-        while IFS= read -r path; do
-            # 对于绝对路径或不在仓库内的路径，不做存在性检查
-            if [[ "$path" == /* ]]; then
-                continue
-            fi
-            if is_glob_scope "$path"; then
-                continue
-            fi
-            if [[ ! -e "$root/$path" ]]; then
-                if workset_scope_has_changed_path "$path" "$status_paths"; then
-                    continue
-                fi
-                if [[ -n "$status_paths" ]] && grep -qxF "$path" <<< "$status_paths"; then
-                    continue
-                fi
-                missing+=("$path")
-            fi
-        done <<< "$workset"
-    fi
+    # Git 路径从 NUL 记录到范围比较始终保留边界；转义仅用于展示。
+    python3 - "$case_file" "$root" <<'PY'
+import fnmatch
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
 
-    if [[ ${#missing[@]} -gt 0 ]]; then
-        echo "缺失/疑似过期的当前批次工作集条目（路径不存在，且未在 git status 中体现）："
-        printf '%s\n' "${missing[@]}" | sort -u | sed 's/.*/- `&`/'
-        echo ""
-    fi
+case_file, root = sys.argv[1:]
+text = Path(case_file).read_text(encoding='utf-8')
+section = re.search(r'^## 当前批次工作集[^\n]*\n(.*?)(?=^## |\Z)', text, re.M | re.S)
+scopes = []
+if section:
+    for line in section.group(1).splitlines():
+        if line.startswith('- 范围:'):
+            scopes.extend(re.findall(r'`([^`]+)`', line.split(' | 主题:', 1)[0]))
+scopes = sorted(set(scopes))
+raw = subprocess.run(
+    ['git', '-C', root, 'status', '--porcelain=v1', '-z', '--untracked-files=all'],
+    check=True, stdout=subprocess.PIPE,
+).stdout
+records = iter(raw.split(b'\0'))
+changed, status_paths = set(), set()
+for record in records:
+    if not record:
+        continue
+    status = record[:2]
+    path = os.fsdecode(record[3:])
+    changed.add(path)
+    status_paths.add(path)
+    if b'R' in status or b'C' in status:
+        # -z 下目标在前，来源是下一条独立 NUL 记录。
+        origin = next(records)
+        if not origin:
+            raise ValueError('incomplete Git rename/copy record')
+        status_paths.add(os.fsdecode(origin))
 
-    # 工作区改动但未被当前批次工作集覆盖
-    local changed_not_listed=()
-    if [[ -n "$changed" ]]; then
-        while IFS= read -r f; do
-            [[ -z "$f" ]] && continue
-            if ! path_covered_by_workset "$f" "$workset"; then
-                changed_not_listed+=("$f")
-            fi
-        done <<< "$changed"
-    fi
+def matches(path, scope):
+    if any(char in scope for char in '*?['):
+        return fnmatch.fnmatchcase(path, scope)
+    return path.startswith(scope) if scope.endswith('/') else path == scope
 
-    if [[ ${#changed_not_listed[@]} -gt 0 ]]; then
-        echo "工作区有改动但未被“当前批次工作集”覆盖："
-        printf '%s\n' "${changed_not_listed[@]}" | sort -u | sed 's/.*/- `&`/'
-        echo ""
-    fi
+def display(path):
+    return path.replace('\\', '\\\\').replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
 
-    # 当前批次工作集中记录但当前工作区未体现（可能已提交/已还原）
-    local listed_but_not_changed=()
-    if [[ -n "$workset" ]]; then
-        while IFS= read -r f; do
-            [[ -z "$f" ]] && continue
-            if ! workset_scope_has_changed_path "$f" "$changed"; then
-                listed_but_not_changed+=("$f")
-            fi
-        done <<< "$workset"
-    fi
+def report(title, paths, always=False):
+    paths = sorted(paths)
+    if paths or always:
+        print(title)
+        for path in paths:
+            print(f'- `{display(path)}`')
+        if not paths:
+            print('- （无）')
+        print()
 
-    if [[ ${#listed_but_not_changed[@]} -gt 0 ]]; then
-        echo "“当前批次工作集”中记录但当前工作区未体现（可能已提交/已还原）："
-        printf '%s\n' "${listed_but_not_changed[@]}" | sort -u | sed 's/.*/- `&`/'
-        echo ""
-    fi
+report(f'工作区改动（git status --porcelain）：{len(changed)}', changed, True)
+missing = [
+    scope for scope in scopes
+    if not os.path.isabs(scope) and not any(c in scope for c in '*?[')
+    and not os.path.lexists(os.path.join(root, scope))
+    and not any(matches(path, scope) for path in status_paths)
+]
+report('缺失/疑似过期的当前批次工作集条目（路径不存在，且未在 git status 中体现）：', missing)
+report('工作区有改动但未被“当前批次工作集”覆盖：',
+       [path for path in changed if not any(matches(path, scope) for scope in scopes)])
+report('“当前批次工作集”中记录但当前工作区未体现（可能已提交/已还原）：',
+       [scope for scope in scopes if not any(matches(path, scope) for path in status_paths)])
+PY
 
     echo "下一步建议："
     echo "- 在对话中执行：/review  # 让助手先做双层 review，再整理 Case 文档"

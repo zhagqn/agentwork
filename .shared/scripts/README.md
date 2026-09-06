@@ -46,6 +46,9 @@
 .shared/scripts/case-review.sh <case-ref> # 审查指定 Case id 或文件路径
 ```
 
+“最新”按修改时间选择（同时间按路径排序），排除 `README.md`，与命令自检一致。
+Git 路径使用 NUL 记录解析；换行等控制字符仅在输出时转义。工作集可用目录或 glob 覆盖含换行的文件名。
+
 ## Source Repo 说明
 当前 source repo 可能因为已安装可选工具而额外出现脚本，例如 `arch-render.py`。
 

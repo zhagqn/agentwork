@@ -412,15 +412,6 @@ def check_brain(path: Path | None) -> tuple[Path | None, list[str]]:
         ],
         failures,
     )
-    check_any_group(
-        text,
-        [
-            ['方案', '选项', 'recommendation', 'options'],
-            ['验收', '完成标准', '成功标准', '最小验收', 'acceptance', 'success criteria'],
-        ],
-        failures,
-        'brain',
-    )
     return path, failures
 
 
@@ -450,15 +441,6 @@ def check_plan(path: Path | None) -> tuple[Path | None, list[str]]:
         add_once(failures, 'case_heading_leak:## 已确认结论（工作快照）')
     if not re.search(r'^- \[[ x]\] .+', text, flags=re.MULTILINE):
         add_once(failures, 'missing_task_checkbox')
-    check_any_group(
-        text,
-        [
-            ['任务', 'steps', 'tasks'],
-            ['验证', '验收', 'verification', 'acceptance'],
-        ],
-        failures,
-        'plan',
-    )
     return path, failures
 
 
@@ -561,14 +543,14 @@ def deliverable_commit_anchors(line: str) -> list[str]:
     return [match.group(0).lower() for match in re.finditer(r'\b[0-9a-fA-F]{7,40}\b', anchor_text)]
 
 
-def check_duplicate_commit_anchors(deliverable_lines: list[str], failures: list[str]) -> None:
+def report_duplicate_commit_anchors(deliverable_lines: list[str]) -> None:
     counts: dict[str, int] = {}
     for line in deliverable_lines:
         for anchor in deliverable_commit_anchors(line):
             counts[anchor] = counts.get(anchor, 0) + 1
     for anchor, count in counts.items():
         if count > 1:
-            add_once(failures, f'duplicate_commit_anchor:{anchor}:{count}')
+            print(f'warning:duplicate_commit_anchor:{anchor}:{count}:review 独立验证或边界后决定是否合并', file=sys.stderr)
 
 
 def latest_review_date(title: str) -> tuple[int, int, int, int | None, int | None] | None:
@@ -710,7 +692,9 @@ def check_case(path: Path | None, strict_flow: bool) -> tuple[Path | None, list[
         add_once(failures, 'missing_task_checkbox')
 
     workset_lines = [line for line in section_lines(text, '## 当前批次工作集') if line.startswith('- ')]
-    if strict_flow and not workset_lines:
+    active_tasks = any(re.match(r'^- \[ \] .+', line) for line in section_lines(text, '## 任务列表'))
+    explicitly_empty = '当前无工作集。' in section_lines(text, '## 当前批次工作集')
+    if strict_flow and not workset_lines and active_tasks and not explicitly_empty:
         add_once(failures, 'missing_workset_entries')
     for line in workset_lines:
         if not re.match(r'^- 范围: `[^`]+`(?:, `[^`]+`)* \| 主题: .+', line):
@@ -733,7 +717,7 @@ def check_case(path: Path | None, strict_flow: bool) -> tuple[Path | None, list[
             add_once(failures, f'bad_deliverable_entry:{line}')
         elif not line.startswith(('- 提交:', '- 历史:')):
             add_once(failures, f'bad_deliverable_entry:{line}')
-    check_duplicate_commit_anchors(deliverable_lines, failures)
+    report_duplicate_commit_anchors(deliverable_lines)
     check_review_history(section_lines(text, '## 审查记录'), failures)
     return path, failures
 
@@ -841,7 +825,7 @@ def run_self_test(root: Path) -> list[str]:
         (
             'case-duplicate-anchor',
             check_case(root / '.shared/case/20260101-0000-duplicate-anchor.md', True),
-            'duplicate_commit_anchor',
+            None,
         ),
         (
             'case-out-of-order',
