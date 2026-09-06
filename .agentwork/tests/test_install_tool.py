@@ -106,6 +106,124 @@ class InstallToolEnvTest(unittest.TestCase):
             if path.is_file() and '.git' not in path.parts
         }
 
+    def test_unowned_file_conflict_stops_all_tools_before_writes(self) -> None:
+        path = self.project / '.shared/plain.txt'
+        path.parent.mkdir()
+        path.write_bytes(b'private\xff')
+        before = self.project_snapshot()
+        result = self.run_installer('install', 'alpha', 'plain', check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.project_snapshot(), before)
+
+    def directory_tool(self) -> Path:
+        root = self.source / '.agentwork/tools/plain'
+        manifest = json.loads((root / 'tool.json').read_text())
+        manifest['entries'][0].update({'from': 'shared', 'to': '.pi/skills/plain'})
+        (root / 'tool.json').write_text(json.dumps(manifest))
+        return self.project / '.pi/skills/plain'
+
+    def test_uninstall_never_installed_preserves_directory(self) -> None:
+        target = self.directory_tool()
+        target.mkdir(parents=True)
+        (target / 'private.txt').write_bytes(b'private\xff')
+        before = self.project_snapshot()
+        self.run_installer('uninstall', 'plain')
+        self.assertEqual(self.project_snapshot(), before)
+
+    def test_directory_reinstall_and_uninstall_preserve_user_additions(self) -> None:
+        target = self.directory_tool()
+        self.run_installer('install', 'plain')
+        (target / 'local-note.md').write_text('keep')
+        self.run_installer('install', 'plain')
+        self.assertEqual((target / 'local-note.md').read_text(), 'keep')
+        before = self.project_snapshot()
+        self.run_installer('install', 'plain')
+        self.assertEqual(self.project_snapshot(), before)
+        self.run_installer('uninstall', 'plain')
+        self.assertEqual((target / 'local-note.md').read_text(), 'keep')
+        self.assertFalse((target / 'plain.txt').exists())
+
+    def test_modified_managed_file_blocks_update_and_uninstall(self) -> None:
+        self.run_installer('install', 'plain')
+        (self.project / '.shared/plain.txt').write_text('user edit')
+        before = self.project_snapshot()
+        for action in ('install', 'uninstall'):
+            result = self.run_installer(action, 'plain', check=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(self.project_snapshot(), before)
+
+    def test_receipted_file_can_upgrade(self) -> None:
+        self.run_installer('install', 'plain')
+        (self.source / '.agentwork/tools/plain/shared/plain.txt').write_text('new version')
+        self.run_installer('install', 'plain')
+        self.assertEqual((self.project / '.shared/plain.txt').read_text(), 'new version')
+        self.run_installer('uninstall', 'plain')
+        self.assertFalse((self.project / '.shared/plain.txt').exists())
+
+    def test_removed_source_file_stays_accounted_for_until_uninstall(self) -> None:
+        target = self.directory_tool()
+        self.run_installer('install', 'plain')
+        (self.source / '.agentwork/tools/plain/shared/plain.txt').unlink()
+        self.run_installer('install', 'plain')
+        self.assertTrue((target / 'plain.txt').is_file())
+        self.run_installer('uninstall', 'plain')
+        self.assertFalse(target.exists())
+
+    def test_empty_directories_install_and_preserve_later_user_files(self) -> None:
+        target = self.directory_tool()
+        source = self.source / '.agentwork/tools/plain/shared'
+        (source / 'empty').mkdir()
+        (source / 'user-content').mkdir()
+        self.run_installer('install', 'plain')
+        self.assertTrue((target / 'empty').is_dir())
+        (target / 'user-content/note').write_text('keep')
+        self.run_installer('install', 'plain')
+        self.run_installer('uninstall', 'plain')
+        self.assertFalse((target / 'empty').exists())
+        self.assertEqual((target / 'user-content/note').read_text(), 'keep')
+
+    def test_receipt_failure_rolls_back_files_and_receipt(self) -> None:
+        self.project = self.project.resolve()
+        self.run_installer('install', 'plain')
+        (self.source / '.agentwork/tools/plain/shared/plain.txt').write_text('upgrade')
+        module = self.load_installer()
+        _, tools = module.load_tools()
+        entries = module.build_tool_entries(self.project, 'plain', tools['plain'], set())
+        grouped, receipts = module.prepare_owned_changes(self.project, 'install', [('plain', entries)])
+        env_plan = module.prepare_install_env(self.project, [])
+        paths = module.transaction_paths(grouped, env_plan) + tuple(receipts)
+        before = self.project_snapshot()
+
+        def operation() -> None:
+            module.apply_tool_changes(self.project, 'install', grouped, env_plan)
+            module.apply_receipts(receipts, self.project)
+            raise OSError('after receipt write')
+
+        with self.assertRaisesRegex(SystemExit, 'rolled back'):
+            module.run_transaction(self.project, paths, operation)
+        self.assertEqual(self.project_snapshot(), before)
+
+    def test_receipt_and_nested_target_symlinks_fail_without_changes(self) -> None:
+        target = self.directory_tool()
+        self.run_installer('install', 'plain')
+        for rel in ('.agentwork/tool-receipts/plain.json', '.pi/skills/plain/plain.txt'):
+            with self.subTest(path=rel):
+                path = self.project / rel
+                content = path.read_bytes()
+                external = Path(self.temp.name) / 'external-link-target'
+                external.write_bytes(content)
+                path.unlink()
+                path.symlink_to(external)
+                before = self.project_snapshot()
+                for action in ('install', 'uninstall'):
+                    result = self.run_installer(action, 'plain', check=False)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertTrue(path.is_symlink())
+                    self.assertEqual(self.project_snapshot(), before)
+                    self.assertEqual(external.read_bytes(), content)
+                path.unlink()
+                path.write_bytes(content)
+
     def test_missing_env_creates_managed_placeholder_and_ignore_rule(self) -> None:
         result = self.run_installer('install', 'alpha')
         self.assertEqual(
@@ -179,15 +297,16 @@ class InstallToolEnvTest(unittest.TestCase):
         self.assertEqual(first_env.count(b'# agentwork:env:alpha'), 1)
 
     def test_hardlinked_entry_env_and_gitignore_are_replaced_without_external_writes(self) -> None:
+        self.run_installer('install', 'alpha')
         shared = self.project / '.shared'
-        shared.mkdir()
         paths = {
-            'entry': (shared / 'alpha.txt', b'project-owned entry\n'),
+            'entry': (shared / 'alpha.txt', b'alpha\n'),
             'env': (self.project / '.env', b'OTHER=1\n'),
             'gitignore': (self.project / '.gitignore', b'# keep\n'),
         }
         external_paths: dict[str, Path] = {}
         for name, (target, content) in paths.items():
+            target.unlink()
             external = Path(self.temp.name) / f'external-{name}'
             external.write_bytes(content)
             os.link(external, target)

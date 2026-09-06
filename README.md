@@ -147,6 +147,14 @@ README, remains the authoritative tool list. Tool installation and removal run
 preflight checks and restore affected project files after ordinary write
 failures or interruption.
 
+Tool files are tracked individually in `.agentwork/tool-receipts/*.json`.
+Receipts also record empty directories created by the installer.
+Existing files without a matching receipt, or with local edits, stop the
+operation before writes; older installations without receipts are not
+automatically adopted. Reinstalling preserves additional project files inside
+tool directories. Uninstall removes only unchanged receipted files and empty
+directories. Keep receipts with the project when moving its installed tools.
+
 The optional [browser tool pack](.agentwork/tools/browser/README.md) integrates
 with a separately installed `agent-browser >= 0.26.0`; it does not bundle that
 CLI, its source, its documentation, or its license. The external CLI remains

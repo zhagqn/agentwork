@@ -192,7 +192,18 @@ class PiOptionalToolSurfaceTest(unittest.TestCase):
         self.assertEqual(self.project_snapshot(), installed)
 
         browser_skill = self.project / '.pi/skills/browser/SKILL.md'
+        original_skill = browser_skill.read_bytes()
         browser_skill.write_text('drifted\n', encoding='utf-8')
+        drifted = self.project_snapshot()
+        result = subprocess.run(
+            ['python3', str(INSTALLER), 'install', *PI_OPTIONAL_TOOLS, '-p', str(self.project)],
+            capture_output=True, text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('ownership conflict', result.stderr)
+        self.assertEqual(self.project_snapshot(), drifted)
+        # The user explicitly restores their edit before requesting a sync.
+        browser_skill.write_bytes(original_skill)
         self.run_installer('install', *PI_OPTIONAL_TOOLS)
         self.assert_manifest_exact()
         self.assertEqual(self.project_snapshot(), installed)

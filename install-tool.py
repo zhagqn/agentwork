@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from collections.abc import Callable
 from dataclasses import dataclass
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -16,7 +17,6 @@ ROOT = Path(__file__).resolve().parent
 TOOLS_ROOT = ROOT / '.agentwork' / 'tools'
 REGISTRY = TOOLS_ROOT / 'registry.json'
 COMMANDS = {'install', 'uninstall', 'list'}
-COPY_IGNORE = shutil.ignore_patterns('__pycache__', '*.pyc', '*.pyo')
 ENV_KEY_FIELDS = {'name', 'required', 'description'}
 ENV_NAME = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
 ENV_ASSIGNMENT = re.compile(r'^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=(.*)$')
@@ -258,9 +258,7 @@ def atomic_write_bytes(
 def copy_entry(src: Path, dst: Path) -> str:
     dst.parent.mkdir(parents=True, exist_ok=True)
     if src.is_dir():
-        if dst.exists():
-            shutil.rmtree(dst)
-        shutil.copytree(src, dst, ignore=COPY_IGNORE)
+        dst.mkdir(exist_ok=True)
         return 'dir'
     atomic_write_bytes(dst, src.read_bytes(), mode_source=src)
     return 'file'
@@ -543,6 +541,82 @@ def transaction_paths(
     return tuple(dict.fromkeys(paths))
 
 
+def prepare_owned_changes(
+    project_root: Path,
+    action: str,
+    grouped: list[tuple[str, tuple[ToolEntry, ...]]],
+) -> tuple[list[tuple[str, tuple[ToolEntry, ...]]], dict[Path, bytes | None]]:
+    """所有工具统一预检；manifest 路径本身不是所有权证据。"""
+    planned: list[tuple[str, tuple[ToolEntry, ...]]] = []
+    receipts: dict[Path, bytes | None] = {}
+    for name, entries in grouped:
+        receipt = safe_target_path(
+            project_root, name,
+            safe_relative_path(name, 'receipt', f'.agentwork/tool-receipts/{name}.json'),
+        )
+        previous: dict[str, str] = {}
+        if receipt.exists():
+            data = load_json(receipt)
+            if set(data) != {'version', 'files'} or data['version'] != 1 or not isinstance(data['files'], dict):
+                fail(f'{name}: invalid tool receipt: {receipt}')
+            previous = data['files']
+        owned: dict[str, Path] = {}
+        for relative, digest in previous.items():
+            rel = safe_relative_path(name, 'receipt file', relative)
+            dst = safe_target_path(project_root, name, rel)
+            if not any(dst == entry.dst or (entry.src.is_dir() and dst.is_relative_to(entry.dst)) for entry in entries):
+                fail(f'{name}: receipt path outside current manifest; reconcile manually: {relative}')
+            if not isinstance(digest, str) or (digest != 'directory' and re.fullmatch(r'[0-9a-f]{64}', digest) is None):
+                fail(f'{name}: invalid receipt digest: {relative}')
+            matches = dst.is_dir() if digest == 'directory' else dst.is_file() and hashlib.sha256(dst.read_bytes()).hexdigest() == digest
+            if dst.exists() and not matches:
+                fail(f'{name}: ownership conflict (modified managed file): {relative}')
+            owned[relative] = dst
+
+        changes: list[ToolEntry] = []
+        # 源已移除的文件暂不在升级时删除，保留记录供后续卸载核对。
+        updated = dict(previous)
+        if action == 'install':
+            for entry in entries:
+                sources = sorted(entry.src.rglob('*')) if entry.src.is_dir() and any(entry.src.iterdir()) else [entry.src]
+                for src in sources:
+                    relative_source = src.relative_to(entry.src) if entry.src.is_dir() else Path(src.name)
+                    if '__pycache__' in relative_source.parts or src.suffix in {'.pyc', '.pyo'}:
+                        continue
+                    if src.is_symlink():
+                        fail(f'{name}: unsupported source symlink: {src}')
+                    if src.is_dir() and any(src.iterdir()):
+                        continue
+                    if not src.is_file() and not src.is_dir():
+                        fail(f'{name}: unsupported source file: {src}')
+                    dst = entry.dst / relative_source if entry.src.is_dir() else entry.dst
+                    dst = safe_target_path(project_root, name, dst.relative_to(project_root))
+                    relative = dst.relative_to(project_root).as_posix()
+                    if src.is_dir() and dst.is_dir():
+                        continue
+                    if dst.exists() and relative not in owned:
+                        fail(f'{name}: ownership conflict (unmanaged file): {relative}')
+                    changes.append(ToolEntry(entry.surface, src, dst))
+                    updated[relative] = 'directory' if src.is_dir() else hashlib.sha256(src.read_bytes()).hexdigest()
+            receipts[receipt] = (json.dumps({'version': 1, 'files': updated}, indent=2, sort_keys=True) + '\n').encode()
+        else:
+            changes = [ToolEntry('receipt', dst, dst) for dst in owned.values()
+                       if not dst.is_dir() or not any(dst.iterdir())]
+            if receipt.exists():
+                receipts[receipt] = None
+        planned.append((name, tuple(changes)))
+    return planned, receipts
+
+
+def apply_receipts(receipts: dict[Path, bytes | None], project_root: Path) -> None:
+    for path, content in receipts.items():
+        if content is None:
+            path.unlink()
+            prune_empty_parents(path.parent, project_root)
+        else:
+            atomic_write_bytes(path, content)
+
+
 def new_parent_paths(project_root: Path, paths: tuple[Path, ...]) -> tuple[Path, ...]:
     missing: set[Path] = set()
     if not project_root.exists():
@@ -607,7 +681,11 @@ def apply_tool_changes(
         for tool_name, entries in grouped:
             print(f'== Tool: {tool_name} ==')
             for entry in sorted(entries, key=lambda item: len(item.dst.parts), reverse=True):
-                removed_kind = remove_entry(entry.dst)
+                if entry.dst.is_dir():
+                    entry.dst.rmdir()
+                    removed_kind = 'dir'
+                else:
+                    removed_kind = remove_entry(entry.dst)
                 if removed_kind == 'missing':
                     print(f'- [skip] {entry.surface}: {target_rel(project_root, entry.dst)} (missing)')
                     continue
@@ -692,11 +770,17 @@ def main() -> int:
         else prepare_install_env(project_root, selected_env_keys)
     )
 
-    paths = transaction_paths(grouped, env_plan)
+    grouped, receipts = prepare_owned_changes(project_root, action, grouped)
+    paths = transaction_paths(grouped, env_plan) + tuple(receipts)
+
+    def apply() -> None:
+        apply_tool_changes(project_root, action, grouped, env_plan)
+        apply_receipts(receipts, project_root)
+
     run_transaction(
         project_root,
         paths,
-        lambda: apply_tool_changes(project_root, action, grouped, env_plan),
+        apply,
     )
     return 0
 
