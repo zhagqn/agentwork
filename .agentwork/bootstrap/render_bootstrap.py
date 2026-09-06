@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import argparse
 import json
 import os
 import re
@@ -664,7 +665,22 @@ def run_render_transaction(rendered: tuple[RenderedFile, ...]) -> None:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description='Render bootstrap files or check them without writing.')
+    parser.add_argument('--check', action='store_true', help='report missing or different outputs without writing')
+    args = parser.parse_args()
     rendered = prepare_rendered_bootstrap()
+    if args.check:
+        drift: list[str] = []
+        for item in rendered:
+            try:
+                if item.path.is_symlink() or item.path.read_bytes() != item.content:
+                    drift.append(str(item.path.relative_to(ROOT)))
+            except OSError:
+                drift.append(str(item.path.relative_to(ROOT)))
+        if drift:
+            print('bootstrap output drift:\n' + '\n'.join(f'- {path}' for path in drift))
+            return 1
+        return 0
     run_render_transaction(rendered)
     return 0
 

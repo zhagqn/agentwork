@@ -526,6 +526,27 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
                 self.assertNotIn('Traceback (most recent call last)', result.stderr)
                 self.assertEqual(tree_snapshot(project), before)
 
+    def test_renderer_check_is_read_only_and_rejects_drift(self) -> None:
+        source = Path(self.temp.name) / 'renderer-check'
+        bootstrap = source / '.agentwork/bootstrap'
+        shutil.copytree(BOOTSTRAP, bootstrap)
+        shutil.copytree(REPO_ROOT / '.shared/commands', source / '.shared/commands')
+        command = ['python3', str(bootstrap / 'render_bootstrap.py')]
+        subprocess.run(command, check=True, capture_output=True)
+        output = bootstrap / 'root/AGENTS.md'
+        original = output.read_bytes()
+        for scenario in ('clean', 'missing', 'drift', 'unknown'):
+            with self.subTest(scenario=scenario):
+                output.write_bytes(original)
+                if scenario == 'missing':
+                    output.unlink()
+                elif scenario == 'drift':
+                    output.write_bytes(b'custom content')
+                before = tree_snapshot(source)
+                result = subprocess.run(command + ['--unknown' if scenario == 'unknown' else '--check'], capture_output=True)
+                self.assertEqual(result.returncode == 0, scenario == 'clean')
+                self.assertEqual(tree_snapshot(source), before)
+
     def test_renderer_rejects_unsafe_source_blocks_before_source_writes(self) -> None:
         variants = (
             ('malformed', f'{PROJECT_START}\nproject data\n'.encode()),
