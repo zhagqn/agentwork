@@ -316,7 +316,10 @@ def is_env_ignored(project_root: Path) -> bool:
     gitignore = project_root / '.gitignore'
     if not gitignore.is_file() or gitignore.is_symlink():
         return False
-    return any(line.rstrip(b'\r\n') == b'.env' for line in gitignore.read_bytes().splitlines(keepends=True))
+    # 非 Git 项目不解释整套 ignore 规则；仅信任最后一条非空行的明确保护。
+    # 无法证明时在末尾追加 .env，避免早先的规则被后续否定模式抵消。
+    lines = [line for line in gitignore.read_bytes().splitlines() if line.strip()]
+    return bool(lines) and lines[-1] == b'.env'
 
 
 def line_body(line: bytes) -> str:

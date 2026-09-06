@@ -115,6 +115,25 @@ class InstallToolEnvTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(self.project_snapshot(), before)
 
+    def test_non_git_env_ignore_survives_negation_and_later_git_init(self) -> None:
+        for index, original in enumerate((b'.env\n!.env\n', b'.env\r\n!*\r\n', b'.env\n')):
+            with self.subTest(ignore=original):
+                self.project = Path(self.temp.name) / f'not-yet-git-{index}'
+                self.project.mkdir()
+                ignore = self.project / '.gitignore'
+                ignore.write_bytes(original)
+                self.run_installer('install', 'alpha')
+                self.assertTrue(ignore.read_bytes().startswith(original))
+                self.assertFalse((self.project / '.git').exists())
+                first = self.project_snapshot()
+                self.run_installer('install', 'alpha')
+                self.assertEqual(self.project_snapshot(), first)
+                (self.project / '.env').write_text('TEST_API_KEY=synthetic-not-a-secret\n')
+                subprocess.run(['git', 'init', '-q', str(self.project)], check=True)
+                subprocess.run(['git', '-C', str(self.project), 'add', '--all'], check=True)
+                tracked = subprocess.run(['git', '-C', str(self.project), 'ls-files', '-z'], check=True, capture_output=True).stdout
+                self.assertNotIn(b'.env', tracked.split(b'\0'))
+
     def directory_tool(self) -> Path:
         root = self.source / '.agentwork/tools/plain'
         manifest = json.loads((root / 'tool.json').read_text())
