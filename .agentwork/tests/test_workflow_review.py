@@ -55,6 +55,26 @@ class WorkflowReviewTest(unittest.TestCase):
     def git(self, *args):
         return subprocess.run(['git', '-C', str(self.root), *args], check=True, capture_output=True)
 
+    def test_exec_review_keep_structural_and_content_gates(self):
+        plan = next(v for k, v in checker.SELF_TEST_FIXTURES.items() if 'exec-fixture' in k)
+        review = next(v for k, v in checker.SELF_TEST_FIXTURES.items() if '/review/' in k)
+        path = self.root / 'artifact.md'
+        checks = ((plan, checker.check_exec, ('# Plan: fixture', '## 验证策略')),
+                  (review, lambda p: checker.check_review(p, True), ('# Review:', '## Findings')))
+        for text, check, headings in checks:
+            path.write_text(text)
+            self.assertEqual(check(path)[1], [])
+            for prefix in headings:
+                heading = next(line for line in text.splitlines() if line.startswith(prefix.split(':')[0]))
+                path.write_text(text.replace(heading, '', 1))
+                self.assertTrue(check(path)[1], heading)
+            path.write_text(text + '\n{name}\n')
+            self.assertTrue(check(path)[1])
+        path.write_text(plan.replace('- [x]', '- [ ]'))
+        self.assertIn('missing_completed_task_checkbox', checker.check_exec(path)[1])
+        path.write_text(review.replace('### Important\n- none', '### Important\n- 保留阻塞问题'))
+        self.assertTrue(checker.check_review(path, True)[1])
+
     def test_git_paths_and_latest_case(self):
         self.git('init', '-q')
         self.git('config', 'user.email', 'fixture@example.invalid')
@@ -98,3 +118,34 @@ class WorkflowReviewTest(unittest.TestCase):
         result = subprocess.run(['bash', str(SCRIPT)], cwd=self.root, text=True, capture_output=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('暂无 Case 记录', result.stderr)
+
+    def test_literal_bracket_path_does_not_cover_unrelated_file(self):
+        self.git('init', '-q')
+        self.git('config', 'user.email', 'fixture@example.invalid')
+        self.git('config', 'user.name', 'Fixture')
+        (self.root / 'src').mkdir()
+        literal = self.root / 'src/[id].tsx'
+        other = self.root / 'src/i.tsx'
+        literal.write_text('before')
+        other.write_text('before')
+        self.case.write_text('## 当前批次工作集（可选）\n- 范围: `src/[id].tsx` | 主题: fixture\n')
+        self.git('add', '.')
+        self.git('commit', '-qm', 'fixture')
+        other.write_text('after')
+        for state in ('modified', 'deleted', 'renamed'):
+            with self.subTest(state=state):
+                if state == 'modified':
+                    literal.write_text('after')
+                elif state == 'deleted':
+                    literal.unlink()
+                else:
+                    literal.write_text('before')
+                    self.git('mv', 'src/[id].tsx', 'src/new.tsx')
+                before_index = self.git('diff', '--cached', '--binary').stdout
+                result = subprocess.run(['bash', str(SCRIPT), str(self.case)], cwd=self.root, text=True, capture_output=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                uncovered = result.stdout.split('工作区有改动但未被“当前批次工作集”覆盖：', 1)[1].split('\n\n', 1)[0]
+                self.assertIn('`src/i.tsx`', uncovered)
+                self.assertNotIn('`src/[id].tsx`', uncovered)
+                self.assertNotIn('记录但当前工作区未体现', result.stdout)
+                self.assertEqual(self.git('diff', '--cached', '--binary').stdout, before_index)

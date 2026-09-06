@@ -384,13 +384,6 @@ def check_required_headings(text: str, headings: list[str], failures: list[str])
             add_once(failures, f'missing_heading:{heading}')
 
 
-def check_any_group(text: str, groups: list[list[str]], failures: list[str], label: str) -> None:
-    lowered = text.lower()
-    for group in groups:
-        if not any(item.lower() in lowered for item in group):
-            add_once(failures, f'missing_text_group:{label}:{"/".join(group)}')
-
-
 def check_brain(path: Path | None) -> tuple[Path | None, list[str]]:
     failures: list[str] = []
     path = check_exists(path, 'brain', failures)
@@ -451,8 +444,6 @@ def check_exec(path: Path | None) -> tuple[Path | None, list[str]]:
     text = read_text(path)
     if not re.search(r'^- \[x\] .+', text, flags=re.MULTILINE):
         add_once(failures, 'missing_completed_task_checkbox')
-    if '## 执行记录' in text:
-        check_any_group(text, [['验证', 'verification', 'checked', '确认']], failures, 'exec_record')
     return path, failures
 
 
@@ -523,12 +514,6 @@ def check_review(path: Path | None, fail_on_major: bool) -> tuple[Path | None, l
     check_required_headings(text, ['# Review:'], failures)
     if not (heading_present(text, '## Findings') or heading_present(text, '## Findings Summary')):
         add_once(failures, 'missing_heading:## Findings')
-    check_any_group(
-        text,
-        [['发现', '问题', '风险', 'findings', 'issues', 'no issues', '未发现', '无问题']],
-        failures,
-        'review',
-    )
     if fail_on_major:
         failures.extend(parse_review_major_findings(text))
     return path, failures

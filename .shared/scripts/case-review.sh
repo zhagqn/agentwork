@@ -302,7 +302,14 @@ for record in records:
             raise ValueError('incomplete Git rename/copy record')
         status_paths.add(os.fsdecode(origin))
 
+literal_scopes = {
+    scope for scope in scopes if not scope.endswith('/')
+    and (scope in status_paths or os.path.lexists(os.path.join(root, scope)))
+}
+
 def matches(path, scope):
+    if scope in literal_scopes:
+        return path == scope
     if any(char in scope for char in '*?['):
         return fnmatch.fnmatchcase(path, scope)
     return path.startswith(scope) if scope.endswith('/') else path == scope

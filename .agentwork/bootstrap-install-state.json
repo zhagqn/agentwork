@@ -192,7 +192,7 @@
     },
     {
       "path": ".shared/patterns/case-workflow.md",
-      "sha256": "c85ffb2cf5e0b4be95245ea4cfc67cc78825fc31468243322842a08cf114a3e5",
+      "sha256": "db76a7940126646417a59b44a70d19d5b7f5aa2885d1d1647025f0053545cf9b",
       "type": "file"
     },
     {
@@ -217,17 +217,17 @@
     },
     {
       "path": ".shared/scripts/README.md",
-      "sha256": "b33154743a1ace944523656d858e912c7213810ce2bbd92cdff6b01d7bc53e35",
+      "sha256": "9f41601fcb111d2d7a4a0dbebb49bfd7a88ddd369bbac74152f5730d13f91ecf",
       "type": "file"
     },
     {
       "path": ".shared/scripts/agentwork-check.py",
-      "sha256": "3e0979ccd4106f687db218ada051f0b509fd44806edb996cbe40b146c337629d",
+      "sha256": "209e1402dd2e82dad3e0c8dc397d6bbfa7260dbf391f12d408c75e8f19dbb2fe",
       "type": "file"
     },
     {
       "path": ".shared/scripts/case-review.sh",
-      "sha256": "17453c4a867219e0227a5d106ffef6896f38c9d6fc8a5c3d48825bc50eb5f3e3",
+      "sha256": "d3525cf2b262518fcb3a922c7dd7b82806eeabdaaf619dbdd2bc26497139cd0d",
       "type": "file"
     },
     {

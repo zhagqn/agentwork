@@ -15,7 +15,7 @@ Case 是 agentwork 的**任务快照与工作流外壳**：
 2. 工件先于快照：对含糊任务先 `/brain`，再 `/plan`，不要先建 Case 再反复改写
 3. Case 写入显式化：只有 `/case plan [plan-source]` 把已确认 brain / plan 结果写入 Case
 4. 计划先于执行：设计确认且计划明确后才进入 `/exec` 或 `/case exec`
-5. 执行许可显式化：确认推荐方案只表示可以进入 `/plan` 或 `/case plan`，不等于可以修改源码；真正开始动手仍需明确 `/exec` 或 `/case exec`
+5. 执行许可显式化：确认推荐方案只表示可以进入 `/plan` 或 `/case plan`，不等于可以修改源码；真正开始动手仍需明确的当前执行意图，可以是 `/exec`、`/case exec`，也可以是“按已确认计划，现在开始修改”等无歧义的自然语言。Case load 不继承历史执行授权
 6. 执行小步化：默认通过 `/exec` / `/case exec` 推进 1-3 个任务，再回到 `/review`
 7. review 双层化：通过 `/review` 同时 review 工件与工作产物
 8. 无 Case 也可工作：没有 Case 也能通过 `.tmp/agentwork/*` 跑通
@@ -54,7 +54,7 @@ Case 是 agentwork 的**任务快照与工作流外壳**：
 
 - 不写入 Case：`/brain` → `/plan` → `/exec` → `/review`
 - 写入 Case：`/brain` → `/plan` → `/case plan [plan-source]` → `/case exec` → `/case review`
-- 用户对推荐方案的确认只代表可以进入 `/plan` 或 `/case plan`，不代表可以直接改源码；如果没有明确 `/exec`，就停在 plan 边界
+- 用户对推荐方案的确认只代表可以进入 `/plan` 或 `/case plan`，不代表可以直接改源码；如果没有明确的当前执行意图（命令或无歧义的自然语言），就停在 plan 边界
 - 当用户或计划明确采用 subagent 分工或局部复核时，任务拆解、输出契约与验收责任参考 `.shared/patterns/subagent-workflow.md`
 - 平台原生 goal / loop / hook 的选择责任见 `.shared/patterns/platform-adapter.md`
 
