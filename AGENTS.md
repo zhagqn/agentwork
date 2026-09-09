@@ -35,6 +35,7 @@
 - 可选工具默认不预装，按项目约定单独引入
 - Git index（staged 区）是用户的提交和 review 边界；未经明确要求，不改变 staged 区
 - 优先写项目级配置，避免污染全局配置
+- 文档任务按需使用 anydoc（详见 `.shared/skills/anydoc/SKILL.md`）：默认提供能力规则，运行时依赖在项目级延迟安装，扫描 PDF 的 hosted OCR 需单独授权。
 - source repo 的安装入口：`install-bootstrap.py`、`install-tool.py`
 
 ## 工作流起步建议

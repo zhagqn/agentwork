@@ -88,6 +88,15 @@ RECEIPT_REL = Path('.agentwork/bootstrap-install-state.json')
 SHA256_PATTERN = re.compile(r'^[0-9a-f]{64}$')
 COMMAND_NAME_PATTERN = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*$')
 
+# Default capability skills are part of bootstrap. Their runtime packages stay
+# optional and are installed by the agent in the project only when needed.
+DEFAULT_SKILL_ENTRIES = (
+    (BOOTSTRAP / 'codex' / 'skills' / 'anydoc' / 'SKILL.md', Path('.codex/skills/anydoc/SKILL.md'), 'Codex default skill'),
+    (BOOTSTRAP / 'claude' / 'skills' / 'anydoc' / 'SKILL.md', Path('.claude/skills/anydoc/SKILL.md'), 'Claude default skill'),
+    (BOOTSTRAP / 'pi' / 'skills' / 'anydoc' / 'SKILL.md', Path('.pi/skills/anydoc/SKILL.md'), 'Pi default skill'),
+    (BOOTSTRAP / 'cursor' / 'rules' / 'anydoc.mdc', Path('.cursor/rules/anydoc.mdc'), 'Cursor default rule'),
+)
+
 
 @dataclass(frozen=True)
 class PreparedFile:
@@ -349,6 +358,8 @@ def collect_writes(target: Path):
     wrappers = load_wrapper_specs(spec)
     writes = []
     writes.extend(collect_core_shared_writes(target))
+    for src, destination, label in DEFAULT_SKILL_ENTRIES:
+        writes.append((src, target / destination, 'file', label))
     root_bootstrap = ROOT / 'AGENTS.md' if target.resolve() == ROOT.resolve() else BOOTSTRAP / 'root' / 'AGENTS.md'
     writes.append((root_bootstrap, target / 'AGENTS.md', 'file', 'root bootstrap file'))
     writes.append(

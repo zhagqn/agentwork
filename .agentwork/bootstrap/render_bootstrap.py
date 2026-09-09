@@ -425,6 +425,26 @@ def prepare_rendered_bootstrap() -> tuple[RenderedFile, ...]:
         BOOTSTRAP / 'cursor' / 'rules' / 'agentwork-bootstrap.mdc',
         render_cursor(),
     )
+    # anydoc is a default capability: ship the routing rule with bootstrap,
+    # while its npm runtime remains a project-level delayed dependency.
+    # Prefer the shared canonical source; test fixtures and external bootstrap
+    # checkouts may include only the bootstrap tree, so retain a self-contained
+    # fallback there as well.
+    anydoc_source = ROOT / '.shared' / 'skills' / 'anydoc' / 'SKILL.md'
+    if not anydoc_source.is_file():
+        anydoc_source = BOOTSTRAP / 'codex' / 'skills' / 'anydoc' / 'SKILL.md'
+    anydoc_skill = anydoc_source.read_text(encoding='utf-8')
+    for platform_path in (
+        BOOTSTRAP / 'codex' / 'skills' / 'anydoc' / 'SKILL.md',
+        BOOTSTRAP / 'claude' / 'skills' / 'anydoc' / 'SKILL.md',
+        BOOTSTRAP / 'pi' / 'skills' / 'anydoc' / 'SKILL.md',
+    ):
+        add_rendered_file(outputs, platform_path, anydoc_skill)
+    add_rendered_file(
+        outputs,
+        BOOTSTRAP / 'cursor' / 'rules' / 'anydoc.mdc',
+        "---\ndescription: agentwork 默认办公文档解析能力\nglobs: []\nalwaysApply: false\n---\n\n当任务需要读取办公文档或 PDF 时，按 `.shared/skills/anydoc/SKILL.md` 使用 anydoc。依赖只在项目级按需安装，禁止全局安装；输出写入 `.tmp/anydoc/`，保留原文件，默认不启用 hosted OCR；扫描 PDF 优先使用当前 agent 的视觉能力。\n",
+    )
     for agent in SPEC['codex_agents']:
         add_rendered_file(
             outputs,

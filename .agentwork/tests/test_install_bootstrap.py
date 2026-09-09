@@ -127,6 +127,20 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
     def test_fresh_install_registers_generated_codex_agent(self) -> None:
         self.run_installer()
 
+        default_skills = (
+            ('.codex/skills/anydoc/SKILL.md', 'Codex default skill'),
+            ('.claude/skills/anydoc/SKILL.md', 'Claude default skill'),
+            ('.pi/skills/anydoc/SKILL.md', 'Pi default skill'),
+            ('.cursor/rules/anydoc.mdc', 'Cursor default rule'),
+        )
+        records = {entry['path']: entry for entry in self.receipt()['files']}
+        for relative, label in default_skills:
+            with self.subTest(path=relative):
+                installed = self.project / relative
+                self.assertTrue(installed.is_file(), label)
+                self.assertEqual(installed.read_bytes(), (REPO_ROOT / relative).read_bytes())
+                self.assertIn(relative, records)
+
         installed_agent = self.project / '.codex/agents/luna-worker.toml'
         source_agent = BOOTSTRAP / 'codex/agents/luna-worker.toml'
         self.assertEqual(installed_agent.read_bytes(), source_agent.read_bytes())

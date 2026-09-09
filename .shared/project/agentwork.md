@@ -6,7 +6,7 @@
 
 ## TL;DR
 - 本仓库是 `agentwork` 的 source repo，不是直接业务项目模板
-- 核心职责：维护可复用工作流、基础迁移文件和可选工具源
+- 核心职责：维护可复用工作流、默认文档输入能力和可选工具源
 - source repo 自身也按目标项目结构自承载 bootstrap
 - `install-bootstrap.py` 只同步核心工作流，不会把已安装的可选工具自动扩散到目标项目
 
@@ -25,17 +25,17 @@
 - `.opencode/commands/`：OpenCode 核心工作流薄 wrapper，由 bootstrap 生成并在 source repo 自承载
 - `.agentwork/bootstrap/pi/prompts/`：Pi 项目 prompt 的 canonical 生成产物
 - `.pi/prompts/`：Pi 核心工作流薄 wrapper，由 bootstrap 生成并在 source repo 自承载
-- `.pi/skills/`：source repo 中显式安装的 optional tool Pi 入口；不属于核心 bootstrap
+- `.pi/skills/`：source repo 中默认或显式安装的 Pi skill 入口；anydoc 属于核心 bootstrap，其余 optional tool 仍需显式安装
 - `.codex/agents/`：Codex 项目级执行子代理，由 bootstrap 生成、显式注册并在 source repo 自承载
 - `.agentwork/tools/`：可选工具源（figma/browser/android/godot/...）
 - `.tmp/`：核心 workflow 和可选工具的临时工件；核心 workflow 默认使用 `.tmp/agentwork/*`
 
 ### 兼容性 / 运行时红线
 - 不默认依赖任何特定 runtime
-- 可选工具不直接长期驻留在 `.shared`
+- anydoc 的共享规则属于核心 `.shared/skills/anydoc`；其他可选工具不直接长期驻留在 `.shared`
 - `.tmp/*` 默认不纳入提交，除非明确保留证据
 - source repo 自身也按目标项目结构自承载 bootstrap；相同路径的核心 `.shared` 文件应跳过复制，只刷新根目录适配层与 managed block
-- `install-bootstrap.py` 只同步核心工作流；已安装的可选工具文件不会随着 bootstrap 自动扩散到目标项目
+- `install-bootstrap.py` 同步核心工作流及 anydoc 默认能力规则；其他已安装的可选工具文件不会随着 bootstrap 自动扩散到目标项目
 - 外部项目 bootstrap 不加载 renderer，也不刷新 agentwork source checkout；只有 source repo self-host (`-p .`) 才预计算 renderer 输出和 prospective 目标计划，并将 canonical 生成与目标安装放入同一可回滚事务
 - project、Case 与 `.gitignore` 的 managed block 只接受“完全不存在”或“唯一且有序”的 marker；残缺、逆序、重复 marker 与非 UTF-8 内容在首个目标写入前停止
 - bootstrap 与 optional tool 安装器不新增或改写目标项目许可文件；agentwork 根 `LICENSE` 是 source repo 的许可事实源
@@ -45,7 +45,7 @@
 - bootstrap 默认安装并注册 `luna_worker` Codex 执行子代理；安装器只维护 agentwork 受管配置块和受管 agent 文件，遇到同名项目自定义定义时停止，不静默覆盖
 - Pi 核心适配精确安装 `/brain`、`/plan`、`/exec`、`/review`、`/case` 与 `/commit` 六个项目 prompt；`/case` 映射共享 Case，Pi 内置 `/session` 和用户目录 JSONL 不作为 agentwork 跨平台状态
 - Pi 结构兼容基线为 `v0.84.4`：项目 prompt 需从仓库根 cwd 启动并通过 project trust 才能发现；trust 与 headless `--approve` 都不是 sandbox 或工具级审批
-- 核心 bootstrap 不安装 Pi runtime、settings、package、extension、plan-mode、subagent 或 optional tool；Browser、Research、CodeGraph 可由各自 manifest 显式安装 `.pi/skills/**`，但不创建 `.pi/settings.json`、安装外部 CLI 或假设 MCP 已连接；官方 plan-mode 示例占用 `/plan` 时属于用户安装的外部命令冲突，应回退共享命令或调整其一
+- 核心 bootstrap 不安装 Pi runtime、settings、package、extension、plan-mode、subagent 或 optional tool 运行时依赖；anydoc 只提供默认 skill 规则，npm 包由 agent 在项目中按需安装。Browser、Research、CodeGraph 可由各自 manifest 显式安装 `.pi/skills/**`，但不创建 `.pi/settings.json`、安装外部 CLI 或假设 MCP 已连接；官方 plan-mode 示例占用 `/plan` 时属于用户安装的外部命令冲突，应回退共享命令或调整其一
 - optional tool 可通过 `tool.json.env_keys` 声明项目级凭据名；安装器只在 Git ignored 的根 `.env` 中追加缺失的空占位，不覆盖、执行或回显值，卸载时保留用户原有或已填写的 assignment
 - `research` 是 provider-neutral 单一研究入口；它可主动选择最窄 provider，也可在本地或直接官方路径已足够时选择不调用远程 provider；行为 routing contract 只有通过固定评测 gate 后才可标记为 stable
 - Exa 是仅用于公开 Web 发现/批量 fetch 的受限 provisional optional provider；Octocode 仍为跨仓库证据研究的 experimental tool，快速 GitHub 查询继续优先 `gh`；Research 与 provider 的 stable 状态必须由现行评测 gate 支撑

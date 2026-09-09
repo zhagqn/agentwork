@@ -33,6 +33,9 @@ repository instead of relying on one provider's private conversation state.
   Godot, architecture documentation, and other integrations stay outside the
   core workflow and are installed only when a project needs them. The registry
   in [`.agentwork/tools/`](.agentwork/tools/README.md) is the source of truth.
+- **Default document input.** anydoc is distributed as a default skill for
+  Codex, Claude Code, Cursor, Pi, and the shared layer. Its npm runtime is
+  installed in a project only when an agent needs to parse an office document.
 - **Local, deterministic checks.** Workflow artifacts and bootstrap behavior
   have repository-owned checks, while live provider tests remain explicit
   compatibility investigations rather than hidden prerequisites.
@@ -42,7 +45,9 @@ repository instead of relying on one provider's private conversation state.
 agentwork is not an AI model, an agent runtime, or a replacement for the native
 capabilities of Codex and other coding tools. It does not silently install MCP
 servers, copy every optional tool into every project, or treat generated plans
-as permission to edit code. Platform-native capabilities remain preferred;
+as permission to edit code. anydoc supplies a default document parsing rule,
+but its runtime package is still installed only at project scope and on demand.
+Platform-native capabilities remain preferred;
 the shared layer exists to make intent, handoff, and verification portable.
 
 This repository is the source and maintenance repository for agentwork. The
@@ -56,8 +61,9 @@ repository's bootstrap and optional tool sources.
 - At least one supported coding agent: Codex, Claude Code, OpenCode, Cursor, or
   Pi
 
-The core bootstrap has no package installation step. Optional tool packs may
-have their own runtime, authentication, or MCP requirements.
+The core bootstrap has no package installation step. anydoc's runtime package
+is installed only when needed; other optional tool packs may have their own
+runtime, authentication, or MCP requirements.
 
 ## Quick start
 
@@ -102,8 +108,10 @@ approval. Pi's built-in `/session` describes its native conversation session;
 use `/case` for agentwork's explicit repository-backed handoff and recovery
 workflow. Other platforms use the same shared Case entry.
 
-The core bootstrap deliberately does **not** install optional tools, configure
-MCP servers or providers, or import existing task state.
+The core bootstrap deliberately does **not** install optional tool runtimes,
+configure MCP servers or providers, or import existing task state. It does
+install the anydoc capability rules; an agent installs the pinned npm package
+in the project only when a document task requires it.
 
 ### Updating an existing project
 
@@ -172,7 +180,7 @@ the project deliberately sets `BROWSER_CDP_PREFER=1`.
 | [`.codex/`](.codex) | Self-hosted Codex skills, configuration, and bounded custom agent for this source repository. |
 | [`.claude/`](.claude), [`.opencode/`](.opencode), [`.cursor/`](.cursor) | Self-hosted thin platform adapters generated from the bootstrap source. |
 | `.pi/prompts/` | Self-hosted Pi project prompt templates generated from the bootstrap source. |
-| `.pi/skills/` | Pi entry points from optional tool packs explicitly installed in this source checkout; not part of the core bootstrap. |
+| `.pi/skills/` | Pi skill entry points; anydoc is part of the core bootstrap, while other tool packs remain explicit. |
 | [`docs/architecture/`](docs/architecture/README.md) | Example and generated output for the optional `arch` tool, not the architecture of an agentwork business service. |
 
 The source repository self-hosts the same bootstrap layout it distributes.
@@ -188,7 +196,7 @@ belongs in `.shared/`.
 | Claude Code | `CLAUDE.md`, project commands, optional skills | Thin commands delegate to the shared workflow; runtime loops and permissions remain platform concerns. |
 | OpenCode | `AGENTS.md`, generated project commands | Commands inject shared definitions; provider, model, plugin, MCP, and permission configuration remain project-owned. |
 | Cursor | Project rule plus `AGENTS.md` fallback | Uses native editing and diagnostics while shared command files provide the portable workflow contract. |
-| Pi | `AGENTS.md`, six project prompts under `.pi/prompts/` | Static adapter contract is based on Pi `v0.84.4`; start from the repository root and trust the project. The core bootstrap does not install Pi, extensions, subagents, or optional tools; Browser, Research, and CodeGraph can add explicit project skills through their own tool packs. |
+| Pi | `AGENTS.md`, six project prompts under `.pi/prompts/`, default anydoc skill | Static adapter contract is based on Pi `v0.84.4`; start from the repository root and trust the project. The core bootstrap does not install Pi, extensions, subagents, or optional tool runtimes; Browser, Research, and CodeGraph can add explicit project skills through their own tool packs. |
 
 Platform discovery, permissions, sandbox behavior, and runtime orchestration can
 change independently. The

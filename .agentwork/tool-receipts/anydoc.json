@@ -1,0 +1,10 @@
+{
+  "files": {
+    ".claude/skills/anydoc/SKILL.md": "c4711a31886415b58587172d3a12b8ff903d79faf61a81a267a33cf8ee520ecc",
+    ".codex/skills/anydoc/SKILL.md": "c4711a31886415b58587172d3a12b8ff903d79faf61a81a267a33cf8ee520ecc",
+    ".cursor/rules/anydoc.mdc": "61855492c78e724c451e743a38a07b9c5669fa63260cb065de8063b4ed6cfc00",
+    ".pi/skills/anydoc/SKILL.md": "c4711a31886415b58587172d3a12b8ff903d79faf61a81a267a33cf8ee520ecc",
+    ".shared/skills/anydoc/SKILL.md": "c4711a31886415b58587172d3a12b8ff903d79faf61a81a267a33cf8ee520ecc"
+  },
+  "version": 1
+}
