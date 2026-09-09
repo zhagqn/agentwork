@@ -1,33 +1,35 @@
-# CodeGraph MCP Reference
+# CodeGraph Reference
 
 该文件是 codegraph 可选工具的引用型参考文档：只记录官方接入路径，不 vendor 上游源码或二进制。
 
 - 上游：<https://github.com/colbymchenry/codegraph>（MIT）
-- 定位：100% 本地的预建代码知识图谱 + MCP server——把 grep/glob/Read 的多轮试探收敛为一次语义查询（符号、跨文件调用路径含动态分发、影响范围），文件变更自动增量同步
+- 定位：本地预建代码知识图谱，提供 CLI 与可选 MCP server，用于符号、跨文件调用路径和影响范围查询，文件变更自动增量同步
 - 免责：本文档若与官方仓库最新说明不一致，以官方为准
 
 ## 收益边界（如实标注）
 
-- 确定收益是**更少工具调用、更快回答**（官方基准：工具调用 -40%~-81%）
-- token / 成本收益**规模依赖**：大而复杂的仓库、高频调用场景才显著；小任务上直接 read/grep 更轻量时可能不降反升（上游 issue #1080 跟踪工具选择问题）
-- 比较成本请看 cost 而非 token 计数：其响应大部分体积是低价 cache read
+- 上游基准在其选定的仓库、任务与模型下测得工具调用和成本下降，不代表所有项目都有同样收益。
+- 跨模块结构查询通常更值得评估；已知路径的小改动可能直接 read/grep 更轻量（[上游 issue #1080](https://github.com/colbymchenry/codegraph/issues/1080) 提供了小任务变慢的用户反馈）。
+- 在实际项目中比较任务质量、耗时、工具调用与计费成本，不只比较 token 数。
 
 ## 安装流程
 
-三步职责不同，缺一不可：
+CLI 导航需要本机 CLI 与项目索引；MCP 接线按使用的 Agent 另行选择：
 
 ```bash
 # 1. 安装 CLI（自带 runtime，不要求本机 Node）
 curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh
 # 或已有 Node 时：npm i -g @colbymchenry/codegraph
 
-# 2. 接线 agent（新终端执行；自动检测 Claude Code / Codex / Cursor 等并写入 MCP 配置）
-codegraph install
-
-# 3. 每个项目单独建索引（创建 .codegraph/ 并开启文件监听自动同步）
+# 2. 每个项目单独建索引（创建 .codegraph/ 并开启文件监听自动同步）
 cd <project>
 codegraph init
+
+# 3. 验证 CLI 查询，无需 MCP
+codegraph explore "<symbol names or question>"
 ```
+
+需要 MCP 时再运行 `codegraph install`，选择目标 Agent 和项目级作用域。该命令会修改 Agent 配置与指令，部分平台还会设置工具自动许可；执行前说明这些影响并取得授权。仅使用 CLI 的 Pi 无需这一步。具体参数以已安装版本的 `codegraph install --help` 为准。
 
 - 升级：`codegraph upgrade`（`--check` 仅查询）
 - Claude Code 验证：`/mcp` 中确认 codegraph server 已连接
@@ -35,9 +37,9 @@ codegraph init
 
 ## 日常使用
 
-**用户层零调用**：查询由 agent 自行决定何时调用 MCP 工具，索引随文件变更自动同步，无需重跑。用户唯一要做的是每个新项目一次 `codegraph init`。
+查询由 agent 按项目导航约定选择 CLI 或已连接的 MCP；索引随文件变更自动同步。
 
-**助手职责（降低用户心智负担）**：本参考文档已安装的项目里，若助手发现 codegraph CLI 可用但当前项目缺 `.codegraph/`，应主动提出运行 `codegraph init`（属安装型操作，先确认再执行），而不是等用户想起来。忘记 init 也不是故障：agent 查不到图谱时自然退回 grep/Read，只是慢一点。
+CLI 或项目索引缺失时回退本地读取/搜索；任务确实需要图谱时可提出建索引建议，经用户授权后运行 `codegraph init`。
 
 ## 遥测
 
