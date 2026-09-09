@@ -459,6 +459,65 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
         self.assertEqual(optional_file.read_text(encoding='utf-8'), 'project optional tool\n')
         self.assertEqual(receipt_outside_file.read_text(encoding='utf-8'), 'project notes\n')
 
+    def test_tmp_protection_survives_negations_and_git_init(self) -> None:
+        cases = {
+            'directory': '.tmp/\n!.tmp/\n',
+            'children': '.tmp/*\n!.tmp/keep.md\n',
+            'leading-space': ' .tmp/\n',
+            'managed': f'{GITIGNORE_START}\n.tmp/\n{GITIGNORE_END}\n!.tmp/\n',
+        }
+        for name, rules in cases.items():
+            for initialized in (False, True):
+                for newline in ('\n', '\r\n'):
+                    with self.subTest(name=name, git=initialized, newline=repr(newline)):
+                        project = Path(tempfile.mkdtemp(dir=self.temp.name))
+                        original = rules.replace('\n', newline).encode()
+                        (project / '.gitignore').write_bytes(original)
+                        (project / '.tmp').mkdir()
+                        (project / '.tmp/keep.md').write_text('synthetic temporary artifact\n')
+                        (project / 'staged.txt').write_text('project-owned\n')
+                        if initialized:
+                            subprocess.run(['git', 'init', '-q', str(project)], check=True)
+                            subprocess.run(['git', '-C', str(project), 'add', 'staged.txt'], check=True)
+                            index_before = (project / '.git/index').read_bytes()
+
+                        self.run_installer(project=project)
+                        if initialized:
+                            self.assertEqual((project / '.git/index').read_bytes(), index_before)
+                        else:
+                            self.assertFalse((project / '.git').exists())
+                            subprocess.run(['git', 'init', '-q', str(project)], check=True)
+
+                        ignore = (project / '.gitignore').read_bytes()
+                        if name == 'managed':
+                            self.assertEqual(ignore.count(GITIGNORE_START.encode()), 1)
+                            self.assertLess(ignore.index(b'!.tmp/'), ignore.index(GITIGNORE_START.encode()))
+                        else:
+                            self.assertTrue(ignore.startswith(original))
+                        if newline == '\r\n':
+                            self.assertNotIn(b'\n', ignore.replace(b'\r\n', b''))
+                        before_repeat = tree_snapshot(project)
+                        self.run_installer(project=project)
+                        self.assertEqual(tree_snapshot(project), before_repeat)
+
+                        subprocess.run(['git', '-C', str(project), 'add', '--all'], check=True,
+                                       capture_output=True)
+                        tracked = subprocess.run(
+                            ['git', '-C', str(project), 'ls-files', '--', '.tmp'],
+                            check=True, capture_output=True, text=True,
+                        )
+                        self.assertEqual(tracked.stdout, '')
+
+    def test_tmp_protection_does_not_untrack_existing_artifact(self) -> None:
+        subprocess.run(['git', 'init', '-q', str(self.project)], check=True)
+        (self.project / '.tmp').mkdir()
+        (self.project / '.tmp/retained.md').write_text('explicitly retained evidence\n')
+        subprocess.run(['git', '-C', str(self.project), 'add', '-f', '.tmp/retained.md'], check=True)
+        index_before = (self.project / '.git/index').read_bytes()
+        self.run_installer()
+        self.assertEqual((self.project / '.git/index').read_bytes(), index_before)
+        self.assertEqual((self.project / '.tmp/retained.md').read_text(), 'explicitly retained evidence\n')
+
     def test_reinstall_preserves_unmanaged_pi_content_and_receipt(self) -> None:
         settings = self.project / '.pi/settings.json'
         extension = self.project / '.pi/extensions/project-extension.ts'

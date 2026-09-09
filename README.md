@@ -127,6 +127,11 @@ generated marker, or the previous receipt. Project and Case indexes,
 outside those blocks remains project-owned. Partial, reversed, duplicated, or
 conflicting managed state stops the install before target writes begin.
 
+The installer keeps `.tmp/` protection as the final ignore rule, moving its
+managed block when necessary. This takes precedence over earlier exceptions
+without deleting project-owned rules. To retain a specific temporary artifact,
+explicitly force-add that file. Ignore rules do not untrack existing files.
+
 If a target write fails or the process is interrupted, the installer restores
 the target paths managed by that run. This is a filesystem rollback for one
 installer process, not concurrency isolation: it cannot undo unrelated changes
