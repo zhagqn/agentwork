@@ -2,7 +2,7 @@
   "files": [
     {
       "path": ".claude/CLAUDE.md",
-      "sha256": "1ee07f655434887314a6427276a28302a33dc9fd6a5adf8fb920e78e7fb612c2",
+      "sha256": "a7c768fc638ab781e1a6fd660cd881bd20c56e6db5568ae59b0e1fc1b77989eb",
       "type": "file"
     },
     {
@@ -37,7 +37,7 @@
     },
     {
       "path": ".claude/skills/anydoc/SKILL.md",
-      "sha256": "0e62cea011b9b488106c1dee5ee38b535852de0338c8bca658d0d3b77f2b6aaa",
+      "sha256": "2aecb3c655fdff089b48e229e12a318a11bf668b6f84139e5c3cf3b73ffb6481",
       "type": "file"
     },
     {
@@ -47,7 +47,7 @@
     },
     {
       "path": ".codex/skills/anydoc/SKILL.md",
-      "sha256": "0e62cea011b9b488106c1dee5ee38b535852de0338c8bca658d0d3b77f2b6aaa",
+      "sha256": "2aecb3c655fdff089b48e229e12a318a11bf668b6f84139e5c3cf3b73ffb6481",
       "type": "file"
     },
     {
@@ -82,12 +82,12 @@
     },
     {
       "path": ".cursor/rules/agentwork-bootstrap.mdc",
-      "sha256": "dba829d2f285780ebe32a1578605f8798fc5fb2a11c4b7f124bd237756a4c748",
+      "sha256": "51f9ba6516ce2db67c80e7b3c822bd6ff0ac3dfd1aef749dd372d63098c9c2d5",
       "type": "file"
     },
     {
       "path": ".cursor/rules/anydoc.mdc",
-      "sha256": "4feb6640928045b79f1ce3f92d3bd36c4e0c23065112c8a26d594d797915de9e",
+      "sha256": "ed389d6ad67400eed36943ae1337dcd45403a350984c89abf422755d321b716d",
       "type": "file"
     },
     {
@@ -157,7 +157,7 @@
     },
     {
       "path": ".pi/skills/anydoc/SKILL.md",
-      "sha256": "0e62cea011b9b488106c1dee5ee38b535852de0338c8bca658d0d3b77f2b6aaa",
+      "sha256": "2aecb3c655fdff089b48e229e12a318a11bf668b6f84139e5c3cf3b73ffb6481",
       "type": "file"
     },
     {
@@ -187,7 +187,7 @@
     },
     {
       "path": ".shared/commands/plan.md",
-      "sha256": "b0608528ee8319b3e20cd06a6bd3ce41937facc20de7b05d19ffe0651a3e0740",
+      "sha256": "4d7dd8b3f133ea2b5429ca0118e8698bab24f03f3dc90495d64bdeba36024a38",
       "type": "file"
     },
     {
@@ -257,7 +257,7 @@
     },
     {
       "path": ".shared/skills/anydoc/SKILL.md",
-      "sha256": "0e62cea011b9b488106c1dee5ee38b535852de0338c8bca658d0d3b77f2b6aaa",
+      "sha256": "2aecb3c655fdff089b48e229e12a318a11bf668b6f84139e5c3cf3b73ffb6481",
       "type": "file"
     },
     {
@@ -287,7 +287,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "3cb8c9c9c722f3acb4cdd9950258c73ec4fc5666707dfdb16ca0d7ef26e1e981",
+      "sha256": "1df1619e3b310c4fed896ac31c4ff2db7ebadac195ad5cbb35e053f4a093caf1",
       "type": "file"
     }
   ],

@@ -12,7 +12,7 @@
   2. 最新的 `.tmp/agentwork/brain/*.md`
 - 输出：`.tmp/agentwork/plan/{YYYYMMDD-HHMM-slug}.md`
 - 使用模板：`.shared/templates/plan.md`
-- `/plan` 只把已确认设计拆成任务，不代表可以开始修改源码；真正执行仍需 `/exec` 或 `/case exec`
+- `/plan` 只把已确认设计拆成任务，不代表可以开始修改源码；真正执行需明确的当前执行意图，例如 `/exec`、`/case exec` 或“按已确认计划，现在开始修改”
 - 需要写入 Case 时，后续显式调用 `/case plan [plan-source]`
 
 ## 必做流程
