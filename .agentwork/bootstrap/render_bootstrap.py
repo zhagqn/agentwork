@@ -48,6 +48,16 @@ def toml_string(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)
 
 
+def default_wrapper_description(title: str) -> str:
+    """Fallback description for a wrapper that declares none.
+
+    Shared by the Pi metadata path and the platform render loop so both
+    default identically; drifting defaults would give Pi a different
+    description than Claude, Codex and OpenCode for the same command.
+    """
+    return f'{title} 命令入口'
+
+
 def render_memory(kind: str) -> str:
     v = SPEC['variants'][kind]
     out: list[str] = [AUTO, v['title'], '']
@@ -77,6 +87,7 @@ def render_memory(kind: str) -> str:
 
 def render_cursor() -> str:
     v = SPEC['variants']['cursor']
+    workflow_items = v.get('workflow_override') or COMMON['workflow_items']
     body = [
         AUTO,
         v['title'],
@@ -87,12 +98,15 @@ def render_cursor() -> str:
         '',
         f"> {v['note']}",
         '',
+        COMMON['startup_title'],
+        number(COMMON['startup_items']),
+        '',
         COMMON['basic_title'],
         bullet(COMMON['basic_items']),
         '',
         COMMON['workflow_title'],
         '',
-        bullet(COMMON['workflow_items']),
+        bullet(workflow_items),
         '',
         COMMON['navigation_title'],
         '',
@@ -101,30 +115,31 @@ def render_cursor() -> str:
     return "\n".join(body).rstrip() + "\n"
 
 
-def render_claude_command(title: str, target: str) -> str:
+def render_claude_command(title: str, description: str, target: str) -> str:
     return (
+        f"---\ndescription: {json.dumps(description, ensure_ascii=False)}\n---\n\n"
         f"{AUTO}\n# {title}\n\n"
         "命令入口，读取共享规则。\n\n"
         "## 执行前必读\n"
         f"- 主定义：`{target}`\n"
-        "- 占位符规范：`.shared/constraints/placeholder-naming.md`\n"
     )
 
 
 def render_codex_skill(
     name: str,
     title: str,
+    description: str,
     target: str,
     interaction: list[str] | None = None,
 ) -> str:
     out = (
-        f"---\nname: {name}\ndescription: {title} 命令入口\n---\n\n"
+        f"---\nname: {name}\n"
+        f"description: {json.dumps(description, ensure_ascii=False)}\n---\n\n"
         f"{AUTO}\n"
         f"# {title}\n\n"
         "命令入口，读取共享规则。\n\n"
         "## 执行前必读\n"
         f"- 主定义：`{target}`\n"
-        "- 占位符规范：`.shared/constraints/placeholder-naming.md`\n"
     )
     if interaction:
         out += f"\n## Codex 交互适配\n{bullet(interaction)}\n"
@@ -169,16 +184,15 @@ def render_codex_config_block() -> str:
     return "\n".join(out) + "\n"
 
 
-def render_opencode_command(title: str, target: str) -> str:
+def render_opencode_command(title: str, description: str, target: str) -> str:
     return (
-        f"---\ndescription: {title} 命令入口\n---\n\n"
+        f"---\ndescription: {json.dumps(description, ensure_ascii=False)}\n---\n\n"
         f"{AUTO}\n"
         f"# {title}\n\n"
         "按共享定义执行本命令，参数如下（可为空）：\n\n"
         "$ARGUMENTS\n\n"
         "## 执行前必读\n"
         f"@{target}\n"
-        "@.shared/constraints/placeholder-naming.md\n"
     )
 
 
@@ -253,6 +267,15 @@ def validated_wrapper_specs(raw_wrappers: object | None = None) -> tuple[dict, .
             )
         ):
             raise SystemExit(f'invalid Codex interaction metadata: {name}')
+
+        description = wrapper.get('description')
+        if description is not None and (
+            not isinstance(description, str)
+            or not description.strip()
+            or '\n' in description
+            or '\r' in description
+        ):
+            raise SystemExit(f'invalid bootstrap wrapper description: {name}')
         result.append(wrapper)
     return tuple(result)
 
@@ -290,7 +313,10 @@ def validated_pi_wrappers(
             raise SystemExit(f'Pi prompt name conflicts with v{baseline} TUI command: {name}')
 
         title = wrapper.get('pi_title', wrapper.get('title'))
-        description = wrapper.get('pi_description', f'{title} 命令入口')
+        description = wrapper.get(
+            'pi_description',
+            wrapper.get('description', default_wrapper_description(title)),
+        )
         if not isinstance(title, str) or not isinstance(description, str):
             raise SystemExit(f'invalid Pi prompt metadata: {name}')
         if '\n' in title or '\r' in title or '\n' in description or '\r' in description:
@@ -336,7 +362,6 @@ def render_pi_prompt(wrapper: dict) -> str:
         '',
         '## 执行前必读',
         f"- 完整读取主定义：`{wrapper['target']}`",
-        '- 完整读取占位符规范：`.shared/constraints/placeholder-naming.md`',
     ]
     return "\n".join([*frontmatter, *body]).rstrip() + "\n"
 
@@ -460,20 +485,23 @@ def prepare_rendered_bootstrap() -> tuple[RenderedFile, ...]:
         name = wrapper['name']
         title = wrapper['title']
         target = wrapper['target']
+        description = wrapper.get('description') or default_wrapper_description(title)
         add_rendered_file(
             outputs,
             BOOTSTRAP / 'claude' / 'commands' / f'{name}.md',
-            render_claude_command(title, target),
+            render_claude_command(title, description, target),
         )
         add_rendered_file(
             outputs,
             BOOTSTRAP / 'codex' / 'skills' / name / 'SKILL.md',
-            render_codex_skill(name, title, target, wrapper.get('codex_interaction')),
+            render_codex_skill(
+                name, title, description, target, wrapper.get('codex_interaction')
+            ),
         )
         add_rendered_file(
             outputs,
             BOOTSTRAP / 'opencode' / 'commands' / f'{name}.md',
-            render_opencode_command(title, target),
+            render_opencode_command(title, description, target),
         )
     for wrapper in pi_wrappers:
         add_rendered_file(

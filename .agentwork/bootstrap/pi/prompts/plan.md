@@ -1,5 +1,5 @@
 ---
-description: "/plan [plan-source] 命令入口"
+description: "设计已确认、需要把它拆成可执行且可验证的任务时使用。先锁定本轮范围与非目标，再产出无占位的轻量计划；计划本身不构成修改源码的许可。"
 argument-hint: "[plan-source]"
 ---
 
@@ -12,4 +12,3 @@ $ARGUMENTS
 
 ## 执行前必读
 - 完整读取主定义：`.shared/commands/plan.md`
-- 完整读取占位符规范：`.shared/constraints/placeholder-naming.md`

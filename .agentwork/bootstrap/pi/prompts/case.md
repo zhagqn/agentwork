@@ -1,5 +1,5 @@
 ---
-description: "/case [subcommand] [args] 命令入口"
+description: "任务需要跨会话或跨工具接力时使用。管理仓库内的显式任务快照：新建、加载、把已确认计划写入快照、按快照推进或审查；旧快照只在显式加载时读取。"
 argument-hint: "[subcommand] [args]"
 ---
 
@@ -12,4 +12,3 @@ $ARGUMENTS
 
 ## 执行前必读
 - 完整读取主定义：`.shared/commands/case.md`
-- 完整读取占位符规范：`.shared/constraints/placeholder-naming.md`

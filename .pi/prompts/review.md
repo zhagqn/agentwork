@@ -1,5 +1,5 @@
 ---
-description: "/review [review-source] 命令入口"
+description: "一轮工作完成、风险发生变化或准备提交前使用。同时审查工作产物与工作流工件，以当前文件、diff 和实际验证结果为事实依据。"
 argument-hint: "[review-source]"
 ---
 
@@ -12,4 +12,3 @@ $ARGUMENTS
 
 ## 执行前必读
 - 完整读取主定义：`.shared/commands/review.md`
-- 完整读取占位符规范：`.shared/constraints/placeholder-naming.md`

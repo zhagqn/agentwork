@@ -1,5 +1,5 @@
 ---
-description: "/exec [exec-source] 命令入口"
+description: "已有明确计划、要推进当前批次实际改动时使用。默认小步推进 1-3 个任务后停下等下一轮；遇到阻塞就停，不靠猜测继续。"
 argument-hint: "[exec-source]"
 ---
 
@@ -12,4 +12,3 @@ $ARGUMENTS
 
 ## 执行前必读
 - 完整读取主定义：`.shared/commands/exec.md`
-- 完整读取占位符规范：`.shared/constraints/placeholder-naming.md`

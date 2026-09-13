@@ -19,9 +19,7 @@
 ## 启动必读
 1. `.shared/constraints/coding-style.md`
 2. `.shared/constraints/destructive-operations.md`
-3. `.shared/constraints/placeholder-naming.md`
-4. `.shared/project/index.md`
-5. `.shared/INDEX.md`
+3. `.shared/INDEX.md`
 
 ## 基本规则
 - 默认使用简体中文沟通

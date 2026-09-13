@@ -1,5 +1,5 @@
 ---
-description: "/brain <brain-topic> 命令入口"
+description: "需求不清晰、边界或成功标准未锁定、需要比较多个方案时使用。先澄清真实需求与约束，再给出方案对比与推荐，产出 brain note；不改动源码，也不等于可以开始执行。"
 argument-hint: "<brain-topic>"
 ---
 
@@ -12,4 +12,3 @@ $ARGUMENTS
 
 ## 执行前必读
 - 完整读取主定义：`.shared/commands/brain.md`
-- 完整读取占位符规范：`.shared/constraints/placeholder-naming.md`
