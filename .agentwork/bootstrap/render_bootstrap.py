@@ -429,6 +429,51 @@ def prepare_root_shared_data() -> tuple[tuple[Path, str], ...]:
     )
 
 
+def render_capability_rule(description: str, body: str) -> str:
+    return f'---\ndescription: {description}\nglobs: []\nalwaysApply: false\n---\n\n{body}\n'
+
+
+def safe_spec_relpath(value: object, field: str) -> Path:
+    if not isinstance(value, str) or not value:
+        raise SystemExit(f'invalid bootstrap default capability {field}')
+    path = Path(value)
+    if path.is_absolute() or '..' in path.parts:
+        raise SystemExit(f'invalid bootstrap default capability {field}: {value}')
+    return path
+
+
+def validated_default_capabilities() -> tuple[dict, ...]:
+    raw = SPEC.get('default_capabilities')
+    if not isinstance(raw, list) or not raw:
+        raise SystemExit('invalid bootstrap default capability specification')
+    seen: set[str] = set()
+    for capability in raw:
+        if not isinstance(capability, dict) or set(capability) != {
+            'name', 'canonical', 'mirror_to', 'cursor_rule'
+        }:
+            raise SystemExit('invalid bootstrap default capability specification')
+        name = capability['name']
+        if not isinstance(name, str) or not WRAPPER_NAME_PATTERN.fullmatch(name):
+            raise SystemExit(f'invalid bootstrap default capability name: {name!r}')
+        if name in seen:
+            raise SystemExit(f'duplicate bootstrap default capability: {name}')
+        seen.add(name)
+        safe_spec_relpath(capability['canonical'], f'{name} canonical')
+        mirrors = capability['mirror_to']
+        if not isinstance(mirrors, list) or not mirrors:
+            raise SystemExit(f'{name}: default capability mirror_to must be a non-empty list')
+        for mirror in mirrors:
+            safe_spec_relpath(mirror, f'{name} mirror_to')
+        rule = capability['cursor_rule']
+        if not isinstance(rule, dict) or set(rule) != {'path', 'description', 'body'}:
+            raise SystemExit(f'{name}: invalid default capability cursor_rule')
+        safe_spec_relpath(rule['path'], f'{name} cursor_rule path')
+        for field in ('description', 'body'):
+            if not isinstance(rule[field], str) or not rule[field].strip():
+                raise SystemExit(f'{name}: default capability cursor_rule {field} must be non-empty')
+    return tuple(raw)
+
+
 def add_rendered_file(outputs: dict[Path, bytes], path: Path, text: str) -> None:
     if path in outputs:
         raise SystemExit(f'duplicate bootstrap render target: {path}')
@@ -438,6 +483,7 @@ def add_rendered_file(outputs: dict[Path, bytes], path: Path, text: str) -> None
 def prepare_rendered_bootstrap() -> tuple[RenderedFile, ...]:
     wrappers = validated_wrapper_specs()
     pi_wrappers = validated_pi_wrappers(wrappers)
+    default_capabilities = validated_default_capabilities()
     root_shared_data = prepare_root_shared_data()
     outputs: dict[Path, bytes] = {}
     add_rendered_file(outputs, ROOT / 'AGENTS.md', render_memory('source_root'))
@@ -450,26 +496,23 @@ def prepare_rendered_bootstrap() -> tuple[RenderedFile, ...]:
         BOOTSTRAP / 'cursor' / 'rules' / 'agentwork-bootstrap.mdc',
         render_cursor(),
     )
-    # anydoc is a default capability: ship the routing rule with bootstrap,
-    # while its npm runtime remains a project-level delayed dependency.
-    # Prefer the shared canonical source; test fixtures and external bootstrap
-    # checkouts may include only the bootstrap tree, so retain a self-contained
-    # fallback there as well.
-    anydoc_source = ROOT / '.shared' / 'skills' / 'anydoc' / 'SKILL.md'
-    if not anydoc_source.is_file():
-        anydoc_source = BOOTSTRAP / 'codex' / 'skills' / 'anydoc' / 'SKILL.md'
-    anydoc_skill = anydoc_source.read_text(encoding='utf-8')
-    for platform_path in (
-        BOOTSTRAP / 'codex' / 'skills' / 'anydoc' / 'SKILL.md',
-        BOOTSTRAP / 'claude' / 'skills' / 'anydoc' / 'SKILL.md',
-        BOOTSTRAP / 'pi' / 'skills' / 'anydoc' / 'SKILL.md',
-    ):
-        add_rendered_file(outputs, platform_path, anydoc_skill)
-    add_rendered_file(
-        outputs,
-        BOOTSTRAP / 'cursor' / 'rules' / 'anydoc.mdc',
-        "---\ndescription: agentwork 默认办公文档解析能力\nglobs: []\nalwaysApply: false\n---\n\n当任务需要读取办公文档或 PDF 时，按 `.shared/skills/anydoc/SKILL.md` 使用 anydoc。依赖只在项目级按需安装，禁止全局安装；输出写入 `.tmp/anydoc/`，保留原文件，默认不启用 hosted OCR；扫描 PDF 优先使用当前 agent 的视觉能力。\n",
-    )
+    # 默认能力的正文随 bootstrap 分发，运行时依赖仍按项目延迟安装。
+    # canonical 源优先；测试夹具与外部 bootstrap checkout 可能只含 bootstrap 树，
+    # 故回退到第一个 mirror 目标，保持自包含。
+    for capability in default_capabilities:
+        mirrors = [BOOTSTRAP / Path(mirror) for mirror in capability['mirror_to']]
+        source = ROOT / Path(capability['canonical'])
+        if not source.is_file():
+            source = mirrors[0]
+        skill = source.read_text(encoding='utf-8')
+        for mirror in mirrors:
+            add_rendered_file(outputs, mirror, skill)
+        rule = capability['cursor_rule']
+        add_rendered_file(
+            outputs,
+            BOOTSTRAP / Path(rule['path']),
+            render_capability_rule(rule['description'], rule['body']),
+        )
     for agent in SPEC['codex_agents']:
         add_rendered_file(
             outputs,

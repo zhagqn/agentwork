@@ -132,6 +132,22 @@
       "extra_basic": []
     }
   },
+  "default_capabilities": [
+    {
+      "name": "anydoc",
+      "canonical": ".shared/skills/anydoc/SKILL.md",
+      "mirror_to": [
+        "codex/skills/anydoc/SKILL.md",
+        "claude/skills/anydoc/SKILL.md",
+        "pi/skills/anydoc/SKILL.md"
+      ],
+      "cursor_rule": {
+        "path": "cursor/rules/anydoc.mdc",
+        "description": "agentwork 默认办公文档解析能力",
+        "body": "当任务需要读取办公文档或 PDF 时，按 `.shared/skills/anydoc/SKILL.md` 使用 anydoc。依赖只在项目级按需安装，禁止全局安装；输出写入 `.tmp/anydoc/`，保留原文件，默认不启用 hosted OCR；扫描 PDF 优先使用当前 agent 的视觉能力。"
+      }
+    }
+  ],
   "codex_agents": [
     {
       "name": "luna_worker",
