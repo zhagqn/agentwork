@@ -9,6 +9,7 @@ Bootstrap 是新项目复用 agentwork 核心工作流时的启动层源。
 - `.shared/` 核心工作流层
 - Claude / OpenCode / Cursor / Codex / Pi 的平台入口（默认全部安装）
 - anydoc 默认文档输入能力；运行时 npm 依赖按项目需要延迟安装
+- research 默认调研能力；只分发 routing 契约，remote provider 仍需单独安装
 - Codex 项目级 `luna_worker` 执行型子代理及其受管注册块
 
 安装入口：根目录 `install-bootstrap.py`
@@ -27,6 +28,7 @@ Bootstrap 是新项目复用 agentwork 核心工作流时的启动层源。
 
 ## Bootstrap does NOT
 - 不安装可选工具包的运行时依赖；anydoc 的 npm 包仍由 agent 在项目中按需安装
+- 默认能力只分发规则正文：不安装 MCP server、CLI 或二进制，不创建或修改 `.env`，不修改平台 MCP 私有配置，不向远程服务发送私有资料或凭据
 - 不自动配置 MCP
 - 不自动生成 `opencode.json*` 或配置 OpenCode Provider、model、agent、skill、plugin
 - 不安装 Pi / Node / package / extension / plan-mode / subagent，不修改 `~/.pi`、`.pi/settings.json` 或项目 trust，也不自动为可选工具增加 Pi 入口

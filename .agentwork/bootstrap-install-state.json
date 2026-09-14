@@ -2,7 +2,7 @@
   "files": [
     {
       "path": ".claude/CLAUDE.md",
-      "sha256": "81929f4deb922edd967879f84209e658eba8c14841f121d13dccd6b96cde2dfe",
+      "sha256": "27ebb550acffae6dab3c17133a359fb4693881e64ff9a1993ec80bc129dc5166",
       "type": "file"
     },
     {
@@ -41,6 +41,11 @@
       "type": "file"
     },
     {
+      "path": ".claude/skills/research/SKILL.md",
+      "sha256": "cffe16b0922c249666049bfe1a931b9fa534ce686a3746be67b083d2da93805b",
+      "type": "file"
+    },
+    {
       "path": ".codex/agents/luna-worker.toml",
       "sha256": "d2dd50b5e303be8b199da8680544ce32408540cf7691976848fb13d59a53d14b",
       "type": "file"
@@ -76,18 +81,33 @@
       "type": "file"
     },
     {
+      "path": ".codex/skills/research/SKILL.md",
+      "sha256": "cffe16b0922c249666049bfe1a931b9fa534ce686a3746be67b083d2da93805b",
+      "type": "file"
+    },
+    {
+      "path": ".codex/skills/research/agents/openai.yaml",
+      "sha256": "2f7ba87a12a656054835d208a5dc670a171243a59ba2c8c61132a41559906e00",
+      "type": "file"
+    },
+    {
       "path": ".codex/skills/review/SKILL.md",
       "sha256": "93a31565e034f5d9ae391a921c09ad118997b68a2bf72851a61ecd5e0c6be150",
       "type": "file"
     },
     {
       "path": ".cursor/rules/agentwork-bootstrap.mdc",
-      "sha256": "170e766d80142ea3825958962953a7090e9c36242d2e121643556e432dca7c34",
+      "sha256": "abe134d536685b11e633786a67eadf62494d1030d84d581f8a4cda76989ced64",
       "type": "file"
     },
     {
       "path": ".cursor/rules/anydoc.mdc",
       "sha256": "ed389d6ad67400eed36943ae1337dcd45403a350984c89abf422755d321b716d",
+      "type": "file"
+    },
+    {
+      "path": ".cursor/rules/research.mdc",
+      "sha256": "32356bde2a1c80c198d162aaa2d32290bbfd79a6bb9742663f84c9e208a909e2",
       "type": "file"
     },
     {
@@ -158,6 +178,11 @@
     {
       "path": ".pi/skills/anydoc/SKILL.md",
       "sha256": "2aecb3c655fdff089b48e229e12a318a11bf668b6f84139e5c3cf3b73ffb6481",
+      "type": "file"
+    },
+    {
+      "path": ".pi/skills/research/SKILL.md",
+      "sha256": "106c70e202393f7b8200a003c2cc377bb33fed7f9272549839b05676aef6def2",
       "type": "file"
     },
     {
@@ -237,17 +262,17 @@
     },
     {
       "path": ".shared/scripts/README.md",
-      "sha256": "9f41601fcb111d2d7a4a0dbebb49bfd7a88ddd369bbac74152f5730d13f91ecf",
+      "sha256": "f2ed113e858896bc0d025dcb17832f72e6bde39351dc4adf4199a3954d1b11a3",
       "type": "file"
     },
     {
       "path": ".shared/scripts/agentwork-check.py",
-      "sha256": "209e1402dd2e82dad3e0c8dc397d6bbfa7260dbf391f12d408c75e8f19dbb2fe",
+      "sha256": "3d3a4551fd34828cc548a8b69d22f4e082919c9267b1e1d09f6b5c363c5b0811",
       "type": "file"
     },
     {
       "path": ".shared/scripts/case-review.sh",
-      "sha256": "d3525cf2b262518fcb3a922c7dd7b82806eeabdaaf619dbdd2bc26497139cd0d",
+      "sha256": "2bd0ff9b5c0fae9a696dbb1724d96d15f7ed5c6bc85e5e48609054b7d82b71bf",
       "type": "file"
     },
     {
@@ -258,6 +283,11 @@
     {
       "path": ".shared/skills/anydoc/SKILL.md",
       "sha256": "2aecb3c655fdff089b48e229e12a318a11bf668b6f84139e5c3cf3b73ffb6481",
+      "type": "file"
+    },
+    {
+      "path": ".shared/skills/research/SKILL.md",
+      "sha256": "8a55944ddbfa8f14b14e8100840ccacb59157929795287e3fa1c0830251d6884",
       "type": "file"
     },
     {
@@ -287,7 +317,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "f8ab12386d9197d3c025cbefb44a425d2a7de18a7d735da986281ab8646c37ce",
+      "sha256": "6072a27734bee992846edee89e1a86023400d5a9e8c5fae19b53750440c7b06a",
       "type": "file"
     }
   ],

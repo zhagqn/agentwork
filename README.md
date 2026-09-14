@@ -29,13 +29,22 @@ repository instead of relying on one provider's private conversation state.
 - **A conservative Codex integration.** The bootstrap installs project-level
   skills, keeps `AGENTS.md` as the stable entry point, and registers a bounded
   `luna_worker` custom agent without replacing unrelated Codex configuration.
-- **Optional capability packs.** Browser automation, research, Figma, Android,
-  Godot, architecture documentation, and other integrations stay outside the
-  core workflow and are installed only when a project needs them. The registry
+- **Optional capability packs.** Browser automation, Figma, Android, Godot,
+  architecture documentation, and other integrations stay outside the core
+  workflow and are installed only when a project needs them. The registry
   in [`.agentwork/tools/`](.agentwork/tools/README.md) is the source of truth.
-- **Default document input.** anydoc is distributed as a default skill for
-  Codex, Claude Code, Cursor, Pi, and the shared layer. Its npm runtime is
-  installed in a project only when an agent needs to parse an office document.
+- **Default capabilities.** anydoc and research are distributed as default
+  skills for Codex, Claude Code, Cursor, Pi, and the shared layer. Distribution
+  does not install runtime dependencies: anydoc's npm package is installed in a
+  project only when an agent needs to parse an office document, and research
+  ships the routing contract alone. research is the single research entry point
+  and picks the narrowest provider itself; remote providers such as Exa and
+  Octocode remain separate optional packs that never install MCP servers, CLIs,
+  or binaries, never create or modify `.env`, never touch platform MCP private
+  configuration, and never send private material or credentials to a remote
+  service. Default distribution is not a stability claim: research's routing
+  contract stays non-stable until the gates in
+  [`.agentwork/evals/research/`](.agentwork/evals/research/README.md) pass.
 - **Local, deterministic checks.** Workflow artifacts and bootstrap behavior
   have repository-owned checks, while live provider tests remain explicit
   compatibility investigations rather than hidden prerequisites.
@@ -147,12 +156,16 @@ List the current tool catalog from the agentwork source checkout:
 python3 install-tool.py list
 ```
 
-Install only what a target project needs. For example, to add the
-provider-neutral research skill:
+Install only what a target project needs. For example, to add browser
+automation:
 
 ```bash
-python3 install-tool.py install research -p /absolute/path/to/project
+python3 install-tool.py install browser -p /absolute/path/to/project
 ```
+
+research is not in this catalog. It is a default capability that arrives with
+the core bootstrap, so `install-tool.py install research` fails with
+`Unknown tool: research`.
 
 Each tool pack declares its installed files in `tool.json` and documents its
 external prerequisites in `INSTALL.md`. The catalog registry, rather than this
