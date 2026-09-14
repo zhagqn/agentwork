@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent
 TOOLS_ROOT = ROOT / '.agentwork' / 'tools'
 REGISTRY = TOOLS_ROOT / 'registry.json'
 COMMANDS = {'install', 'uninstall', 'list'}
+REGISTRY_SCHEMA_VERSION = 1
 ENV_KEY_FIELDS = {'name', 'required', 'description'}
 ENV_NAME = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
 ENV_ASSIGNMENT = re.compile(r'^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=(.*)$')
@@ -94,6 +95,8 @@ def load_env_keys(tool_name: str, manifest: dict) -> tuple[EnvKey, ...]:
 
 def load_tools() -> tuple[dict, dict[str, dict]]:
     registry = load_json(REGISTRY)
+    if registry.get('schema_version') != REGISTRY_SCHEMA_VERSION:
+        fail(f'unsupported registry schema: {REGISTRY}')
     raw_tools = registry.get('tools')
     if not isinstance(raw_tools, list):
         fail('registry tools must be a list')
@@ -567,7 +570,11 @@ def prepare_owned_changes(
         for relative, digest in previous.items():
             rel = safe_relative_path(name, 'receipt file', relative)
             dst = safe_target_path(project_root, name, rel)
-            if not any(dst == entry.dst or (entry.src.is_dir() and dst.is_relative_to(entry.dst)) for entry in entries):
+            # 退役路径只阻断 install：卸载必须仍能按旧收据清理，否则用户无路可退。
+            if action == 'install' and not any(
+                dst == entry.dst or (entry.src.is_dir() and dst.is_relative_to(entry.dst))
+                for entry in entries
+            ):
                 fail(f'{name}: receipt path outside current manifest; reconcile manually: {relative}')
             if not isinstance(digest, str) or (digest != 'directory' and re.fullmatch(r'[0-9a-f]{64}', digest) is None):
                 fail(f'{name}: invalid receipt digest: {relative}')

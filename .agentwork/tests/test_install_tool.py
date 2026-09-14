@@ -222,6 +222,53 @@ class InstallToolEnvTest(unittest.TestCase):
             module.run_transaction(self.project, paths, operation)
         self.assertEqual(self.project_snapshot(), before)
 
+    def test_registry_schema_version_is_validated(self) -> None:
+        """registry 的 schema_version 必须被校验，异常形态一律拒绝。"""
+        registry = self.source / '.agentwork/tools/registry.json'
+        original = json.loads(registry.read_text())
+        for label, payload in (
+            ('missing', {k: v for k, v in original.items() if k != 'schema_version'}),
+            ('future', {**original, 'schema_version': 999}),
+            ('string', {**original, 'schema_version': '1'}),
+            ('null', {**original, 'schema_version': None}),
+            ('list', {**original, 'schema_version': [1]}),
+        ):
+            with self.subTest(variant=label):
+                registry.write_text(json.dumps(payload) + '\n')
+                result = self.run_installer('list', check=False)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('unsupported registry schema', result.stderr + result.stdout)
+        registry.write_text(json.dumps(original) + '\n')
+        self.assertEqual(self.run_installer('list').returncode, 0)
+
+    def test_retired_receipt_path_blocks_install_but_allows_uninstall(self) -> None:
+        """源端移除文件后，旧收据路径不得同时堵死 install 与 uninstall。"""
+        self.add_tool('twin')
+        manifest_path = self.source / '.agentwork/tools/twin/tool.json'
+        manifest = json.loads(manifest_path.read_text())
+        manifest['entries'].append(
+            {'surface': 'shared', 'from': 'shared/extra.txt', 'to': '.shared/twin-extra.txt'}
+        )
+        (self.source / '.agentwork/tools/twin/shared/extra.txt').write_text('extra\n')
+        manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
+        self.write_registry()
+        self.run_installer('install', 'twin')
+        self.assertTrue((self.project / '.shared/twin-extra.txt').is_file())
+
+        # 源端退役 extra.txt：它成为 manifest 之外的旧收据路径。
+        manifest['entries'] = [e for e in manifest['entries'] if e['to'] != '.shared/twin-extra.txt']
+        manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
+        (self.source / '.agentwork/tools/twin/shared/extra.txt').unlink()
+
+        blocked = self.run_installer('install', 'twin', check=False)
+        self.assertNotEqual(blocked.returncode, 0)
+        self.assertIn('receipt path outside current manifest', blocked.stderr + blocked.stdout)
+
+        self.run_installer('uninstall', 'twin')
+        for relative in ('.shared/twin.txt', '.shared/twin-extra.txt'):
+            self.assertFalse((self.project / relative).exists(), relative)
+        self.assertFalse((self.project / '.agentwork/tool-receipts/twin.json').exists())
+
     def test_systemexit_after_second_write_rolls_back(self) -> None:
         """fail() 在事务内抛 SystemExit 时也必须回滚，而不是留下半写状态。"""
         self.project = self.project.resolve()
