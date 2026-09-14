@@ -46,7 +46,11 @@
 .shared/scripts/case-review.sh <case-ref> # 审查指定 Case id 或文件路径
 ```
 
-“最新”按修改时间选择（同时间按路径排序），排除 `README.md`，与命令自检一致。
+“最新”按文件名时间戳选择，不使用修改时间：
+
+- 只有符合 `YYYYMMDD-HHMM-slug.md` 的工件参与选取；命名不符的草稿（含 `README.md`）一律不被选中
+- 同一 `YYYYMMDD-HHMM` 存在多个候选时不做兜底排序，直接报 `ambiguous_latest` 并要求显式指定
+- `case-review.sh` 与命令自检共用这一个入口，不存在第二套选取规则
 Git 路径使用 NUL 记录解析；换行等控制字符仅在输出时转义。工作集可用目录或 glob 覆盖含换行的文件名。
 已存在或在 Git status 中出现的精确路径优先按字面匹配（如 `src/[id].tsx`），其余范围才解释为 glob。
 

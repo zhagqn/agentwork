@@ -19,18 +19,18 @@ pick_latest_case() {
         return 1
     fi
 
-    local latest
-    latest=$(python3 - "$CASE_DIR" <<'PY'
-from pathlib import Path
-import sys
+    # 统一走 agentwork-check.py latest，避免第二条独立的选取规则。
+    local checker
+    checker="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/agentwork-check.py"
 
-paths = [p for p in Path(sys.argv[1]).glob('*.md') if p.is_file() and p.name != 'README.md']
-if paths:
-    print(max(paths, key=lambda p: (p.stat().st_mtime_ns, str(p))))
-PY
-)
-    if [[ -z "$latest" ]]; then
-        echo "暂无 Case 记录" >&2
+    # 只捕获 stdout；stderr（含 ambiguous_latest 诊断）直接透传，避免混入路径。
+    local latest
+    if ! latest=$(python3 "$checker" latest case); then
+        if [[ "$latest" == missing_latest:* ]]; then
+            echo "暂无 Case 记录" >&2
+        else
+            echo "无法确定最新 Case，请显式指定 case id 或文件路径" >&2
+        fi
         return 1
     fi
 

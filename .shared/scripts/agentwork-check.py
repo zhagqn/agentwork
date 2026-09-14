@@ -317,14 +317,37 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding='utf-8')
 
 
+ARTIFACT_NAME_RE = re.compile(r'^(\d{8}-\d{4})-.+\.md$')
+
+
+class AmbiguousLatest(Exception):
+    """同一时间戳下存在多个候选，需由调用方显式指定。"""
+
+    def __init__(self, kind: str, paths: list[Path]) -> None:
+        self.kind = kind
+        self.paths = paths
+        super().__init__(kind)
+
+
 def latest_path(kind: str) -> Path | None:
+    """按 `YYYYMMDD-HHMM-slug.md` 命名选取最新工件；不依赖 mtime。"""
     pattern = TEXT_GLOBS[kind]
-    paths = [path for path in Path.cwd().glob(pattern) if path.is_file()]
-    if kind == 'case':
-        paths = [path for path in paths if path.name != 'README.md']
-    if not paths:
+    stamped: dict[str, list[Path]] = {}
+    # 相对 glob：输出保持仓库相对路径，与 case-review.sh 的历史输出一致。
+    for path in Path().glob(pattern):
+        if not path.is_file():
+            continue
+        match = ARTIFACT_NAME_RE.match(path.name)
+        if match is None:
+            continue
+        stamped.setdefault(match.group(1), []).append(path)
+    if not stamped:
         return None
-    return max(paths, key=lambda path: (path.stat().st_mtime_ns, str(path)))
+    newest = max(stamped)
+    candidates = sorted(stamped[newest], key=lambda path: str(path))
+    if len(candidates) > 1:
+        raise AmbiguousLatest(kind, candidates)
+    return candidates[0]
 
 
 def resolve_path(kind: str, value: str | None) -> Path | None:
@@ -884,14 +907,6 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    if args.command == 'latest':
-        path = latest_path(args.kind)
-        if path is None:
-            print(f'missing_latest:{args.kind}:{TEXT_GLOBS[args.kind]}')
-            return 1
-        print(path)
-        return 0
-
     if args.command == 'self-test':
         root = self_test_root(args.root)
         failures = run_self_test(root)
@@ -902,18 +917,31 @@ def main() -> int:
         print(f'agentwork_check:PASS:self-test:{root}')
         return 0
 
-    if args.command == 'brain':
-        path, failures = check_brain(resolve_path('brain', args.path))
-    elif args.command == 'plan':
-        path, failures = check_plan(resolve_path('plan', args.path))
-    elif args.command == 'exec':
-        path, failures = check_exec(resolve_path('plan', args.path))
-    elif args.command == 'review':
-        path, failures = check_review(resolve_path('review', args.path), args.fail_on_major)
-    elif args.command == 'case':
-        path, failures = check_case(resolve_path('case', args.path), args.strict_flow)
-    else:
-        raise AssertionError(args.command)
+    try:
+        if args.command == 'latest':
+            path = latest_path(args.kind)
+            if path is None:
+                print(f'missing_latest:{args.kind}:{TEXT_GLOBS[args.kind]}')
+                return 1
+            print(path)
+            return 0
+
+        if args.command == 'brain':
+            path, failures = check_brain(resolve_path('brain', args.path))
+        elif args.command == 'plan':
+            path, failures = check_plan(resolve_path('plan', args.path))
+        elif args.command == 'exec':
+            path, failures = check_exec(resolve_path('plan', args.path))
+        elif args.command == 'review':
+            path, failures = check_review(resolve_path('review', args.path), args.fail_on_major)
+        elif args.command == 'case':
+            path, failures = check_case(resolve_path('case', args.path), args.strict_flow)
+        else:
+            raise AssertionError(args.command)
+    except AmbiguousLatest as exc:
+        names = ', '.join(str(path) for path in exc.paths)
+        print(f'ambiguous_latest:{exc.kind}:{names}', file=sys.stderr)
+        return 1
 
     if failures:
         for failure in failures:

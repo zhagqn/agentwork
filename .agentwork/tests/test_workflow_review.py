@@ -17,7 +17,8 @@ class WorkflowReviewTest(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        self.case = self.root / '.shared/case/20260101-test.md'
+        # 名称须符合 YYYYMMDD-HHMM-slug，否则不参与 latest 选取。
+        self.case = self.root / '.shared/case/20260101-0000-test.md'
         self.case.parent.mkdir(parents=True)
         self.fixture = next(v for k, v in checker.SELF_TEST_FIXTURES.items() if k.startswith('.shared/case/'))
 
@@ -112,6 +113,44 @@ class WorkflowReviewTest(unittest.TestCase):
         self.assertNotIn('未被“当前批次工作集”覆盖', result.stdout)
         self.assertNotIn('缺失/疑似过期', result.stdout)
         self.assertNotIn('记录但当前工作区未体现', result.stdout)
+
+    def latest_case(self):
+        return subprocess.run(
+            ['python3', str(ROOT / '.shared/scripts/agentwork-check.py'), 'latest', 'case'],
+            cwd=self.root, text=True, capture_output=True,
+        )
+
+    def test_latest_ignores_nonconforming_names_regardless_of_mtime(self):
+        self.case.write_text('# Case: stamped\n')
+        stray = self.case.parent / 'scratch-notes.md'
+        stray.write_text('# Case: draft\n')
+        os.utime(self.case, (1600000000, 1600000000))
+        os.utime(stray, (2000000000, 2000000000))
+
+        result = self.latest_case()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), str(self.case.relative_to(self.root)))
+
+        # case-review.sh 必须与 agentwork-check.py 得到同一结论。
+        review = subprocess.run(['bash', str(SCRIPT)], cwd=self.root, text=True, capture_output=True)
+        self.assertEqual(review.returncode, 0, review.stderr)
+        self.assertIn(f'Case: {self.case.relative_to(self.root)}', review.stdout)
+        self.assertNotIn('scratch-notes.md', review.stdout)
+
+    def test_same_timestamp_is_ambiguous_instead_of_mtime_tiebreak(self):
+        self.case.write_text('# Case: first\n')
+        twin = self.case.parent / '20260101-0000-twin.md'
+        twin.write_text('# Case: second\n')
+
+        result = self.latest_case()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('ambiguous_latest:case', result.stderr)
+        for path in (self.case, twin):
+            self.assertIn(str(path.relative_to(self.root)), result.stderr)
+
+        review = subprocess.run(['bash', str(SCRIPT)], cwd=self.root, text=True, capture_output=True)
+        self.assertNotEqual(review.returncode, 0)
+        self.assertIn('无法确定最新 Case', review.stderr)
 
     def test_readme_only_is_not_a_case(self):
         (self.case.parent / 'README.md').write_text('not a case')
