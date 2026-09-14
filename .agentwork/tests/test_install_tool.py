@@ -222,6 +222,28 @@ class InstallToolEnvTest(unittest.TestCase):
             module.run_transaction(self.project, paths, operation)
         self.assertEqual(self.project_snapshot(), before)
 
+    def test_systemexit_after_second_write_rolls_back(self) -> None:
+        """fail() 在事务内抛 SystemExit 时也必须回滚，而不是留下半写状态。"""
+        self.project = self.project.resolve()
+        self.run_installer('install', 'plain')
+        (self.source / '.agentwork/tools/plain/shared/plain.txt').write_text('upgrade')
+        module = self.load_installer()
+        _, tools = module.load_tools()
+        entries = module.build_tool_entries(self.project, 'plain', tools['plain'], set())
+        grouped, receipts = module.prepare_owned_changes(self.project, 'install', [('plain', entries)])
+        env_plan = module.prepare_install_env(self.project, [])
+        paths = module.transaction_paths(grouped, env_plan) + tuple(receipts)
+        before = self.project_snapshot()
+
+        def operation() -> None:
+            module.apply_tool_changes(self.project, 'install', grouped, env_plan)
+            module.apply_receipts(receipts, self.project)
+            module.fail('after receipt write')
+
+        with self.assertRaisesRegex(SystemExit, 'rolled back'):
+            module.run_transaction(self.project, paths, operation)
+        self.assertEqual(self.project_snapshot(), before)
+
     def test_receipt_and_nested_target_symlinks_fail_without_changes(self) -> None:
         target = self.directory_tool()
         self.run_installer('install', 'plain')

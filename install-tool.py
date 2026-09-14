@@ -653,12 +653,12 @@ def run_transaction(
 
         try:
             operation()
-        except (Exception, KeyboardInterrupt) as exc:
+        except (Exception, KeyboardInterrupt, SystemExit) as exc:
             rollback_errors: list[str] = []
             for snapshot in reversed(snapshots):
                 try:
                     restore_snapshot(snapshot)
-                except Exception as rollback_exc:
+                except (Exception, KeyboardInterrupt, SystemExit) as rollback_exc:
                     rollback_errors.append(f'{snapshot.path}: {rollback_exc}')
             for path in new_parents:
                 try:
