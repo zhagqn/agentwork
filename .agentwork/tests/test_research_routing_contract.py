@@ -14,9 +14,18 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 INSTALLER = REPO_ROOT / 'install-tool.py'
 TOOLS_ROOT = REPO_ROOT / '.agentwork/tools'
 REGISTRY = TOOLS_ROOT / 'registry.json'
-ROUTING_CASES = TOOLS_ROOT / 'research/evals/routing-cases.json'
-STACK = ('research', 'exa', 'octocode')
-PROVIDERS = STACK[1:]
+EVALS_ROOT = REPO_ROOT / '.agentwork/evals/research'
+ROUTING_CASES = EVALS_ROOT / 'routing-cases.json'
+BOOTSTRAP_ROOT = REPO_ROOT / '.agentwork/bootstrap'
+# research 已提升为 bootstrap 默认能力；只有 provider 仍是 registry 工具。
+RESEARCH_DEFAULT_ENTRIES = (
+    'codex/skills/research/SKILL.md',
+    'codex/skills/research/agents/openai.yaml',
+    'claude/skills/research/SKILL.md',
+    'pi/skills/research/SKILL.md',
+    'cursor/rules/research.mdc',
+)
+PROVIDERS = ('exa', 'octocode')
 MCP_CONFIG_PATHS = (
     '.mcp.json',
     '.cursor/mcp.json',
@@ -49,23 +58,25 @@ def tree_snapshot(path: Path) -> dict[str, tuple[str, bytes | str | None]]:
 class ResearchRoutingContractTest(unittest.TestCase):
     def test_source_has_one_research_skill_and_independent_providers(self) -> None:
         registry = json.loads(REGISTRY.read_text(encoding='utf-8'))
-        stack_entries = {
+        registry_names = {item['name'] for item in registry['tools']}
+        provider_entries = {
             item['name']: item
             for item in registry['tools']
-            if item['name'] in STACK
+            if item['name'] in PROVIDERS
         }
-        self.assertEqual(set(stack_entries), set(STACK))
-        self.assertEqual(stack_entries['research']['kind'], ['skill'])
+        self.assertEqual(set(provider_entries), set(PROVIDERS))
+        # research 由 bootstrap 分发，不得再作为 registry 工具或 tool 收据存在。
+        self.assertNotIn('research', registry_names)
+        self.assertFalse((TOOLS_ROOT / 'research').exists())
 
-        research = load_manifest('research')
-        self.assertNotIn('env_keys', research)
-        self.assertEqual(research['kind'], ['skill'])
-        self.assertEqual(
-            {entry['surface'] for entry in research['entries']},
-            {'shared', 'codex', 'claude', 'pi', 'cursor'},
-        )
-        self.assertFalse(any('/mcp/' in entry['to'] for entry in research['entries']))
-        self.assertFalse(any('/scripts/' in entry['to'] for entry in research['entries']))
+        # 唯一 canonical 正文 + 五个平台默认入口，均不落到 mcp/ 或 scripts/。
+        canonical = REPO_ROOT / '.shared/skills/research/SKILL.md'
+        self.assertTrue(canonical.is_file())
+        for relative in RESEARCH_DEFAULT_ENTRIES:
+            with self.subTest(entry=relative):
+                self.assertTrue((BOOTSTRAP_ROOT / relative).is_file())
+        self.assertFalse(any('/mcp/' in item for item in RESEARCH_DEFAULT_ENTRIES))
+        self.assertFalse(any('/scripts/' in item for item in RESEARCH_DEFAULT_ENTRIES))
 
         provider_targets: dict[str, set[str]] = {}
         for provider in PROVIDERS:
@@ -92,9 +103,11 @@ class ResearchRoutingContractTest(unittest.TestCase):
             len(all_provider_targets),
             sum(len(targets) for targets in provider_targets.values()),
         )
-        self.assertTrue(all(
-            entry['to'] not in all_provider_targets for entry in research['entries']
-        ))
+        # 默认能力的落地路径与 provider 的 shared 目标不得重叠。
+        research_targets = {'.shared/skills/research/SKILL.md'} | {
+            f'.{item}' for item in RESEARCH_DEFAULT_ENTRIES
+        }
+        self.assertFalse(research_targets & all_provider_targets)
 
         routing = json.loads(ROUTING_CASES.read_text(encoding='utf-8'))
         forbidden = tuple(routing['prompt_forbidden_provider_names'])
@@ -112,7 +125,8 @@ class ResearchRoutingContractTest(unittest.TestCase):
             with self.subTest(case=case_id):
                 self.assertEqual(cases[case_id]['remote_provider_limit'], 0)
 
-        self.assertIn('- provisional', (TOOLS_ROOT / 'research/README.md').read_text())
+        # 默认分发不等于契约 stable：gate 未过前 provisional 标记必须留在 evals 契约里。
+        self.assertIn('provisional', (EVALS_ROOT / 'README.md').read_text())
         self.assertIn('- provisional', (TOOLS_ROOT / 'exa/README.md').read_text())
         for provider in PROVIDERS:
             reference = (TOOLS_ROOT / provider / 'shared/mcp' / f'{provider}.md').read_text()
@@ -121,7 +135,22 @@ class ResearchRoutingContractTest(unittest.TestCase):
                 self.assertNotIn(f'codex mcp add {provider}', reference)
                 self.assertIn(f'claude mcp add --scope local {provider}', reference)
 
-    def test_isolated_install_keeps_one_skill_and_provider_lifecycles_independent(self) -> None:
+    def test_providers_were_not_promoted_alongside_research(self) -> None:
+        """research 提升为默认能力时，provider 必须仍只在 registry。"""
+        registry_names = {
+            item['name']
+            for item in json.loads(REGISTRY.read_text(encoding='utf-8'))['tools']
+        }
+        for provider in PROVIDERS:
+            with self.subTest(provider=provider):
+                self.assertIn(provider, registry_names)
+                self.assertTrue((TOOLS_ROOT / provider / 'tool.json').is_file())
+                # 不得出现在任何 bootstrap 分发面。
+                for surface in ('codex/skills', 'claude/skills', 'pi/skills'):
+                    self.assertFalse((BOOTSTRAP_ROOT / surface / provider).exists())
+                self.assertFalse((BOOTSTRAP_ROOT / 'cursor/rules' / f'{provider}.mdc').exists())
+
+    def test_provider_install_is_isolated_from_bootstrapped_research(self) -> None:
         with tempfile.TemporaryDirectory(prefix='agentwork-research-routing-') as temp:
             project = Path(temp) / 'project'
             project.mkdir()
@@ -131,37 +160,26 @@ class ResearchRoutingContractTest(unittest.TestCase):
             subprocess.run(['git', '-C', str(project), 'add', boundary.name], check=True)
             staged_before = self.staged_hash(project)
 
-            self.run_installer(project, 'install', 'research')
-            self.assert_manifest_exact(project, ('research',))
-            research_only = self.project_snapshot(project)
-            self.run_installer(project, 'install', 'research')
-            self.assertEqual(self.project_snapshot(project), research_only)
+            # research 已离开 registry：tool 通道必须拒绝它，且不留任何痕迹。
+            before_any_install = self.project_snapshot(project)
+            rejected = subprocess.run(
+                ['python3', str(INSTALLER), 'install', 'research', '-p', str(project)],
+                cwd=REPO_ROOT, text=True, capture_output=True, check=False,
+            )
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertIn('Unknown tool: research', rejected.stderr + rejected.stdout)
+            self.assertEqual(self.project_snapshot(project), before_any_install)
             self.assertFalse((project / '.env').exists())
             self.assertFalse((project / '.gitignore').exists())
             self.assertFalse((project / '.shared/mcp').exists())
             self.assert_no_platform_mcp_config(project)
 
             self.run_installer(project, 'install', *PROVIDERS)
-            self.assert_manifest_exact(project, STACK)
-            self.assertEqual(
-                {
-                    path.relative_to(project).as_posix()
-                    for path in project.rglob('SKILL.md')
-                },
-                {
-                    '.shared/skills/research/SKILL.md',
-                    '.codex/skills/research/SKILL.md',
-                    '.claude/skills/research/SKILL.md',
-                    '.pi/skills/research/SKILL.md',
-                },
-            )
-            self.assertEqual(
-                {
-                    path.relative_to(project).as_posix()
-                    for path in (project / '.cursor/rules').glob('*')
-                },
-                {'.cursor/rules/research.mdc'},
-            )
+            self.assert_manifest_exact(project, PROVIDERS)
+            # provider 通道只铺 .shared/mcp 与 .shared/scripts，
+            # 不产生任何 skill 正文或 cursor 规则——那些只能来自 bootstrap。
+            self.assertEqual(list(project.rglob('SKILL.md')), [])
+            self.assertFalse((project / '.cursor').exists())
             self.assertEqual(
                 (project / '.env').read_text(),
                 '# agentwork:env:exa\n'
@@ -174,8 +192,8 @@ class ResearchRoutingContractTest(unittest.TestCase):
             self.assertEqual(ignored.returncode, 0)
             self.assert_no_platform_mcp_config(project)
             installed = self.project_snapshot(project)
-            self.run_installer(project, 'install', *STACK)
-            self.assert_manifest_exact(project, STACK)
+            self.run_installer(project, 'install', *PROVIDERS)
+            self.assert_manifest_exact(project, PROVIDERS)
             self.assertEqual(self.project_snapshot(project), installed)
             self.assertEqual(self.staged_hash(project), staged_before)
 
@@ -185,16 +203,16 @@ class ResearchRoutingContractTest(unittest.TestCase):
                 'EXA_API_KEY=',
                 f'EXA_API_KEY={secret}',
             ))
-            uninstall = self.run_installer(project, 'uninstall', *STACK)
+            uninstall = self.run_installer(project, 'uninstall', *PROVIDERS)
             self.assertNotIn(secret, uninstall.stdout + uninstall.stderr)
             self.assertEqual(env_path.read_text(), f'EXA_API_KEY={secret}\n')
-            for name in STACK:
+            for name in PROVIDERS:
                 for entry in load_manifest(name)['entries']:
                     target = project / entry['to']
                     self.assertFalse(target.exists() or target.is_symlink())
             self.assert_no_platform_mcp_config(project)
             after_uninstall = self.project_snapshot(project)
-            self.run_installer(project, 'uninstall', *STACK)
+            self.run_installer(project, 'uninstall', *PROVIDERS)
             self.assertEqual(self.project_snapshot(project), after_uninstall)
             self.assertEqual(self.staged_hash(project), staged_before)
 

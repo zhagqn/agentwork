@@ -1,6 +1,13 @@
 # Research Evaluation
 
-该目录保存 `research` optional tool 的 source-only 评测契约，不随 `tool.json` 安装到目标项目。
+该目录保存 `research` 的 source-only 评测契约。它位于 `.agentwork/bootstrap/` 之外，因此结构上不可能随 bootstrap 分发到目标项目。
+
+## 当前状态
+
+- `research`：provisional：结构回归通过，等待现行内容与路由 gate 验证
+- `exa`：provisional（见 `.agentwork/tools/exa/README.md`）
+
+`research` 已是 bootstrap 默认能力，但**默认分发不等于契约 stable**。下述 Promotion Gate 与 Routing Gate 未通过前，routing contract 保持 non-stable。
 
 ## 固定输入
 

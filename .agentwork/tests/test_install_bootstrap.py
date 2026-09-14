@@ -132,6 +132,13 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
             ('.claude/skills/anydoc/SKILL.md', 'Claude default skill'),
             ('.pi/skills/anydoc/SKILL.md', 'Pi default skill'),
             ('.cursor/rules/anydoc.mdc', 'Cursor default rule'),
+            # research 与 anydoc 同为默认能力；其平台入口是手写薄指针，
+            # 含唯一的 5 层嵌套资产 agents/openai.yaml。
+            ('.codex/skills/research/SKILL.md', 'Codex default skill'),
+            ('.codex/skills/research/agents/openai.yaml', 'Codex default skill asset'),
+            ('.claude/skills/research/SKILL.md', 'Claude default skill'),
+            ('.pi/skills/research/SKILL.md', 'Pi default skill'),
+            ('.cursor/rules/research.mdc', 'Cursor default rule'),
         )
         records = {entry['path']: entry for entry in self.receipt()['files']}
         for relative, label in default_skills:

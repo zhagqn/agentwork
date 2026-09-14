@@ -14,10 +14,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 INSTALLER = REPO_ROOT / 'install-tool.py'
 TOOLS_ROOT = REPO_ROOT / '.agentwork/tools'
 REGISTRY = TOOLS_ROOT / 'registry.json'
-PI_OPTIONAL_TOOLS = ('browser', 'research', 'codegraph')
+# research 已提升为 bootstrap 默认能力，不再属于可选工具。
+PI_OPTIONAL_TOOLS = ('browser', 'codegraph')
 PI_SKILL_REFERENCES = {
     'browser': '../../../.shared/skills/browser/SKILL.md',
-    'research': '../../../.shared/skills/research/SKILL.md',
     'codegraph': '../../../.shared/mcp/codegraph.md',
 }
 PI_PATH = shutil.which('pi')
@@ -167,6 +167,17 @@ class PiOptionalToolSurfaceTest(unittest.TestCase):
                 )
 
         self.assertEqual(load_manifest('codegraph')['kind'], ['mcp', 'skill'])
+        self.assertNotIn('research', {item['name'] for item in registry['tools']})
+
+    def test_research_pi_entry_is_a_bootstrap_default_capability(self) -> None:
+        """research 的 Pi 入口由 bootstrap 分发，不再经 registry 或 tool 收据。"""
+        skill = REPO_ROOT / '.agentwork/bootstrap/pi/skills/research/SKILL.md'
+        self.assertTrue(skill.is_file())
+        content = skill.read_text(encoding='utf-8')
+        self.assertIn('name: research', content)
+        self.assertIn('description:', content)
+        self.assertIn('../../../.shared/skills/research/SKILL.md', content)
+        self.assertFalse((TOOLS_ROOT / 'research').exists())
 
     def test_install_reinstall_uninstall_and_restore_are_exact(self) -> None:
         staged_before = self.staged_hash()

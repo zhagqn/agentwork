@@ -93,6 +93,12 @@ DEFAULT_SKILL_ENTRIES = (
     (BOOTSTRAP / 'claude' / 'skills' / 'anydoc' / 'SKILL.md', Path('.claude/skills/anydoc/SKILL.md'), 'Claude default skill'),
     (BOOTSTRAP / 'pi' / 'skills' / 'anydoc' / 'SKILL.md', Path('.pi/skills/anydoc/SKILL.md'), 'Pi default skill'),
     (BOOTSTRAP / 'cursor' / 'rules' / 'anydoc.mdc', Path('.cursor/rules/anydoc.mdc'), 'Cursor default rule'),
+    # research 的平台入口是手写薄指针，三个平台各有差异，不由渲染器派生。
+    (BOOTSTRAP / 'codex' / 'skills' / 'research' / 'SKILL.md', Path('.codex/skills/research/SKILL.md'), 'Codex default skill'),
+    (BOOTSTRAP / 'codex' / 'skills' / 'research' / 'agents' / 'openai.yaml', Path('.codex/skills/research/agents/openai.yaml'), 'Codex default skill asset'),
+    (BOOTSTRAP / 'claude' / 'skills' / 'research' / 'SKILL.md', Path('.claude/skills/research/SKILL.md'), 'Claude default skill'),
+    (BOOTSTRAP / 'pi' / 'skills' / 'research' / 'SKILL.md', Path('.pi/skills/research/SKILL.md'), 'Pi default skill'),
+    (BOOTSTRAP / 'cursor' / 'rules' / 'research.mdc', Path('.cursor/rules/research.mdc'), 'Cursor default rule'),
 )
 
 
