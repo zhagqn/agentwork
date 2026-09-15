@@ -10,6 +10,9 @@
 - 来源优先级：
   1. 显式传入的 `plan-source`
   2. 最新的 `.tmp/agentwork/brain/*.md`
+
+「最新」由 `.shared/scripts/agentwork-check.py latest brain` 判定，不按修改时间手选：只有符合 `YYYYMMDD-HHMM-slug.md` 的工件参与，最新时间戳存在多个候选时报 `ambiguous_latest` 并要求显式指定。完整规则见 `.shared/scripts/README.md`。
+
 - 输出：`.tmp/agentwork/plan/{YYYYMMDD-HHMM-slug}.md`
 - 使用模板：`.shared/templates/plan.md`
 - `/plan` 只把已确认设计拆成任务，不代表可以开始修改源码；真正执行需明确的当前执行意图，例如 `/exec`、`/case exec` 或“按已确认计划，现在开始修改”

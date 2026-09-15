@@ -47,6 +47,8 @@ Case 管理与推进命令。
 2. 最新的 `.tmp/agentwork/plan/*.md`
 3. 最新的 `.tmp/agentwork/brain/*.md`
 
+上述两项的「最新」由 `.shared/scripts/agentwork-check.py latest plan|brain` 判定，不按修改时间手选：只有符合 `YYYYMMDD-HHMM-slug.md` 的工件参与，最新时间戳存在多个候选时报 `ambiguous_latest` 并要求显式指定。完整规则见 `.shared/scripts/README.md`。
+
 `[plan-source]` 可为 brain note、plan note 或其他明确文本工件；不要自动读取旧 Case，也不要从未确认讨论中推断已选方案。
 
 ### 写入内容

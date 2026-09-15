@@ -197,7 +197,7 @@
     },
     {
       "path": ".shared/commands/case.md",
-      "sha256": "c7c9fa8af7853d5fc8543ab06e86e5118f5d829396d7dd757d7c51913f8aad19",
+      "sha256": "3654495a4f71f81868ef25b6f4d7dc3c59abbd2b4fc383e78b8654a2adaaf780",
       "type": "file"
     },
     {
@@ -207,17 +207,17 @@
     },
     {
       "path": ".shared/commands/exec.md",
-      "sha256": "93b66f4d9c7588f4ee7227a5ac924d713447ea33cb77bb1c52268605210edc03",
+      "sha256": "a511b22ee94d2943287acfe94d85b41b919c3539df2dee21fd8c15f29bfc9d92",
       "type": "file"
     },
     {
       "path": ".shared/commands/plan.md",
-      "sha256": "4d7dd8b3f133ea2b5429ca0118e8698bab24f03f3dc90495d64bdeba36024a38",
+      "sha256": "ef75c48d852b1ebed1da1fa7066388823b1537a3a35dab8aab99abec893f2f6e",
       "type": "file"
     },
     {
       "path": ".shared/commands/review.md",
-      "sha256": "2cdeb7edddcaec8396a6f6845dee4cd21a5a94290815e6035a1924dee7a3f496",
+      "sha256": "bc5c1d9c85bd902e33a5037bc05579747903f4802d8b7f80f6a6afcd39abd718",
       "type": "file"
     },
     {
@@ -262,7 +262,7 @@
     },
     {
       "path": ".shared/scripts/README.md",
-      "sha256": "f2ed113e858896bc0d025dcb17832f72e6bde39351dc4adf4199a3954d1b11a3",
+      "sha256": "092a217781246f597e2b620183fe625576ffe6c126ec2bf2a49c256336419920",
       "type": "file"
     },
     {

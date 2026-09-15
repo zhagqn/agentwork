@@ -17,6 +17,9 @@
 - 来源优先级：
   1. 显式传入的 `exec-source`
   2. 最新的 `.tmp/agentwork/plan/*.md`
+
+「最新」由 `.shared/scripts/agentwork-check.py latest plan` 判定，不按修改时间手选：只有符合 `YYYYMMDD-HHMM-slug.md` 的工件参与，最新时间戳存在多个候选时报 `ambiguous_latest` 并要求显式指定。完整规则见 `.shared/scripts/README.md`。
+
 - 执行后：更新 plan 文件中的任务状态与执行记录
 
 ## 执行策略

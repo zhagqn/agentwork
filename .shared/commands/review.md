@@ -58,6 +58,9 @@
 - 来源优先级：
   1. 显式传入的 `review-source`
   2. 最新的 `.tmp/agentwork/plan/*.md`
+
+「最新」由 `.shared/scripts/agentwork-check.py latest plan` 判定，不按修改时间手选：只有符合 `YYYYMMDD-HHMM-slug.md` 的工件参与，最新时间戳存在多个候选时报 `ambiguous_latest` 并要求显式指定。完整规则见 `.shared/scripts/README.md`。
+
 - 结果：写入 `.tmp/agentwork/review/{YYYYMMDD-HHMM-slug}.md`
 - 使用模板：`.shared/templates/review.md`
 - 写入后运行 `.shared/scripts/agentwork-check.py review <review-note>`；若该 review 要作为“无阻塞问题”的完成 gate，再运行 `.shared/scripts/agentwork-check.py review <review-note> --fail-on-major`
