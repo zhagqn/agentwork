@@ -72,7 +72,6 @@
 - 提交: `adb75e6` | 范围: `.agentwork/tests/`、Cursor renderer / canonical / 自承载入口 | 验证: 四平台正文与固定集合、安装态检查及 Cursor frontmatter 修复；Codex 0.154.0 实际安装与双路径发现，Pi 0.84.4 / 0.85.1 各 14 项通过。静态契约与运行时发现分开验收，Claude / Cursor 运行时仍留待办
 - 提交: `3a6ed5c` | 范围: `install-bootstrap.py`、`.agentwork/bootstrap/`、`.codex/`、相关文档 | 验证: 默认子代理不再生成或注册；旧收据及无收据摘要识别、用户改写保留、TOML 语义保护和回滚有覆盖，安装器 65 项通过；自承载旧文件与注册已清除
 - 提交: `4fde0d8` | 范围: `.agentwork/tests/test_octocode_mcp.py` | 验证: 子进程保持管道打开以验证不等待 EOF，消除短计时竞态；定向 4 项及最终全量 157 项全部通过、无跳过，self-test、renderer 与 diff 检查通过
-- 历史: 提交前阶段曾出现 Octocode 1 秒响应超时；相关测试修正已包含在上述独立批次。Codex 路径调查的临时证据及关键结论保留在关联工件、已确认结论与风险节。
 
 ## 风险 / 阻塞
 - Octocode 原测试的 1 秒响应 / 3 秒退出时序存在启动速度竞态，现改为子进程保持管道打开直到输入关闭，10 秒只作挂起保护。定向与最终全量通过；代理生产代码未变，本轮未验证远程 provider E2E。
