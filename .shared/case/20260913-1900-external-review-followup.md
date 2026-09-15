@@ -1,7 +1,7 @@
 # Case: 20260913-1900-external-review-followup
 
 > 创建: 2026-09-13 19:00 +08:00
-> 简述: 落实外部架构审查结论，按三批收口事务退出、工件选取、所有权与平台契约
+> 简述: 外部审查跟进已收口；新项目可初步引入，旧 research 按显式迁移流程升级
 
 ## 任务列表（按优先级）
 - [x] 第一批：补 `install-tool.py` 的 SystemExit 回滚与「第二次写入后抛错」回归
@@ -25,96 +25,78 @@
 - [x] 批次 4：评估后决定不做的三项，理由写入「关键决策 / 取舍」：归属视图、收据 envelope 统一、source repo 自身漂移门禁
 - [x] 划界：五平台契约矩阵留在兄弟 Case `20260912-2330-adapter-test-symmetry`（其 5 项中 4 项仍未完成，与本 Case 主题正交）
 - [x] 交叉验证三项未复核的 Important finding（三项均已复现；其中两项的修复属第二批）
+- [x] 完成审查 P1：消除旧 optional research 升级后 6 条双重所有权，覆盖旧版卸载与用户修改保护
+- [x] 完成审查 P2：明确 verify 的 source-only / 目标项目执行边界，目标项目不得调用未分发的测试和渲染器
+- [x] 完成审查 P2：verify 区分无 Case 与 latest 歧义/执行失败，失败不得静默跳过
+- [x] 完成审查 P2：命令文档显式引用统一 latest 选取契约，消除手选 mtime 歧义
 
 ## 已确认结论（工作快照）
 ### 目标
-- 按外部审查结论收口三类边界：默认选择与文件所有权分离、两安装器共享事务机制、自动选取工件建立发布契约。
+- 收口事务退出、工件选取、默认能力分发与文件所有权，并验证初步引入项目不会误覆盖或误删除用户文件。
 ### 边界
-- In Scope: `install-bootstrap.py`、`install-tool.py`、`.agentwork/bootstrap/*`（含 `render_bootstrap.py`、`spec.json`）、`.agentwork/tools/registry.json`、`.agentwork/tools/research/*`、`.shared/scripts/*`、`.agentwork/tests/*`、以及 `.shared/commands` 与 `patterns` 的文档单源改造。
-- Out of Scope: CI、发布、打包分发；高风险操作强制拦截；`.shared/` 目录结构调整；把审查包内设计模型直接替换现有安装器；把 Exa / Octocode 一并提升为默认能力（二者仍为 registry-only provider）；research 正文方法论改写；routing 评测 gate 本身的实现。
+- In Scope: 两安装器、bootstrap 渲染与默认能力、registry、research 迁移、相关测试、共享命令/脚本及本 Case。
+- Out of Scope: CI、发布打包、真实五平台发现能力验收、research routing gate 实现、Exa/Octocode 提升为默认能力。
+- 五平台契约矩阵继续留在关联兄弟 Case；本轮未加载其内容，也不改动其已有工作区修改。
 ### 约束
-- 审查包内 12 条 ownership、10 条 resolver、4 条 schema 测试是参考模型，不是补丁。落地需自行实现并验收，包内 README 已明确禁止直接替换。
-- 五阶段核心流程不是可停用的默认工具；anydoc、research 可作为默认能力，但默认选择不等于安装运行时依赖或写入凭据。
-- 命令约束按各命令特点定制，写入许可在可写流程里正向声明，不扩散禁令。
-- 临时目录命名与生命周期按各域用途区分，不做统一规范。
+- Git index 是用户边界；本轮不暂存、不提交。临时复现只写 .tmp/。
+- 外部审查包 12 条 ownership、10 条 resolver、4 条 schema 测试是参考模型，不得直接替换安装器。
+- 本轮由用户明确授权完成待办。真实历史工具装卸、删除与故障注入均仅针对自行创建的隔离夹具；不操作外部业务项目。
 ### 已选方案
-- 采用审查者的三批顺序，仅调整一处：`latest` 只落最小守卫（拒绝不符 `YYYYMMDD-HHMM-slug` 命名、遇歧义显式报错），不一次性实现完整发布协议。该守卫已在第一批落地，完整发布协议仍未做且暂不做。
-- 归属拆成两个可查询维度：声明来源与本次安装所有权，提供只读 `audit-ownership` / `explain <path>` 类入口。
-- 36 个未入收据文件按三类分别处置，不整体补进 bootstrap 收据。
-- research 与 anydoc 统一为 bootstrap 默认能力：两者均由 bootstrap 收据认领、均不在 registry、均无 tool 收据，共用同一条分发通道与同一套所有权证据。
-- 两者的**投影方式不同，不可套用同一模型**（实测）：anydoc 的 3 份平台文件与 canonical 逐字节相同（`2aecb3c655fd`），是派生物，须继续由渲染器生成；research 的 5 份是手写薄入口，共三种互不相同的变体（codex 与 claude 同为 592B `cffe16b0922c`，pi 另有 770B 且 description 写「Pi task」，cursor 为 590B），均指回 85B/6356B 的 canonical。故 research 走**静态文件**放入 BOOTSTRAP 由 `DEFAULT_SKILL_ENTRIES` 拾取，渲染器不碰。依据是 BOOTSTRAP 树已有静态文件先例：39 个文件中 6 个不在渲染列表（`README.md`、`spec.json`、`render_bootstrap.py` 属输入，`data/*.block.md`、`opencode/.gitignore` 属手写内容）。代价是这 5 份不受 `render --check` 漂移保护，与既有 `data/*.block.md` 同等待遇。
+- anydoc、research 均作为 bootstrap 默认能力分发；Exa/Octocode 保持 registry-only。默认规则分发不代表安装运行时、写凭据、修改 MCP 配置或通过 routing stable gate。
+- anydoc 为 canonical 正文的渲染派生物；research 为静态薄入口，5 条 DEFAULT_SKILL_ENTRIES 加 1 条 core shared canonical，共 6 个目标文件。
+- research evals 放在 source-only 的 .agentwork/evals/research/，不进入目标收据。
+- latest 按 YYYYMMDD-HHMM-slug.md 文件名时间戳选择，不合命名者排除，最新同戳歧义必须报错；未引入完整发布协议。
+- 完成审查结论：四项待办已闭环；当前验证范围内未发现阻塞初步引入的破坏性问题。全新项目可使用；旧 optional research 必须先由仍支持该工具的旧源码正常卸载，再运行当前 bootstrap。不可自动绕过冲突或仅删除收据。
 ### 关键决策 / 取舍（可选）
-- `install-tool.py` 的 `run_transaction` 回滚阶段，catch 元组保留 `KeyboardInterrupt` 与 `SystemExit`，与 `install-bootstrap.py:902` 对称：回滚期收到中断时记录为 rollback_error 并继续尽力回滚，优于半写状态逃逸，属有明确事务边界依据的防御，勿以「捕获过宽」为由收窄。
-- `.shared/scripts/verify.sh` 不使用 `set -e`：该入口的价值在于跑完四项门禁并报出全部失败项，`set -e` 会让首个失败掩盖其余结果。
-- 「统一 catalog 会新增两安装器耦合」这一保留意见已撤回。实测 `install-bootstrap.py:305-335` 的 `collect_optional_shared_relpaths()` 本来就读 registry 与每个 `tool.json`，缺 entry 直接 SystemExit，耦合早已隐式存在，显式化成本低于原估计。
-- 29 个可选工具投影虽与规范源逐字节一致，但内容相同不构成认领许可，只能在显式自举对账操作中建立收据。
-- 5 个项目数据文件（三个 Case、`project/agentwork.md`、`.gitkeep`）只做分类可见，不纳入刷新所有权，否则升级会覆盖本地任务数据。
-- anydoc 归属方向已反转：外部审查原写「纳入 registry 迁移为 `tool:anydoc`」，实测证明该方向会重新制造双所有权。bootstrap 收据 claim 全部 5 条 anydoc 路径且摘要全部匹配磁盘，孤儿 tool 收据 claim 同样 5 条但摘要全部过期；anydoc 不在 registry、无工具目录，`install-tool.py install/uninstall anydoc` 均报 `Unknown tool` rc=1，该收据任何代码路径都不可达。它是 `33adeab` 迁移时手写并一起提交的残留物（`git log` 显示只有这一笔历史），正确动作是删除而非复活。
-- 分发通道的分流开关是 `collect_optional_shared_relpaths()`：排除集由 registry 派生，现含 `skills/research/SKILL.md` 而不含 anydoc。research 摘出 registry 后 core sweep 会自动接管 `.shared/skills/research/SKILL.md`，无需显式登记。
-- evals 落点选 `.agentwork/bootstrap/research/evals/` 已排除两处风险：`render_bootstrap.py:720-728` 的 `--check` 只遍历 rendered 列表比对磁盘，不反向枚举 BOOTSTRAP 找多余文件；bootstrap 全仓仅两处 rglob 且都在 `.shared` 上，BOOTSTRAP 树一律显式路径消费，故放入其中的文件天然保持 source-only。
+- run_transaction 回滚阶段保留 Exception、KeyboardInterrupt、SystemExit：中断时继续尽力恢复并报告残留路径，具有事务边界依据。
+- verify 不使用 set -e，以便汇总全部失败；但 latest 失败不得因此变成成功跳过。
+- anydoc 孤儿 tool 收据已删：历史五条摘要均过期，bootstrap 的同五条匹配磁盘，tool 通道不可达。该结论只针对当时 source repo，不推及外部旧 research 收据。
+- 不做收据 envelope 统一：两安装器不读对方收据，纯形态统一收益低。当前旧 research 跨通道迁移仍必须解决所有权交接，不能用此取舍排除。
+- 不新增通用 audit-ownership/explain 查询入口；历史“模型已经无交集”的论据已被旧项目复现推翻，需保留迁移交叉收据验证。
+- 未新增 source repo 自身漂移自动门禁；现有 render --check 只覆盖渲染输出，不能替代静态 research 投影与所有目标安装态的比较。
+- 保留 renderer canonical 缺失时回退首个 mirror，外部 bootstrap checkout 与夹具依赖其自包含行为。
+- 29 个可选工具投影即使逐字节相同也不自动构成 tool 所有权许可；项目 Case、project 文档和 .gitkeep 属项目数据，不纳入刷新所有权。
+- “统一 catalog 新增耦合”意见已撤回：collect_optional_shared_relpaths 本已读取 registry/manifest，耦合既存。
 
 ## 计划摘要（可选）
-### 关键文件 / 边界（已闭环）
-- `install-tool.py:656,661`：事务已补捕 `SystemExit`（含回滚阶段），与 `install-bootstrap.py:897,902` 对称。`fail()` 仍是 `raise SystemExit`（`:55-56`），不改语义。
-- `.shared/scripts/agentwork-check.py:320-349,917-944`：latest 改为按文件名 `YYYYMMDD-HHMM` 选取并显式拒绝同戳歧义；不再有 `kind == 'case'` 的 README.md 特例（命名规则已隐含排除）。
-- `.shared/scripts/case-review.sh:22-38`：删除独立 mtime 选取，改调统一 latest 入口；只捕获 stdout，stderr 透传。
-### 关键文件 / 边界（仍开放）
-- `install-bootstrap.py:91-96,359`：`DEFAULT_SKILL_ENTRIES` 是 `(src, dst, label)` 平铺元组、消费处硬编码 `'file'`。anydoc 4 条均单文件；research 有 6 个待装文件跨 5 个面，需新增 5 条（shared 那条由 core sweep 接管），总数 4 → 9。
-- `.agentwork/bootstrap/spec.json` 的 `default_capabilities` 与 `render_bootstrap.py:432-474,486` 已闭环：扇出改数据驱动，cursor 规则正文由 `render_capability_rule()` 生成，`safe_spec_relpath()` 拒绝绝对路径与 `..` 穿越。canonical 缺失时回退首个 mirror 的自包含行为保留（外部 bootstrap checkout 与测试夹具依赖它）。
-- `.agentwork/tests/test_research_routing_contract.py:17-19,50-123`：`ROUTING_CASES` 与 README 断言都从 `TOOLS_ROOT/research` 读，`STACK` 含 research 且断言其 registry 成员身份与 manifest 形态；共 23 处引用，删目录即破。
-- `.agentwork/tests/test_pi_optional_tools.py:17-20`、`test_install_bootstrap.py:131-134`：前者 `PI_OPTIONAL_TOOLS` 含 research，后者显式列 4 条默认 skill。
-- `.agentwork/bootstrap/spec.json` `.common.basic_items[11]`：anydoc 默认能力文案的单一来源，渲染进 `AGENTS.md`、`.claude/CLAUDE.md`、`.cursor/rules/agentwork-bootstrap.mdc`。
-- `install-tool.py:571` 早于 `:582` 的 action 分支：旧 receipt 路径退役会同时阻断 install 与 uninstall（行号本轮已复核仍准确）。属遗留未排期项。
-- `install-tool.py:95-137`：完全未读取或校验 `registry["schema_version"]`；全文该字段出现 0 次。属遗留未排期项。
-- `.shared/scripts/agentwork-check.py`：`check_plan` 只校验形态，不判断内容是否已确认；latest 守卫只保证选中对象稳定，不保证其内容可用。
+### 关键文件 / 边界
+- install-tool.py：SystemExit 回滚、registry schema_version 校验、退役 receipt 路径只阻断 install；卸载继续校验路径、symlink 与摘要。
+- install-bootstrap.py：DEFAULT_SKILL_ENTRIES 为 9 条；core sweep 排除 registry optional 路径与 source-only verify。preflight 在存在性及内容判断前检查全部 tool 收据交集，已有 core 收据也不能绕过；不可解析、越界或 symlink 收据停止安装。
+- .agentwork/bootstrap/spec.json 与 render_bootstrap.py：默认能力扇出数据驱动、路径边界校验、重复目标保护；research 静态入口不在 render --check 覆盖内。
+- .shared/scripts/agentwork-check.py 与 case-review.sh：共用 latest resolver；形态校验不证明工件内容已确认。
+- .shared/scripts/verify.sh：仅 source repo 可运行且不再分发；无 Case 允许跳过，歧义/执行失败计入失败汇总。旧目标副本仅在历史 bootstrap 摘要匹配时事务退役；用户修改保留。
 ### 执行批次 / 优先级
-- 已完成的第一批（事务退出、latest 选取）保持闭环。后续按「机制 → 测试 → 文档」排序：批次 1 先落分发机制，因为测试要针对它断言；批次 2 紧随对齐测试，它是后续一切的门禁；批次 3 文档最后，它描述的是完工形态。
-- 遗留未排期项（schema_version 校验、旧 receipt 退役顺序、归属视图、envelope 统一、`verify` 入口、自身漂移门禁）在本次迁移完成后再排，避免为即将变动的所有权模型先堆断言。
+- 已提交批次保留；本轮在已有工作区修复上补齐所有权阻断、可执行迁移指引、门禁回归、source-only 退役与文档，四项全部完成。
+- 当前实现和 Case 改动尚未提交；未触碰 staged，未改变兄弟 Case 的已有修改。
 ### 执行策略（可选）
 - standard
 ### 验证策略
-- 每批后运行 `python3 -m unittest discover -s .agentwork/tests -p 'test_*.py'`，当前基线为 133 条运行、OK、1 因无 Pi 跳过（第一批新增 3 条，原基线 130）。
-- 运行 `python3 .agentwork/bootstrap/render_bootstrap.py --check` 与 `python3 .shared/scripts/agentwork-check.py self-test`。
-- 批次 1 须实测：core sweep 自动带上 `.shared/skills/research/SKILL.md`；bootstrap 收据 claim research 全部 6 条路径且摘要匹配；`install-tool.py list` 不再含 research；`install-tool.py install research` 报 `Unknown tool`；隔离目标项目全新 bootstrap 后 research 五面入口齐全且 5 层嵌套的 `agents/openai.yaml` 未丢失。
-- 批次 3 后重跑 `install-bootstrap.py -p .` 自承载刷新，确认幂等且零漂移。
-- 渲染器改动必须有产物层对照，不只看测试通过。
-- 遗留项验收须覆盖真实五路径状态、用户改写、部分缺失、重复迁移、默认包增减、卸载后 bootstrap 同步、manifest 退役路径、未来 schema 拒绝、中途失败回滚，不得只证明 fresh install 成功。
+- 当前回归基线：148 项运行、OK、1 因无 Pi 跳过；workflow self-test、render --check、当前 Case strict-flow。额外补验旧 verify 退役后收据写入失败的全树回滚。
+- 迁移须覆盖旧工具真实安装、bootstrap 升级、重复升级、修改/缺失目标、旧收据退役、旧版卸载，不能只证明 fresh install。
+- verify 须覆盖源仓与全新目标项目、无 Case、唯一 Case、最新同戳歧义、checker 执行失败、多项失败聚合。
+- 全新项目应保留业务文件、LICENSE、.env，重复安装逐字节幂等，用户改动受管文件时在写入前拒绝。
 ### 完成标准（可选）
-- 三批任务各自通过上述验收；未闭环项以显式风险留存，不以形态检查通过替代语义结论。
+- 四项 P1/P2 均以实现、回归及隔离迁移实测闭环；初步引入验收通过。真实平台发现与 research routing stable gate 不在此次验收范围。
 
 ## 关联工件（可选）
 - 外部审查报告：`.tmp/review-package/agentwork-review/agentwork-review.md`
-- 审查证据与复现脚本：`.tmp/review-package/agentwork-review/`（inventory、experiments、proposed_contracts、migration_probe、mutation_probe）
-- 本地 review note：`.tmp/agentwork/review/20260913-1842-review-package.md`
-- 本次方向调整 plan note：`.tmp/agentwork/plan/20260914-1227-research-anydoc-default-capability.md`（本 Case 当前批次的 plan-source）
-- 前一版仅处理 anydoc 归属的 plan note：`.tmp/agentwork/plan/20260914-1132-iteration-direction-adjustment.md`（已被上者取代）
-- 兄弟 Case（五平台测试对称化）：`.shared/case/20260912-2330-adapter-test-symmetry.md`
+- 审查证据与复现脚本：`.tmp/review-package/agentwork-review/`
+- 本地原 review note：`.tmp/agentwork/review/20260913-1842-review-package.md`
+- 当前方向 plan-source：`.tmp/agentwork/plan/20260914-1227-research-anydoc-default-capability.md`
+- 已取代的 anydoc 单项 plan：`.tmp/agentwork/plan/20260914-1132-iteration-direction-adjustment.md`
+- 兄弟 Case：`.shared/case/20260912-2330-adapter-test-symmetry.md`（本轮未加载）
+- 修复前复现：`.tmp/case-review-followup/probe.py`（旧行为证据，不用于验证修复后结果）。
+- 修复后历史工具迁移验证：`.tmp/case-review-followup/migration-check.py`，本轮夹具 `.tmp/migration-check-5ge5scep/`；依赖原 probe 提取的 6141a1f 父提交工具源码。
 
 ## 当前批次工作集（可选）
-- 范围: `.agentwork/bootstrap/spec.json` | 主题: 新增 default_capabilities 数据表，承载 canonical / mirror_to / cursor_rule
-- 范围: `.agentwork/bootstrap/render_bootstrap.py` | 主题: 默认能力扇出改数据驱动，cursor 规则正文脱离字面量
-- 范围: `.agentwork/bootstrap/codex/skills/research/`, `.agentwork/bootstrap/claude/skills/research/`, `.agentwork/bootstrap/pi/skills/research/` | 主题: research 三个 skill 平台入口迁入 bootstrap，作为静态文件由 DEFAULT_SKILL_ENTRIES 拾取
-- 范围: `.agentwork/bootstrap/cursor/rules/research.mdc` | 主题: research 的 Cursor 规则入口迁入 bootstrap
-- 范围: `.agentwork/evals/research/` | 主题: evals 契约迁出 tools 树，并承载 provisional 状态标记
-- 范围: `.agentwork/tools/registry.json` | 主题: 摘除 research 条目（10 → 9 个工具）
-- 范围: `install-bootstrap.py` | 主题: DEFAULT_SKILL_ENTRIES 4 → 9 条，含唯一 5 层嵌套资产
-- 范围: `.agentwork/tests/test_research_routing_contract.py` | 主题: 解除 registry 成员身份耦合，用例改验通道隔离，补 provider 未被提升负例
-- 范围: `.agentwork/tests/test_pi_optional_tools.py` | 主题: PI_OPTIONAL_TOOLS 摘除 research，Pi 入口断言移到默认能力侧
-- 范围: `.agentwork/tests/test_install_bootstrap.py` | 主题: 默认 skill 断言 4 → 9 条
-- 范围: `.agentwork/bootstrap/spec.json` | 主题: basic_items 增 research 默认能力文案（12 → 13 条）
-- 范围: `AGENTS.md`, `.claude/CLAUDE.md`, `.cursor/rules/agentwork-bootstrap.mdc` | 主题: 三处适配层渲染产物同步 research 文案
-- 范围: `.agentwork/bootstrap/root/AGENTS.md`, `.agentwork/bootstrap/claude/CLAUDE.md`, `.agentwork/bootstrap/cursor/rules/agentwork-bootstrap.mdc` | 主题: bootstrap 树内对应源产物同步
-- 范围: `README.md` | 主题: research 移出 optional packs、并入默认能力段并写明 provider 边界与 provisional 状态；安装示例改用 browser
-- 范围: `.agentwork/bootstrap/README.md` | 主题: 增 research 默认能力条目与默认能力的安装边界
-- 范围: `.shared/project/agentwork.md` | 主题: 六处 research/anydoc 表述更新，落地被删 README 的安装边界，更新「最近更新」
-- 范围: `.agentwork/tool-receipts/anydoc.json` | 主题: 删除孤儿收据（`33adeab` 手写残留）
-- 范围: `.agentwork/bootstrap-install-state.json` | 主题: 自承载刷新后的收据更新
-- 范围: `install-tool.py` | 主题: 补 registry schema_version 校验；退役 receipt 路径只阻断 install
-- 范围: `.agentwork/tests/test_install_tool.py` | 主题: 两条新回归（schema 五形态、退役路径不堵死 uninstall）
-- 范围: `.shared/scripts/verify.sh` | 主题: 本地门禁聚合入口（新增）
-- 范围: `.shared/case/20260913-1900-external-review-followup.md` | 主题: 本 Case 快照
+- 范围: `install-bootstrap.py`, `.agentwork/tests/test_install_bootstrap.py` | 主题: 收据交集预检、完整迁移验证与 source-only 退役
+- 范围: `.shared/scripts/verify.sh`, `.agentwork/tests/test_verify.py` | 主题: 门禁失败传播与 source-only 边界
+- 范围: `.shared/commands/`, `.shared/scripts/README.md`, `README.md`, `.shared/project/agentwork.md` | 主题: latest 统一规则、迁移指引与目标验证入口
+- 范围: `.agentwork/bootstrap-install-state.json` | 主题: 自承载刷新后的收据
+- 范围: `.shared/case/20260913-1900-external-review-followup.md` | 主题: 本轮实现及完成审查快照
 
 ## 产出批次（提交锚点）
+- 提交: `429b2c4, 7dc531f` | 范围: 安装器、门禁、相关测试、文档与 bootstrap 收据 | 验证: 148 项运行 / OK / 1 skipped；5 项聚合门禁回归、61 项 bootstrap 回归通过；实际历史 research 工具迁移、用户修改保护、重复安装与旧版再次卸载无改动；source-only 退役注入收据失败后全树恢复。自承载刷新、render --check 与 workflow self-test 通过。主题：bootstrap 安全边界与 latest 命令文档。
 - 提交: `d34da1f fix(installer): 校验 registry schema 并放行退役路径的卸载` | 范围: `install-tool.py`、`.agentwork/tests/test_install_tool.py` | 验证: `schema_version` 校验在仓库副本上验五种异常形态（缺失 / 999 / 字符串 / null / 列表）全部被拒、合法 registry 正常载入 9 工具。退役 receipt 路径的修复用真实场景验证：双文件工具装好后源端退役其一，install 仍 rc=1 且报出该路径，uninstall 改为 rc=0 且两个文件与收据全部清理——用户不再被困在既装不了也卸不掉的状态。放开的只是「路径是否在当前 manifest 内」这一条，`safe_target_path` 的 symlink 与越界防护、digest 校验对卸载路径仍生效。`test_install_tool.py` 38 → 40 用例全绿
 - 提交: `20292c1 feat(workflow): 新增本地门禁聚合入口` | 范围: `.shared/scripts/verify.sh` | 验证: 39 行，只串起四条既有门禁不新增检查逻辑。两条路径均实测：真实仓库全绿时 rc=0 且四项串齐（137 用例 OK、self-test、`render --check`、Case strict-flow），副本内注入渲染漂移与 Case 破形两处失败后 rc=1 且汇总同时指名两项，中间通过的 self-test 不受影响
 - 提交: `a9172a0 docs(research): 同步默认能力文档并清理孤儿收据` | 范围: `.agentwork/bootstrap/spec.json`、三处适配层及其 bootstrap 源产物、`README.md`、`.agentwork/bootstrap/README.md`、`.shared/project/agentwork.md`、`.agentwork/tool-receipts/anydoc.json`（删）、`.agentwork/bootstrap-install-state.json` | 验证: 批次 3 文档单源与清理。`spec.json` 增 research 文案（basic_items 12→13）后 `render --check` 如期报 4 处漂移，重渲染 + 自承载刷新后三处适配层均含该文案且 `--check` rc=0。孤儿收据删除前逐条取证：五条路径摘要全部 STALE，而 bootstrap 收据对同五条全部 CLAIMED+MATCH，且 anydoc 不在 registry、无工具目录、install/uninstall 均报 `Unknown tool`，故删除不丢有效所有权信息。空收据目录下四项行为复核正常：`install-tool.py list` rc=0 / 9 工具、隔离沙箱内 browser 装卸一轮 rc=0 且卸载后收据目录自动清理、自承载刷新 rc=0 且日志完全不提及 tool-receipts。全量 135 运行 / OK / 1 跳过；`self-test` rc=0
@@ -122,50 +104,39 @@
 - 提交: `5eeb97d refactor(bootstrap): 默认能力扇出改为数据驱动` | 范围: `.agentwork/bootstrap/spec.json`、`.agentwork/bootstrap/render_bootstrap.py` | 验证: 默认能力扇出改由 `spec.json` 的 `default_capabilities` 驱动，cursor 规则正文移出渲染器字面量（`grep '默认办公文档解析能力'` 归零）。`render_bootstrap.py --check` rc=0 零漂移、渲染产物仍为 36 个且 anydoc 4 个目标不变，证明纯机制重构、产物逐字节相同；新增 `validated_default_capabilities()` 的 9 个负例（缺键 / 空表 / 非法名 / 绝对路径 / `..` 穿越 / 空 mirror / 缺 rule 字段 / 空白正文 / 多余键）全部被拒；全量回归 133 运行 / OK / 1 跳过
 - 提交: `8a0fb7c fix(installer): 修复事务对 SystemExit 不回滚` | 范围: `install-tool.py`、`.agentwork/tests/test_install_tool.py` | 验证: `run_transaction` 补捕 SystemExit（含回滚阶段）；新增 `test_systemexit_after_second_write_rolls_back`，在改动前的安装器副本上复跑该用例确认失败（`"rolled back" does not match "after receipt write"`），修复后通过
 - 提交: `07fbdab fix(workflow): 统一 latest 工件选取规则` | 范围: `.shared/scripts/agentwork-check.py`、`.shared/scripts/case-review.sh`、`.agentwork/tests/test_workflow_review.py`、`.shared/scripts/README.md` | 验证: latest 改为按 `YYYYMMDD-HHMM` 文件名时间戳选取，同戳报 `ambiguous_latest` 并退出 1；`case-review.sh` 删除独立 mtime 选取改调该入口；改动前副本上复现旧行为（选中 `scratch-notes.md`、同戳静默兜底选 twin）；全量 `python3 -m unittest discover -s .agentwork/tests` 133 运行 / OK / 1 跳过，`agentwork-check.py self-test` 与 `render_bootstrap.py --check` 均 PASS
+- 历史: `2026-09-14 Case 快照同步` | 提交: `9d28b19`、`735e7e7`、`c050e95` | 范围: 本 Case；实现锚点保留于上列，本轮不回填自身提交。
 
 ## 风险 / 阻塞
-- 三个批次共 13 项全部完成。批次 1 与批次 2 作为单一原子单元一次落地（该组确实一次打红 5 个用例、跨 3 个文件，与预测一致），批次 3 独立一轮。当前无红测试、无双所有权窗口。
-- 遗留六项经取证后只做三项，另三项**评估后决定不做**，理由如下（不做不等于未发现，而是收益不抵负担）：
-  - 归属视图 `audit-ownership` / `explain <path>`：本轮迁移已把所有权收敛到单一来源——bootstrap 收据 claim 全部默认能力，registry 管 optional tool，两者不重叠且实测无交集。再建只读查询入口是为已清晰的模型加壳；真需查证时 `git ls-files` 加两条 grep 即可。
-  - 收据 envelope 统一：两安装器的 `{schema_version, files:list}` 与 `{version, files:dict}` 确实不对称，但它们从不读对方的收据，不对称不产生实际后果。统一需写兼容读入与退役协议，是全部候选项里最重的一项，收益仅为「形态一致」。纯内部使用场景下更应跳过。
-  - source repo 自身漂移门禁：现有 `--check` 已覆盖渲染产物漂移，缺口仅在 source repo 自身；而该场景在每轮 `/review` 与新增的 `verify.sh` 中都会被实际跑到，补测试等于给已被流程覆盖的场景加自动化。
-- 兄弟 Case `20260912-2330-adapter-test-symmetry` 只部分过期，不整体吸收：其任务 3（`render_bootstrap.py --check` 接入确定性测试）**已由 `1e6beb1` 完成**，`test_install_bootstrap.py:626` 覆盖 clean / missing / drift / unknown 四场景；任务 1、2、4、5 仍未完成（实测「预期集合」断言模式只有 Pi 有 `EXPECTED_PI_COMMANDS`，Claude 6 / Codex 7 / OpenCode 6 / Cursor 2 个渲染目标均无对应断言；`.agents/` 不存在）。该四项范围在 `.agentwork/tests/` 的平台适配断言，与本 Case 的所有权/分发主题正交，留在兄弟 Case。兄弟 Case 另有两处陈述已失真需其自行更正：「`--check` 未被任何测试或文档调用」为假，回归基线 130 现为 137。
-- evals 落点为 `.agentwork/evals/research/`，偏离原计划的 `.agentwork/bootstrap/research/evals/`。理由是 BOOTSTRAP 语义为「待分发」，放其外让「永不分发」成为结构事实。依据是实测而非推断：仓库副本内 `install-bootstrap.py -p .` rc=0、刷新后 `render --check` rc=0、收据 64 条含 6 条 research 且 `.agentwork/` 前缀 0 条，说明 bootstrap 从不认领 `.agentwork/` 下任何路径。（推进过程中我曾编造过一个不存在的 `managed_agentwork_relpaths()` 对账机制并据此声称该落点会致 rc=8 冲突；该函数在工作区与 HEAD 中均不存在，结论已被上述实测推翻，勿再引用。）
-- 被删 `tools/research/README.md` 的内容已全部安置，无信息滞留于 git 历史：`- provisional` 标记入 `.agentwork/evals/research/README.md` 的「当前状态」区（测试断言改指该处）；「单一入口」与「安全边界」由 canonical SKILL.md 对应章节覆盖；安装边界（不装 MCP/CLI/二进制、不创建或修改 `.env`、不改平台 MCP 私有配置、不发送私有资料或凭据）已在批次 3 写入 `project/agentwork.md:48`、`.agentwork/bootstrap/README.md` 与 `README.md` 的默认能力段。
-- 两项 Important finding 已复现但未修，属第二批：registry `schema_version` 五种异常形态（缺失 / 999 / 字符串 / null / 列表）全部被接受并载入 10 个工具；旧 receipt 路径退役在 `install-tool.py:571` 早于 `:582` 的 action 分支，install 与 uninstall 同时被阻断。第三项（两条 latest 路径都选中不合命名草稿）已在第一批修复。
-- 命令文档与 latest 实际规则存在漂移：`.shared/commands/plan.md:12`、`case.md:47-48`、`exec.md:19`、`review.md:60` 只写「最新的 `.tmp/agentwork/*/*.md`」，未说明按文件名时间戳选取、命名不合规不参与、同戳报错。助手若照字面按修改时间手选，会与 `agentwork-check.py` 得出不同结论——正是本轮消除的「两套并行规则」同类风险。属第三批文档单源任务，本轮未改。
-- latest 收紧带来两处可见行为变化，接力前需知悉：`.tmp/agentwork/*` 中 5 个命名不合规的历史工件（`brain/20260511-arch-static-site-refactor.md`、`plan/20260906-external-review-fixes.md`、`plan/20260906-second-audit-fixes.md`、`review/20260506-workflow-deep-review.md`、`review/20260909-adoption-fixes.md`）自此不再参与 latest 选取，需显式传路径；`agentwork-check.py latest` 与 `case-review.sh` 无参输出由绝对路径变为仓库相对路径（与 `case-review.sh` 改动前的历史输出一致）。
-- **需你确认的前提**：`research/README.md:7` 明确标 `- provisional：结构回归通过，等待现行内容与路由 gate 验证`，`test_research_routing_contract.py:115` 正在断言该标记存在；`project/agentwork.md:50` 又规定 routing contract 只有通过固定评测 gate 才可标 stable。把 provisional 能力提升为「所有项目默认获得」与该约束有张力。当前处理是保留 provisional 标记与 gate 要求，把「默认分发」与「契约 stable」当作两件事（anydoc 即先例：默认规则 + 运行时延迟安装 + hosted OCR 单独授权）。若要求先过 gate 再提升，本计划需整体后移。
-- 渲染器抽象化会触碰所有平台生成产物，`render --check` 是唯一护栏，改动期间须每步验证。
-- `.codex/skills/research/agents/openai.yaml` 是 5 层路径，比收据中现存最深的 4 层更深一级，`DEFAULT_SKILL_ENTRIES` 单文件模型对它是新场景，易漏。机制上 `install-bootstrap.py:147,583` 会自动建中间目录，风险低但需实测。
-- 删除 `.agentwork/tools/research/` 属删目录操作，且会一并移除 `INSTALL.md`、`README.md`；须先确认 evals 新家就位再删。
-- research 提升后，既有自承载项目重装会撞 ownership conflict（已实测：有文件无收据时报 `ownership conflict (unmanaged file)` rc=1）。冲突面由 tool 侧转到 bootstrap 侧，需在批次 1 验证既有项目升级路径。
-- 第一批实现改动与 Case 快照已全部提交（`8a0fb7c`、`07fbdab`、`9d28b19`），工作区干净。
-- 平台发现类结论双方均未在本轮确认：外部审查容器无任何 CLI，我方观测未获第二方复核。`.codex/skills` 在 codex-cli 0.154.0 有效这一结论未被推翻但也未被独立确认。
-- 我此前六处断言经复核为错，已在结论中更正：`.shared` 应为 61/36 而非 63/38（多算 3 个 `.pyc`）；Pi 无 95 条正文断言（44 assert / 8 tests，95 系提及数，另一口径为 64）；Pi 有离线 RPC `get_commands` 列举途径；审查记录非硬限 3 条；`--check` 自 `1e6beb1` 起已被测试与文档调用；OpenCode 与 Cursor 有通用 manifest 投影覆盖。引用旧结论前须核对本条。
-- `.git/index` 时间已为 16:41:18，无法重建旧 index 状态，故此前 staged 数量时间线的证据强度低于原陈述。Git 提交历史不是 index 历史。
-- 无 CI，所有检查依赖本地入口被实际执行；第三批的 `verify` 聚合入口未落地前该风险持续。
+- 无未闭环的本轮 P1/P2。旧 research 采取阻断式迁移，不自动清理收据；须使用原来支持 research 的旧源码正常卸载。当前工具报 Unknown tool 是既定边界，README 已给正确步骤。
+- 修改过的受管文件须先备份并核对；旧卸载与新安装都会拒绝直接覆盖/删除。缺少旧源码或不能确认所有权时需人工对账，不能宣称任意旧项目可无操作自动升级。
+- 不可解析或 symlink tool 收据阻断 bootstrap，即使当前看不到交集；这是无法证明所有权安全时的保守失败。修复收据后可重试，失败前目标不变。
+- 旧 verify 的未修改副本按历史收据摘要退役；用户改写、无收据、symlink 副本保留并报告。目标项目使用 agentwork-check.py 的 self-test 和显式工件检查。
+- research 仍为 provisional；真实五平台发现与 routing stable gate 未运行，不给全平台 stable 承诺。无 CI，门禁仍需实际执行。
+- 低优先级既有工具缺口：case-review.sh 无范围条目时 fallback 会把反引号 token 当路径，仍不属本轮四项待办；当前规范工作集不触发。WRAPPER_NAME_PATTERN 名称偏窄但约束正确，未扩散重命名。
+- latest 兼容变化保留：不合命名历史工件需显式路径；输出为仓库相对路径。只有最新时间戳多候选时报歧义，四个命令文档与统一入口对齐。
+- 历史纠错保留：.shared 数量为 61/36；Pi 95 为提及数；Pi 有离线 RPC get_commands；审查不硬限 3 条；render --check 已被测试/文档调用；OpenCode/Cursor 有通用 manifest 覆盖。不存在 managed_agentwork_relpaths 函数，Git 历史不能重建 index 时间线；旧精确证据见本 Case 历史及外审工件。
+- 保留全部有效提交锚点与用户已有修改；本轮 working tree 未提交、staged 未更改。兄弟 Case 未加载、未编辑。
 
 ## 审查记录
+### 2026-09-14 23:59 +08:00
+- 变更：复审并完成四项待办；修正已有实现对缺失文件、已有 core 收据、损坏 tool 收据的漏检，将指引改为旧源码卸载；替换仅删收据的测试为真实 tool 装卸。verify 不再分发且旧匹配副本可事务退役；补完整门禁测试并同步四命令、README 与 project 约定。
+- 验证：完整 verify rc=0，148 项运行 / OK / 1 skipped，workflow self-test、render --check 通过；之后补验退役事务收据失败回滚，针对性测试通过。历史工具真实迁移、用户修改保护、旧版再次卸载无副作用、新项目业务文件/.env/LICENSE 保全与幂等性均通过。自承载已刷新；Case strict-flow、最终 render --check 与 git diff --check 通过。
+- 风险/待办：本轮四项完成，无阻塞初步引入的已知破坏性问题；迁移仍须遵循旧工具卸载前提，真实平台/runtime 与 routing gate 不在范围。未提交且 staged 未改。
+- 信息保留：保留此前失败复现、所有 7 个实现锚点、事务/迁移取舍和用户已补充的工作内容；当前工作集按此次实际修改恢复，旧审查按时间保留最近三次。
+
+### 2026-09-14 21:52 +08:00
+- 变更：完成审查未通过；登记旧 research 双所有权及旧版卸载破坏、目标项目 verify 不可运行、latest 歧义假绿、命令文档规则未接入。更新完成状态、最终决策、计划、工作集与风险；保留原有用户补充及全部 7 个行为提交锚点，将较早审查归入历史。
+- 验证：审阅 8a0fb7c 父提交至 HEAD 的相关实现 diff；case-review 取证确认实现已提交及孤儿工作集路径。沙箱外 verify rc=0，137 项 OK / 1 skipped，self-test 与 render --check 通过。隔离 probe 全部断言通过；目标项目 verify 实跑 rc=1。原样 latest 分支复现假绿，没有伪造全套 verify 运行结果。Case 编辑后 strict-flow 与 git diff --check 通过。
+- 风险/待办：四项 P1/P2 尚未修复；全新项目可有限试用，旧 research 项目暂不验收。真实平台 runtime 与 routing gate 未验证，不给全平台 stable 承诺。此次只修改 Case 与临时复现，不修改实现、不提交。
+- 信息保留检查：保留目标/边界、所有独立实现锚点、事务与所有权取舍、provisional 前提、迁移实证及历史纠错；移除已提交工作集与被推翻的“无交集”“文档已修”结论。
+
 ### 2026-09-14 21:15 +08:00
 - 变更：批次 3 与批次 4 落地后的双层 review。修掉两处我自己在 `verify.sh` 里引入的问题：头部注释写「任一失败即以其退出码结束」与实现矛盾（实际累积全部失败后统一 exit 1），已改为准确表述并说明不用 `set -e` 的理由；`run()` 捕获并 `return $status` 属死代码——三个调用点全用 `|| true` 消费，而脚本未开 `set -e` 那三个 `|| true` 本身也不必要，一并简化。脚本 43 → 39 行。
 - 验证：追审第二处安装器修复的安全边界，确认放开粒度正确——uninstall 跳过 manifest 归属检查后，`safe_target_path:176-180` 的 symlink 与越界防护、以及 `:572-576` 的 digest 校验均仍生效，故只会删内容与收据匹配的文件，用户改动过的文件仍被阻断（`test_modified_managed_file_blocks_update_and_uninstall` 钉住该行为）。`verify.sh` 简化后重验失败传播未退化：副本内注入渲染漂移 + Case 破形两处失败，rc=1 且汇总同时指名两项，中间通过的 self-test 不受影响。真实仓库跑完整 `verify.sh` rc=0，四项串齐。Case 声称数字全部复核为真：`test_install_tool` 40 用例、全量 137、`verify.sh` 39 行且可执行。
-- 风险/待办：本 Case 18 项已全部完成，无未勾选任务。改动未提交。
+- 风险/待办：当时任务已勾选完成；对应实现现已提交。本轮完成审查发现的新问题见当前风险段，此历史结论不再代表完成状态。
 - 保留决策：`verify.sh` 不使用 `set -e`——该脚本的价值正在于跑完四项并报出全部失败项，`set -e` 会让首个失败掩盖其余结果，与设计目标冲突。
 
-### 2026-09-14 19:30 +08:00
-- 变更：批次 1 与批次 2 共 9 项作为原子单元一次落地后的双层 review。修掉一处真实冗余：`test_research_routing_contract.py` 的 `research_targets` 构造用 `item.split("/", 1)[0]` 与 `[1]` 拼回原串，与直接前置点号等价，两次 split 纯属浪费，已简化为 `f'.{item}'`。修正 Case 中 evals 落点记录的依据表述。
-- 验证：内容保全逐字节取证——7 个迁移文件（含 5 层嵌套 `agents/openai.yaml`）全部与 HEAD 原路径相同；evals README 148→155 行，`固定输入` 之后正文逐字节未变，三处 Gate 定义与 provisional 标记均在。Case 声称的数字全部复核为真：registry 9 工具、排除集 18、`DEFAULT_SKILL_ENTRIES` 9 条（anydoc 4 + research 5，源文件全部存在）、`test_install_bootstrap` 默认 skill 9 条、`STACK` 残留 0。全量 135 运行 / OK / 1 跳过；`render --check` rc=0；`self-test` rc=0。
-- 风险/待办：批次 3 的 4 项未动。被删 `tools/research/README.md` 的安装边界仍只存于 git 历史，须在批次 3 落入 `project/agentwork.md` 与 `bootstrap/README.md`。
-- 保留决策：`safe_spec_relpath()` 与 `validate_rendered_paths()` 对绝对路径 / `..` 的检查存在部分重叠，但依 `coding-style.md`「输入格式校验尽量放在边界层」予以保留——前者在 spec 输入边界给出可定位的错误信息，后者是覆盖 wrapper、agent 等所有渲染目标的深层网，二者职责不同。`validated_default_capabilities()` 沿用 `validated_wrapper_specs()` 与 `load_env_keys()` 既有的精确键集校验风格，属一致性优先，不因表内暂只有一条而削减。
-- 已知瑕疵（未改）：`WRAPPER_NAME_PATTERN` 被借用于校验默认能力名。其约束（小写连字符标识符）对二者都正确，复用避免了重复常量，但名称语义偏窄；重命名会触碰本次范围外的既有调用，留作后续。
-
-### 2026-09-14 09:47 +08:00
-- 变更：完成本轮 Case 与工作产物双层 review。第一批实现保持当前意图，未发现新的 Critical、Important 或 Major 行为问题；将 Case 快照自身纳入当前批次工作集，并修正“仅在 working tree、未改动 staged 区”的过期状态描述。
-- 验证：`.shared/scripts/case-review.sh 20260913-1900-external-review-followup` 取证后无未覆盖实现路径；全量 `python3 -m unittest discover -s .agentwork/tests -p 'test_*.py'` 为 133 运行 / OK / 1 跳过；`agentwork-check.py self-test`、`render_bootstrap.py --check`、Case strict-flow 均通过。self-test 仅输出 fixture 中预期的重复提交锚点 warning。
-- 风险/待办：registry `schema_version` 校验、旧 receipt 路径退役、命令文档与 latest 规则单源化、第三批 `verify` 聚合入口和平台契约矩阵仍未落地。
-
-### 历史审查摘要（2026-09-13 19:00 ~ 2026-09-14 08:10）
-- 09-13 19:00 建 Case：保存外部审查结论与三批推进计划，记录六处自有断言更正（详见风险段），撤回「统一 catalog 会新增耦合」的保留意见（详见关键决策段），并把三项 Important finding 登记为待复现风险。争议数字均经独立复核。
-- 09-14 08:10 第一批落地：`install-tool.py` 事务补捕 `SystemExit`（`8a0fb7c`）、latest 统一为文件名时间戳选取并对同戳报 `ambiguous_latest`（`07fbdab`）。三项 finding 全部在隔离夹具复现（非推断），其中两项另在「改动前副本」上确认旧行为；新增回归亦在改动前安装器上确认会失败。该轮自修两处：`case-review.sh` 原用 `2>&1` 捕获会把未来任何 stderr 混入 Case 路径，改为只捕获 stdout；`ARTIFACT_NAME_RE` 的 `[^/]+` 对 `path.name` 冗余，简化为 `.+`。
-- 该阶段登记的三项待办均已闭环：`schema_version` 校验与旧 receipt 双向阻断在批次 4 修复，命令文档 latest 规则漂移在批次 3 修复。
+### 历史审查摘要（2026-09-13 19:00 ~ 2026-09-14 19:30）
+- 09-14 19:30 迁移 review：7 个迁移文件与原路径逐字节一致，evals 三 gate 与 provisional 标记保全；135 项 OK / 1 skipped，render 与 self-test 通过。保留 spec 输入校验与全局渲染路径检查，职责分别是边界报错与所有输出的安全约束；完整迁移提交锚点见产出批次。
+- 09-13 建 Case 保存三批计划与外审纠错；09-14 08:10 事务 SystemExit 与 latest 的旧行为已在夹具复现并修复。09:47 双层 review：133 项运行 / OK / 1 skipped，self-test、render --check、strict-flow 通过；修正当时 staged 状态表述。回滚与 latest 行为锚点保留于产出批次。
+- registry schema 与退役 receipt 双向阻断随后在批次 4 修复；命令文档 latest 单源化当时并未完成，现重新列入待办。
