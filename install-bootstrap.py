@@ -86,6 +86,10 @@ RECEIPT_REL = Path('.agentwork/bootstrap-install-state.json')
 SHA256_PATTERN = re.compile(r'^[0-9a-f]{64}$')
 COMMAND_NAME_PATTERN = re.compile(r'^[a-z0-9]+(?:-[a-z0-9]+)*$')
 
+# 只在 source repo 内有意义的共享文件：它们检查的对象（测试目录、渲染器）
+# 不随 bootstrap 分发，装到目标项目只会得到一个必然失败的入口。
+SOURCE_ONLY_SHARED_RELPATHS = frozenset({Path('scripts/verify.sh')})
+
 # Default capability skills are part of bootstrap. Their runtime packages stay
 # optional and are installed by the agent in the project only when needed.
 DEFAULT_SKILL_ENTRIES = (
@@ -347,6 +351,8 @@ def collect_core_shared_writes(target: Path):
     for src in sorted(x for x in SHARED_ROOT.rglob('*') if x.is_file()):
         rel = src.relative_to(SHARED_ROOT)
         if is_python_cache_artifact(rel):
+            continue
+        if rel in SOURCE_ONLY_SHARED_RELPATHS:
             continue
         # Session 已退役，但源端残留任务数据仍不可作为核心文件分发。
         if rel.parts and rel.parts[0] in {'project', 'case', 'session'}:
@@ -618,6 +624,39 @@ def has_matching_generated_marker(source: bytes, existing: bytes) -> bool:
     return any(marker in source and marker in existing for marker in markers)
 
 
+def collect_tool_claimed_paths(target: Path) -> dict[str, str]:
+    """目标项目里仍被 optional tool 收据认领的路径 -> 认领它的工具名。
+
+    曾作为 optional tool 分发、后改为默认能力的文件（如 research），在旧项目
+    里会同时被 tool 收据和 bootstrap 收据认领。内容逐字节相同不构成所有权
+    许可，因此升级前必须发现这类交集：否则旧版 uninstall 会删掉 bootstrap
+    仍声称拥有的文件。
+    """
+    receipts_dir = target / '.agentwork' / 'tool-receipts'
+    claimed: dict[str, str] = {}
+    reject_symlink_path(receipts_dir, target, 'tool receipts')
+    if receipts_dir.exists() and not receipts_dir.is_dir():
+        raise SystemExit(f'invalid tool receipts directory: {receipts_dir}')
+    if not receipts_dir.is_dir():
+        return claimed
+    for receipt in sorted(receipts_dir.glob('*.json')):
+        reject_symlink_path(receipt, target, 'tool receipt')
+        try:
+            data = json.loads(receipt.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise SystemExit(f'cannot verify tool ownership: {receipt}: {exc}') from exc
+        if (not isinstance(data, dict) or set(data) != {'version', 'files'}
+                or data['version'] != 1 or not isinstance(data['files'], dict)):
+            raise SystemExit(f'invalid tool receipt: {receipt}')
+        for relative, digest in data['files'].items():
+            if (not relative or Path(relative).is_absolute() or '..' in Path(relative).parts
+                    or Path(relative) == Path('.') or not isinstance(digest, str)
+                    or (digest != 'directory' and not SHA256_PATTERN.fullmatch(digest))):
+                raise SystemExit(f'invalid tool receipt entry: {receipt}: {relative}')
+            claimed.setdefault(Path(relative).as_posix(), receipt.stem)
+    return claimed
+
+
 def preflight_writes(
     target: Path,
     writes,
@@ -625,11 +664,22 @@ def preflight_writes(
     source_contents: dict[Path, bytes] | None = None,
 ) -> None:
     conflicts: list[tuple[str, str]] = []
+    tool_claimed = collect_tool_claimed_paths(target)
     for src, dst, kind, _ in writes:
         if kind != 'file':
             conflicts.append((target_rel(target, dst), f'unsupported managed type: {kind}'))
             continue
         rel = target_rel(target, dst)
+        owner = tool_claimed.get(rel)
+        if owner is not None:
+            conflicts.append((
+                rel,
+                f'still claimed by optional tool receipt "{owner}"; '
+                f'use the previous source checkout that supports this tool to run '
+                f'install-tool.py uninstall {owner} before retrying; '
+                'see README.md for migration and modified-file recovery',
+            ))
+            continue
         symlink = symlink_in_path(dst, target)
         if symlink is not None:
             conflicts.append((rel, f'path contains symlink: {target_rel(target, symlink)}'))
@@ -950,6 +1000,18 @@ def prepare_bootstrap_plan(
         previous_receipt,
         previous_receipt_exists,
     )
+    if target != ROOT:
+        for relative in SOURCE_ONLY_SHARED_RELPATHS:
+            rel = Path('.shared') / relative
+            path = target / rel
+            if not path.exists() and not path.is_symlink():
+                continue
+            digest = previous_receipt.get(rel.as_posix())
+            if (symlink_in_path(path, target) is None and path.is_file()
+                    and digest is not None and sha256_bytes(path.read_bytes()) == digest):
+                retired_removed += (rel,)
+            else:
+                retired_preserved += (rel,)
     retired_readme, remove_retired_readme, preserve_retired_readme = prepare_retired_session_readme(target)
     if remove_retired_readme:
         retired_removed += (RETIRED_SESSION_README_REL,)

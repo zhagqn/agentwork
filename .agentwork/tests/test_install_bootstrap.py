@@ -124,6 +124,155 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
                 )
         self.assertEqual(tree_snapshot(self.project), before)
 
+    def write_tool_receipt(self, tool: str, relatives: tuple[str, ...]) -> Path:
+        """模拟旧 optional tool 安装史：落地文件并写 tool 收据。"""
+        receipt = self.project / f'.agentwork/tool-receipts/{tool}.json'
+        receipt.parent.mkdir(parents=True, exist_ok=True)
+        files = {}
+        for relative in relatives:
+            source = REPO_ROOT / relative
+            installed = self.project / relative
+            installed.parent.mkdir(parents=True, exist_ok=True)
+            # 逐字节相同：内容一致不构成所有权许可，正是本用例要钉住的点。
+            installed.write_bytes(source.read_bytes())
+            files[relative] = hashlib.sha256(source.read_bytes()).hexdigest()
+        receipt.write_text(json.dumps({'version': 1, 'files': files}, indent=2) + '\n')
+        return receipt
+
+    def test_tool_claimed_default_capability_blocks_upgrade_before_writes(self) -> None:
+        """曾由 optional tool 分发的默认能力，升级前必须报冲突而非双重认领。"""
+        relatives = (
+            '.shared/skills/research/SKILL.md',
+            '.codex/skills/research/SKILL.md',
+            '.claude/skills/research/SKILL.md',
+        )
+        self.write_tool_receipt('research', relatives)
+        before = tree_snapshot(self.project)
+
+        result = self.run_installer(check=False)
+        self.assertNotEqual(result.returncode, 0)
+        combined = result.stderr + result.stdout
+        self.assertIn('still claimed by optional tool receipt "research"', combined)
+        self.assertIn('uninstall research', combined)
+        # 写入前即停：项目未被改动，bootstrap 收据未生成。
+        self.assertEqual(tree_snapshot(self.project), before)
+        self.assertFalse((self.project / RECEIPT_REL).exists())
+
+    def test_upgrade_succeeds_after_tool_uninstall_and_stays_idempotent(self) -> None:
+        """通过真实 tool 通道退出旧安装，再由 bootstrap 接管。"""
+        relatives = (
+            '.shared/skills/research/SKILL.md', '.codex/skills/research/SKILL.md',
+            '.codex/skills/research/agents/openai.yaml', '.claude/skills/research/SKILL.md',
+            '.pi/skills/research/SKILL.md', '.cursor/rules/research.mdc',
+        )
+        legacy = Path(self.temp.name) / 'legacy-source'
+        tools = legacy / '.agentwork/tools'
+        pack = tools / 'research'
+        pack.mkdir(parents=True)
+        shutil.copy2(REPO_ROOT / 'install-tool.py', legacy / 'install-tool.py')
+        (tools / 'registry.json').write_text(json.dumps({'schema_version': 1, 'tools': [
+            {'name': 'research', 'dir': 'research', 'kind': ['skill']},
+        ]}))
+        entries = []
+        for index, relative in enumerate(relatives):
+            shutil.copy2(REPO_ROOT / relative, pack / str(index))
+            entries.append({'surface': 'shared', 'from': str(index), 'to': relative})
+        (pack / 'tool.json').write_text(json.dumps({
+            'name': 'research', 'kind': ['skill'], 'entries': entries,
+        }))
+
+        def tool(action):
+            result = subprocess.run(
+                ['python3', str(legacy / 'install-tool.py'), action, 'research', '-p', str(self.project)],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+        tool('install')
+        self.assertNotEqual(self.run_installer(check=False).returncode, 0)
+        tool('uninstall')
+        self.run_installer()
+        records = {entry['path'] for entry in self.receipt()['files']}
+        for relative in relatives:
+            self.assertIn(relative, records)
+
+        # 二次升级：bootstrap 已认领这些路径，交集检查不得再拦。
+        installed = tree_snapshot(self.project)
+        self.run_installer()
+        self.assertEqual(tree_snapshot(self.project), installed)
+        tool('uninstall')
+        self.assertEqual(tree_snapshot(self.project), installed)
+
+    def test_tool_ownership_cannot_be_bypassed_by_target_state(self) -> None:
+        relative = '.shared/skills/research/SKILL.md'
+        for state in ('missing', 'modified', 'already-core', 'normalized'):
+            with self.subTest(state=state):
+                project = Path(self.temp.name) / state
+                project.mkdir()
+                self.project = project
+                if state == 'already-core':
+                    self.run_installer()
+                receipt = self.write_tool_receipt('research', (relative,))
+                if state == 'missing':
+                    (project / relative).unlink()
+                elif state == 'modified':
+                    (project / relative).write_text('user change\n')
+                elif state == 'normalized':
+                    data = json.loads(receipt.read_text())
+                    data['files']['./' + relative] = data['files'].pop(relative)
+                    receipt.write_text(json.dumps(data))
+                before = tree_snapshot(project)
+                self.assertNotEqual(self.run_installer(check=False).returncode, 0)
+                self.assertEqual(tree_snapshot(project), before)
+
+    def test_unverifiable_tool_receipts_block_before_writes(self) -> None:
+        receipt = self.project / '.agentwork/tool-receipts/research.json'
+        receipt.parent.mkdir(parents=True)
+        for content in ('{', '[]', '{"version":999,"files":{}}',
+                        '{"version":1,"files":{"../outside":"directory"}}'):
+            with self.subTest(content=content):
+                receipt.write_text(content)
+                before = tree_snapshot(self.project)
+                self.assertNotEqual(self.run_installer(check=False).returncode, 0)
+                self.assertEqual(tree_snapshot(self.project), before)
+        receipt.unlink()
+        receipt.symlink_to(REPO_ROOT / '.agentwork/tools/registry.json')
+        before = tree_snapshot(self.project)
+        self.assertNotEqual(self.run_installer(check=False).returncode, 0)
+        self.assertEqual(tree_snapshot(self.project), before)
+
+    def test_source_only_shared_scripts_are_not_distributed(self) -> None:
+        """verify.sh 检查的对象不随 bootstrap 分发，故它自身也不得分发。"""
+        self.run_installer()
+        records = {entry['path'] for entry in self.receipt()['files']}
+        self.assertNotIn('.shared/scripts/verify.sh', records)
+        self.assertFalse((self.project / '.shared/scripts/verify.sh').exists())
+        # 其余共享脚本仍须正常分发。
+        for kept in ('agentwork-check.py', 'case-review.sh', 'command-preview.sh'):
+            with self.subTest(script=kept):
+                self.assertIn(f'.shared/scripts/{kept}', records)
+
+    def test_old_verify_is_retired_only_when_receipt_matches(self) -> None:
+        self.run_installer()
+        path = self.project / '.shared/scripts/verify.sh'
+        content = b'#!/bin/sh\necho old verify\n'
+        data = self.receipt()
+        data['files'].append({'path': '.shared/scripts/verify.sh', 'type': 'file',
+                              'sha256': hashlib.sha256(content).hexdigest()})
+        for modified in (True, False):
+            with self.subTest(modified=modified):
+                path.write_bytes(content + b'# user change\n' if modified else content)
+                (self.project / RECEIPT_REL).write_text(json.dumps(data))
+                if not modified:
+                    module = self.load_installer()
+                    plan = self.prepared_plan(module)
+                    with patch.object(module, 'write_receipt', side_effect=OSError('receipt failure')):
+                        self.assert_plan_rollback(module, plan)
+                self.run_installer()
+                self.assertEqual(path.exists(), modified)
+                if modified:
+                    self.assertEqual(path.read_bytes(), content + b'# user change\n')
+
     def test_fresh_install_registers_generated_codex_agent(self) -> None:
         self.run_installer()
 

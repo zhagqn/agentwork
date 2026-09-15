@@ -55,6 +55,8 @@ Git 路径使用 NUL 记录解析；换行等控制字符仅在输出时转义�
 已存在或在 Git status 中出现的精确路径优先按字面匹配（如 `src/[id].tsx`），其余范围才解释为 glob。
 
 ## Source Repo 说明
+`verify.sh` 仅用于 source repo，聚合测试、渲染检查、workflow self-test 与 Case 检查，不随 bootstrap 分发。目标项目直接使用 `agentwork-check.py self-test` 与对应工件检查。无 Case 可跳过；latest 歧义或执行失败必须令聚合门禁失败。
+
 当前 source repo 可能因为已安装可选工具而额外出现脚本，例如 `arch-render.py`。
 
 这些脚本不代表“核心 `.shared` 契约”回涨；它们的归属仍然是对应的 optional tool，应以工具安装入口和工具文档为准。

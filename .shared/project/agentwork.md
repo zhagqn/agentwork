@@ -17,6 +17,7 @@
 - 命令内建 harness 自检：`python3 .shared/scripts/agentwork-check.py self-test`
 - 真实 provider E2E 只作为人工 smoke / 兼容性调查，不作为默认回归或合并 gate
 - 核心 workflow 检查优先沉淀到 `.shared/scripts/`；历史集成诊断只保留专题语境
+- `.shared/scripts/verify.sh` 是 source-only 聚合门禁，不分发到目标项目；历史副本只在旧 bootstrap 收据摘要匹配时退役，用户改写保留。目标项目使用 `agentwork-check.py self-test` 与显式工件检查。
 - 若修改 bootstrap 生成契约，优先同步 `.agentwork/bootstrap/*` 与命令内建 harness
 
 ### 代码与目录约定
@@ -39,6 +40,7 @@
 - 外部项目 bootstrap 不加载 renderer，也不刷新 agentwork source checkout；只有 source repo self-host (`-p .`) 才预计算 renderer 输出和 prospective 目标计划，并将 canonical 生成与目标安装放入同一可回滚事务
 - project、Case 与 `.gitignore` 的 managed block 只接受“完全不存在”或“唯一且有序”的 marker；残缺、逆序、重复 marker 与非 UTF-8 内容在首个目标写入前停止
 - bootstrap 与 optional tool 安装器不新增或改写目标项目许可文件；agentwork 根 `LICENSE` 是 source repo 的许可事实源
+- bootstrap 在写入前拒绝与 tool 收据重叠的认领，即使目标缺失、内容相同或 bootstrap 已有收据；不可解析的 tool 收据也阻断。旧 optional research 须先由仍支持它的旧源码正常卸载，再 bootstrap，迁移与用户改动恢复步骤见根 README。
 - 退役平台入口只在内容可识别为 agentwork 生成物时自动删除；同路径的项目自定义文件和符号链接必须保留并报告
 - 曾由 core bootstrap receipt 管理的退役入口以 receipt 为优先所有权证据：receipt 存在时只有路径哈希匹配才可删除，路径未记录或哈希变化必须持续保留；仅在整个历史 receipt 不存在时使用生成标记兜底
 - source repo 根目录适配层产物属于正式版本基线：bootstrap 生成的 `AGENTS.md`、`.claude/`、`.opencode/commands/*`、`.cursor/`、`.codex/skills/*`、`.codex/agents/*`、`.codex/config.toml` 受管块与 `.pi/prompts/*` 应与 `.agentwork/bootstrap/*` 保持一致；必要时通过命令自检或安装态人工 smoke 做诊断，可选工具安装态允许额外存在，不视为 bootstrap 漂移

@@ -49,6 +49,28 @@ repository instead of relying on one provider's private conversation state.
   have repository-owned checks, while live provider tests remain explicit
   compatibility investigations rather than hidden prerequisites.
 
+## Upgrading Projects With Optional Research
+
+Older projects may have `.agentwork/tool-receipts/research.json`. Bootstrap
+refuses overlapping tool claims before writing, including missing files and
+projects already carrying both receipts. Keep the previous source checkout
+that still lists research, and use its `install-tool.py uninstall research -p
+PROJECT` before running the new `install-bootstrap.py -p PROJECT`. The current
+tool installer no longer recognizes research. Do not delete the receipt alone.
+
+If the old uninstall reports modified files, first back up those files outside
+the managed paths and review the differences. Restore the matching installed
+version only after preserving your edits, uninstall with the old source, then
+bootstrap and reapply the required edits. Without the old source or a verified
+backup, stop and reconcile ownership manually. Migration never silently removes
+user modifications. After migration, repeating the old uninstall has no receipt
+to act on and leaves the bootstrap files intact.
+
+`verify.sh` is a source-repository gate and is not distributed to projects.
+Previously distributed copies are retired only when their old receipt digest
+matches; customized or unowned copies are preserved. Target projects can run
+`.shared/scripts/agentwork-check.py self-test` and explicit artifact checks.
+
 ## What agentwork is not
 
 agentwork is not an AI model, an agent runtime, or a replacement for the native
