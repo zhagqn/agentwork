@@ -195,7 +195,7 @@ class OctocodeMcpWrapperTest(unittest.TestCase):
             ']\n'
             "sys.stdout.write(''.join(json.dumps(item) + '\\n' for item in responses))\n"
             'sys.stdout.flush()\n'
-            'time.sleep(3)\n'
+            'sys.stdin.read()\n'
         )
         fake_npx.chmod(0o755)
         env = os.environ.copy()
@@ -221,7 +221,9 @@ class OctocodeMcpWrapperTest(unittest.TestCase):
         selector = selectors.DefaultSelector()
         selector.register(process.stdout, selectors.EVENT_READ)
         output = bytearray()
-        deadline = time.monotonic() + 1
+        # 子进程在 stdin 关闭前不退出；收到响应即可证明代理未等待 EOF。
+        # 超时仅限制测试挂起，不把运行时启动速度当成协议契约。
+        deadline = time.monotonic() + 10
         try:
             while output.count(b'\n') < 2:
                 remaining = deadline - time.monotonic()
