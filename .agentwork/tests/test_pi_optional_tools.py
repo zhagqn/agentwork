@@ -20,7 +20,9 @@ PI_SKILL_REFERENCES = {
     'browser': '../../../.shared/skills/browser/SKILL.md',
     'codegraph': '../../../.shared/mcp/codegraph.md',
 }
-PI_PATH = shutil.which('pi')
+PI_PATH = shutil.which(os.environ.get('AGENTWORK_PI_EXECUTABLE', 'pi'))
+if PI_PATH is not None:
+    PI_PATH = str(Path(PI_PATH).resolve())
 
 
 def pi_version() -> str | None:
@@ -31,6 +33,7 @@ def pi_version() -> str | None:
         text=True,
         capture_output=True,
         check=False,
+        timeout=10,
     )
     if result.returncode != 0:
         return None
@@ -245,10 +248,10 @@ class PiOptionalToolSurfaceTest(unittest.TestCase):
         self.assertEqual(settings.read_bytes(), before)
 
     @unittest.skipUnless(
-        PI_PATH is not None and PI_VERSION == '0.84.4',
-        'requires the Pi 0.84.4 compatibility baseline',
+        PI_PATH is not None and PI_VERSION in ('0.84.4', '0.85.1'),
+        'requires Pi 0.84.4 or 0.85.1',
     )
-    def test_pi_0844_rpc_discovers_only_trusted_project_skills(self) -> None:
+    def test_pi_rpc_discovers_only_trusted_project_skills(self) -> None:
         self.run_installer('install', *PI_OPTIONAL_TOOLS)
         approved = self.rpc_skill_commands('--approve', 'approved')
         denied = self.rpc_skill_commands('--no-approve', 'denied')
@@ -280,11 +283,12 @@ class PiOptionalToolSurfaceTest(unittest.TestCase):
         if PI_PATH is None:
             self.fail('Pi executable disappeared during the test')
         config_dir = self.root / f'pi-config-{label}'
-        env = os.environ.copy()
+        env = {key: os.environ[key] for key in ('PATH', 'HOME', 'TMPDIR') if key in os.environ}
         env.update(
             {
                 'PI_CODING_AGENT_DIR': str(config_dir),
                 'PI_OFFLINE': '1',
+                'PI_TELEMETRY': '0',
             }
         )
         result = subprocess.run(

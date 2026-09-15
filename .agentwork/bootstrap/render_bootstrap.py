@@ -89,8 +89,9 @@ def render_cursor() -> str:
     v = SPEC['variants']['cursor']
     workflow_items = v.get('workflow_override') or COMMON['workflow_items']
     body = [
-        AUTO,
         v['title'],
+        '',
+        AUTO,
         '',
         v['intro'],
         '',
