@@ -46,11 +46,6 @@
       "type": "file"
     },
     {
-      "path": ".codex/agents/luna-worker.toml",
-      "sha256": "d2dd50b5e303be8b199da8680544ce32408540cf7691976848fb13d59a53d14b",
-      "type": "file"
-    },
-    {
       "path": ".codex/skills/anydoc/SKILL.md",
       "sha256": "2aecb3c655fdff089b48e229e12a318a11bf668b6f84139e5c3cf3b73ffb6481",
       "type": "file"
@@ -242,7 +237,7 @@
     },
     {
       "path": ".shared/patterns/platform-adapter.md",
-      "sha256": "921149d39ef6a2eaf98b9308ac1dbf35d544427d26aad500b7c57e2c19fb4f07",
+      "sha256": "d4ac850b0eec1507b278b5a1e276dc9ea0a7192053a3d7f2d05c7718b7a6192a",
       "type": "file"
     },
     {

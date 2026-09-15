@@ -27,8 +27,8 @@ repository instead of relying on one provider's private conversation state.
   rules. See the
   [platform adapter model](.shared/patterns/platform-adapter.md).
 - **A conservative Codex integration.** The bootstrap installs project-level
-  skills, keeps `AGENTS.md` as the stable entry point, and registers a bounded
-  `luna_worker` custom agent without replacing unrelated Codex configuration.
+  skills and keeps `AGENTS.md` as the stable entry point. Custom agents and
+  Codex configuration remain project-owned.
 - **Optional capability packs.** Browser automation, Figma, Android, Godot,
   architecture documentation, and other integrations stay outside the core
   workflow and are installed only when a project needs them. The registry
@@ -108,10 +108,14 @@ python3 install-bootstrap.py -p /absolute/path/to/project
 ```
 
 The bootstrap installs the shared workflow contract and thin native entry
-points for all supported agents. It also registers the Codex `luna_worker`
-custom agent in an agentwork-managed configuration block. Existing project
+points for all supported agents. It does not install custom agents. Existing project
 files and unrelated Codex configuration are preserved; conflicting managed
 paths fail explicitly instead of being silently overwritten.
+
+Upgrading removes the retired `luna_worker` registration only when its managed
+block matches the known generated version. Its agent file is removed only when
+ownership is verified and no remaining role references it. Modified files and
+configuration blocks are preserved and reported for manual review.
 
 Open the target project in your coding agent and move a task through the
 workflow:
@@ -217,7 +221,7 @@ the project deliberately sets `BROWSER_CDP_PREFER=1`.
 | [`.shared/`](.shared/INDEX.md) | Provider-neutral workflow contracts, constraints, patterns, templates, and deterministic checks. |
 | [`.agentwork/bootstrap/`](.agentwork/bootstrap/README.md) | Sources and renderer for the minimal files installed into target projects. |
 | [`.agentwork/tools/`](.agentwork/tools/README.md) | Optional capability-pack sources, manifests, and installation guidance. |
-| [`.codex/`](.codex) | Self-hosted Codex skills, configuration, and bounded custom agent for this source repository. |
+| [`.codex/`](.codex) | Self-hosted Codex skills for this source repository. |
 | [`.claude/`](.claude), [`.opencode/`](.opencode), [`.cursor/`](.cursor) | Self-hosted thin platform adapters generated from the bootstrap source. |
 | `.pi/prompts/` | Self-hosted Pi project prompt templates generated from the bootstrap source. |
 | `.pi/skills/` | Pi skill entry points; anydoc is part of the core bootstrap, while other tool packs remain explicit. |
@@ -232,7 +236,7 @@ belongs in `.shared/`.
 
 | Platform | Installed entry points | Boundary |
 | --- | --- | --- |
-| Codex | `AGENTS.md`, project skills, managed custom-agent registration | Uses native Codex capabilities first; agentwork supplies shared artifacts and conservative project configuration. |
+| Codex | `AGENTS.md`, project skills | Uses native Codex capabilities first; agentwork supplies shared artifacts without installing custom agents. |
 | Claude Code | `CLAUDE.md`, project commands, optional skills | Thin commands delegate to the shared workflow; runtime loops and permissions remain platform concerns. |
 | OpenCode | `AGENTS.md`, generated project commands | Commands inject shared definitions; provider, model, plugin, MCP, and permission configuration remain project-owned. |
 | Cursor | Project rule plus `AGENTS.md` fallback | Uses native editing and diagnostics while shared command files provide the portable workflow contract. |

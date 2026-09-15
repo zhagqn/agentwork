@@ -27,7 +27,7 @@
 - `.agentwork/bootstrap/pi/prompts/`：Pi 项目 prompt 的 canonical 生成产物
 - `.pi/prompts/`：Pi 核心工作流薄 wrapper，由 bootstrap 生成并在 source repo 自承载
 - `.pi/skills/`：source repo 中默认或显式安装的 Pi skill 入口；anydoc 与 research 属于核心 bootstrap，其余 optional tool 仍需显式安装
-- `.codex/agents/`：Codex 项目级执行子代理，由 bootstrap 生成、显式注册并在 source repo 自承载
+- Codex 自定义子代理由项目自行管理，bootstrap 不分发 agent 文件或注册配置
 - `.agentwork/tools/`：可选工具源（figma/browser/android/godot/...）
 - `.tmp/`：核心 workflow 和可选工具的临时工件；核心 workflow 默认使用 `.tmp/agentwork/*`
 
@@ -43,8 +43,8 @@
 - bootstrap 在写入前拒绝与 tool 收据重叠的认领，即使目标缺失、内容相同或 bootstrap 已有收据；不可解析的 tool 收据也阻断。旧 optional research 须先由仍支持它的旧源码正常卸载，再 bootstrap，迁移与用户改动恢复步骤见根 README。
 - 退役平台入口只在内容可识别为 agentwork 生成物时自动删除；同路径的项目自定义文件和符号链接必须保留并报告
 - 曾由 core bootstrap receipt 管理的退役入口以 receipt 为优先所有权证据：receipt 存在时只有路径哈希匹配才可删除，路径未记录或哈希变化必须持续保留；仅在整个历史 receipt 不存在时使用生成标记兜底
-- source repo 根目录适配层产物属于正式版本基线：bootstrap 生成的 `AGENTS.md`、`.claude/`、`.opencode/commands/*`、`.cursor/`、`.codex/skills/*`、`.codex/agents/*`、`.codex/config.toml` 受管块与 `.pi/prompts/*` 应与 `.agentwork/bootstrap/*` 保持一致；必要时通过命令自检或安装态人工 smoke 做诊断，可选工具安装态允许额外存在，不视为 bootstrap 漂移
-- bootstrap 默认安装并注册 `luna_worker` Codex 执行子代理；安装器只维护 agentwork 受管配置块和受管 agent 文件，遇到同名项目自定义定义时停止，不静默覆盖
+- source repo 根目录适配层产物属于正式版本基线：bootstrap 生成的 `AGENTS.md`、`.claude/`、`.opencode/commands/*`、`.cursor/`、`.codex/skills/*` 与 `.pi/prompts/*` 应与 `.agentwork/bootstrap/*` 保持一致；必要时通过命令自检或安装态人工 smoke 做诊断，可选工具安装态允许额外存在，不视为 bootstrap 漂移
+- 已退役的 Codex 默认子代理只按所有权证据清理：已知未改写注册块可移除；文件优先核对旧收据摘要，仍被其他配置引用或已改写的文件保留并报告。新安装不创建 `.codex/config.toml` 或 `.codex/agents`。
 - Pi 核心适配精确安装 `/brain`、`/plan`、`/exec`、`/review`、`/case` 与 `/commit` 六个项目 prompt；`/case` 映射共享 Case，Pi 内置 `/session` 和用户目录 JSONL 不作为 agentwork 跨平台状态
 - Pi 结构兼容基线为 `v0.84.4`：项目 prompt 需从仓库根 cwd 启动并通过 project trust 才能发现；trust 与 headless `--approve` 都不是 sandbox 或工具级审批
 - 核心 bootstrap 不安装 Pi runtime、settings、package、extension、plan-mode、subagent 或 optional tool 运行时依赖；anydoc 与 research 只提供默认 skill 规则，anydoc 的 npm 包由 agent 在项目中按需安装。默认能力一律不安装 MCP server、CLI 或二进制，不创建或修改 `.env`，不修改平台 MCP 私有配置，不向远程服务发送私有资料或凭据。Browser、CodeGraph 可由各自 manifest 显式安装 `.pi/skills/**`，但不创建 `.pi/settings.json`、安装外部 CLI 或假设 MCP 已连接；官方 plan-mode 示例占用 `/plan` 时属于用户安装的外部命令冲突，应回退共享命令或调整其一
@@ -64,4 +64,4 @@
 
 ## 更新记录
 - 创建: 2026-04-15
-- 最近更新: 2026-09-14
+- 最近更新: 2026-09-15
