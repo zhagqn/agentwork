@@ -48,6 +48,7 @@
 - Pi 核心适配精确安装 `/brain`、`/plan`、`/exec`、`/review`、`/case` 与 `/commit` 六个项目 prompt；`/case` 映射共享 Case，Pi 内置 `/session` 和用户目录 JSONL 不作为 agentwork 跨平台状态
 - Pi 结构兼容基线为 `v0.84.4`：项目 prompt 需从仓库根 cwd 启动并通过 project trust 才能发现；trust 与 headless `--approve` 都不是 sandbox 或工具级审批
 - 核心 bootstrap 不安装 Pi runtime、settings、package、extension、plan-mode、subagent 或 optional tool 运行时依赖；anydoc 与 research 只提供默认 skill 规则，anydoc 的 npm 包由 agent 在项目中按需安装。默认能力一律不安装 MCP server、CLI 或二进制，不创建或修改 `.env`，不修改平台 MCP 私有配置，不向远程服务发送私有资料或凭据。Browser、CodeGraph 可由各自 manifest 显式安装 `.pi/skills/**`，但不创建 `.pi/settings.json`、安装外部 CLI 或假设 MCP 已连接；官方 plan-mode 示例占用 `/plan` 时属于用户安装的外部命令冲突，应回退共享命令或调整其一
+- `pi-mcp` 是 Pi-only optional tool：tool installer 只分发项目 skill 与 setup/check 脚本；用户显式运行 setup 后，Pi 才以 project scope 安装固定顶层版本的 MCP extension 并修改目标项目 `.pi/settings.json`。MCP server、凭据和用户配置不由 agentwork 管理；卸载 runtime registration 与卸载 tool files 是两个显式步骤
 - optional tool 可通过 `tool.json.env_keys` 声明项目级凭据名；安装器只在 Git ignored 的根 `.env` 中追加缺失的空占位，不覆盖、执行或回显值，卸载时保留用户原有或已填写的 assignment
 - `research` 是 provider-neutral 单一研究入口，已随核心 bootstrap 默认分发（不在 registry，`install-tool.py install research` 报 `Unknown tool`）；它可主动选择最窄 provider，也可在本地或直接官方路径已足够时选择不调用远程 provider。默认分发不等于契约 stable：行为 routing contract 只有通过 `.agentwork/evals/research/` 的固定评测 gate 后才可标记为 stable
 - Exa 是仅用于公开 Web 发现/批量 fetch 的受限 provisional optional provider；Octocode 仍为跨仓库证据研究的 experimental tool，快速 GitHub 查询继续优先 `gh`；Research 与 provider 的 stable 状态必须由现行评测 gate 支撑

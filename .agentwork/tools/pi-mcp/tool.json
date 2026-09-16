@@ -1,0 +1,10 @@
+{
+  "name": "pi-mcp",
+  "kind": ["mcp", "skill"],
+  "description": "Optional Pi MCP client adapter with project-scoped pi-mcp-extension setup and checks.",
+  "entries": [
+    {"surface": "shared", "from": "shared/scripts/pi-mcp-setup.sh", "to": ".shared/scripts/pi-mcp-setup.sh"},
+    {"surface": "shared", "from": "shared/scripts/pi-mcp-check.sh", "to": ".shared/scripts/pi-mcp-check.sh"},
+    {"surface": "pi", "from": "pi/skills/pi-mcp", "to": ".pi/skills/pi-mcp"}
+  ]
+}

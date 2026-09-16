@@ -67,6 +67,14 @@
         "cli",
         "mcp"
       ]
+    },
+    {
+      "name": "pi-mcp",
+      "dir": "pi-mcp",
+      "kind": [
+        "mcp",
+        "skill"
+      ]
     }
   ]
 }

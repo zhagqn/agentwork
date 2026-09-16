@@ -15,11 +15,12 @@ INSTALLER = REPO_ROOT / 'install-tool.py'
 TOOLS_ROOT = REPO_ROOT / '.agentwork/tools'
 REGISTRY = TOOLS_ROOT / 'registry.json'
 # research 已提升为 bootstrap 默认能力，不再属于可选工具。
-PI_OPTIONAL_TOOLS = ('browser', 'codegraph')
+PI_OPTIONAL_TOOLS = ('browser', 'codegraph', 'pi-mcp')
 PI_SKILL_REFERENCES = {
     'browser': '../../../.shared/skills/browser/SKILL.md',
     'codegraph': '../../../.shared/mcp/codegraph.md',
 }
+PI_SKILL_FILES = {**PI_SKILL_REFERENCES, 'pi-mcp': 'SKILL.md'}
 PI_PATH = shutil.which(os.environ.get('AGENTWORK_PI_EXECUTABLE', 'pi'))
 if PI_PATH is not None:
     PI_PATH = str(Path(PI_PATH).resolve())
@@ -66,6 +67,33 @@ def tree_snapshot(path: Path) -> dict[str, tuple[str, bytes | str | None]]:
 
 
 class PiOptionalToolSurfaceTest(unittest.TestCase):
+    def test_pi_mcp_scripts_use_installed_project_and_report_only_evidence(self) -> None:
+        self.run_installer('install', 'pi-mcp')
+        bin_dir = self.root / 'bin'
+        bin_dir.mkdir()
+        fake_pi = bin_dir / 'pi'
+        fake_pi.write_text('#!/bin/sh\npwd\nprintf "%s\\n" "$@"\n', encoding='utf-8')
+        fake_pi.chmod(0o755)
+        env = {**os.environ, 'PATH': f'{bin_dir}:{os.environ["PATH"]}'}
+        scripts = self.project / '.shared/scripts'
+        setup = subprocess.run(
+            ['bash', str(scripts / 'pi-mcp-setup.sh')], cwd=self.root,
+            env=env, text=True, capture_output=True, check=True,
+        )
+        lines = setup.stdout.splitlines()
+        self.assertEqual(Path(lines[0]).resolve(), self.project.resolve())
+        self.assertEqual(lines[1:], [
+            'install', '-l', '--approve',
+            'npm:pi-mcp-extension@1.5.0',
+        ])
+        (self.project / '.pi/npm').mkdir()
+        check = subprocess.run(
+            ['bash', str(scripts / 'pi-mcp-check.sh')], cwd=self.root,
+            env=env, text=True, capture_output=True, check=True,
+        )
+        self.assertIn('project extension files: absent', check.stdout)
+        self.assertIn('global servers may still apply', check.stdout)
+
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory(
             prefix='agentwork-pi-optional-tools-'
@@ -161,7 +189,8 @@ class PiOptionalToolSurfaceTest(unittest.TestCase):
                 content = skill.read_text(encoding='utf-8')
                 self.assertIn(f'name: {name}', content)
                 self.assertIn('description:', content)
-                self.assertIn(PI_SKILL_REFERENCES[name], content)
+                if name in PI_SKILL_REFERENCES:
+                    self.assertIn(PI_SKILL_REFERENCES[name], content)
                 self.assertFalse(
                     any(
                         item['to'] == '.pi/settings.json'
@@ -197,7 +226,7 @@ class PiOptionalToolSurfaceTest(unittest.TestCase):
             skill_dir = self.project / f'.pi/skills/{name}'
             with self.subTest(name=name, reference='installed'):
                 self.assertTrue(
-                    (skill_dir / PI_SKILL_REFERENCES[name]).resolve().is_file()
+                    (skill_dir / PI_SKILL_FILES[name]).resolve().is_file()
                 )
         self.assertFalse((self.project / '.pi/settings.json').exists())
         installed = self.project_snapshot()
