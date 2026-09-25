@@ -4,12 +4,27 @@
     "mcp",
     "skill"
   ],
-  "description": "Reference and Pi skill entry for colbymchenry/codegraph: local semantic code-graph CLI/MCP guidance with no vendored upstream source.",
+  "description": "Project-local CodeGraph-first navigation entries for Codex, Claude Code, OpenCode, Cursor, and Pi; no CLI, index, or MCP configuration is installed.",
   "entries": [
     {
       "surface": "shared",
       "from": "shared/mcp/codegraph.md",
       "to": ".shared/mcp/codegraph.md"
+    },
+    {
+      "surface": "codex",
+      "from": "agents/skills/codegraph",
+      "to": ".agents/skills/codegraph"
+    },
+    {
+      "surface": "claude",
+      "from": "claude/rules/codegraph.md",
+      "to": ".claude/rules/codegraph.md"
+    },
+    {
+      "surface": "cursor",
+      "from": "cursor/rules/codegraph.mdc",
+      "to": ".cursor/rules/codegraph.mdc"
     },
     {
       "surface": "pi",

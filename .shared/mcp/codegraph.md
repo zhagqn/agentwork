@@ -1,6 +1,6 @@
 # CodeGraph Reference
 
-该文件是 codegraph 可选工具的引用型参考文档：只记录官方接入路径，不 vendor 上游源码或二进制。
+该文件随 codegraph 可选工具安装，记录项目级导航约定与官方接入路径，不 vendor 上游源码或二进制。
 
 - 上游：<https://github.com/colbymchenry/codegraph>（MIT）
 - 定位：本地预建代码知识图谱，提供 CLI 与可选 MCP server，用于符号、跨文件调用路径和影响范围查询，文件变更自动增量同步
@@ -37,9 +37,27 @@ codegraph explore "<symbol names or question>"
 
 ## 日常使用
 
-查询由 agent 按项目导航约定选择 CLI 或已连接的 MCP；索引随文件变更自动同步。
+### Agent 优先调用约定
 
-CLI 或项目索引缺失时回退本地读取/搜索；任务确实需要图谱时可提出建索引建议，经用户授权后运行 `codegraph init`。
+- 本约定只随可选工具安装到目标项目，不加入核心 bootstrap 或用户级全局约束。
+- 目标项目存在 `.codegraph/`，且当前会话有 CodeGraph MCP 或本机 `codegraph` CLI 可用时，在理解、定位或准备修改代码（排查缺陷、修复、新功能、重构）时优先查询 CodeGraph，再补充普通读取/搜索。已知文件或符号同样适用，不必等普通搜索失败。
+- MCP 使用 `codegraph_explore`；未连接 MCP 但 CLI 可用时，从目标项目根目录执行 `codegraph explore "<symbol names or question>"`。查询中带上相关符号或路径，获取源码、调用链及影响范围；不要自动补装 MCP 来代替可用 CLI。
+- 工具或索引缺失时，本轮该项目直接回退读取/搜索，不反复调用失败入口，不把普通搜索描述为 CodeGraph 结果。建索引是用户决定；不要仅因本规则自动安装 CLI、初始化索引、升级或修改平台配置。
+- 文件监听进程正常运行时，索引会增量同步。若查询提示过期或同步停止，直接读取受影响文件核实当前内容；需要刷新时说明 `codegraph sync` 的用途，不把旧图谱当作当前源码。没有过期或缺失提示时，不机械重复读取已返回的源码。
+- 配置、文档、图谱未覆盖的内容仍可直接读取。跨文件解析可能有歧义，正确性仍由编译器、测试和 lint 验证。
+
+### 项目级入口与生效边界
+
+| 平台 | 随工具安装的入口 | 触发方式 |
+| --- | --- | --- |
+| Codex / OpenCode | `.agents/skills/codegraph/SKILL.md` | 通过技能描述匹配代码任务，加载后执行本约定 |
+| Claude Code | `.claude/rules/codegraph.md` | 无 paths 限制的项目规则；满足工具与索引条件后触发 |
+| Cursor | `.cursor/rules/codegraph.mdc` | alwaysApply 项目规则；满足工具与索引条件后触发 |
+| Pi | `.pi/skills/codegraph/SKILL.md` | 通过技能描述匹配代码任务，加载后执行本约定 |
+
+这些入口提供模型可读取的优先调用指令，不是强制拦截器；技能选择、项目信任和资源重载由平台运行时决定。安装后在目标项目重新加载技能或开启新会话，并通过实际工具调用确认生效。没有自动查询、索引维护或 MCP 连接保证。
+
+依据：CodeGraph `v1.6.0` 官方 [Agent 指令](https://github.com/colbymchenry/codegraph/blob/v1.6.0/src/installer/instructions-template.ts) 与 [MCP 指令](https://github.com/colbymchenry/codegraph/blob/v1.6.0/src/mcp/server-instructions.ts)；平台发现机制见 [Codex skills](https://developers.openai.com/codex/skills/)、[OpenCode skills](https://opencode.ai/docs/skills/)、[Claude rules](https://code.claude.com/docs/en/memory)、[Cursor rules](https://cursor.com/docs/context/rules)。
 
 ## 遥测
 

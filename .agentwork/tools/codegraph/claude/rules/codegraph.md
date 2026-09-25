@@ -1,0 +1,7 @@
+# CodeGraph 项目导航
+
+本规则随可选 CodeGraph 工具包安装，只适用于当前项目。
+
+理解、定位或准备修改代码时，若目标项目存在 `.codegraph/` 且当前会话有 CodeGraph MCP 或本机 CLI 可用，先读取 `.shared/mcp/codegraph.md` 的「Agent 优先调用约定」，优先使用 `codegraph_explore` 或 `codegraph explore`，再补充读取未覆盖的内容。
+
+工具或索引缺失时回退普通读取/搜索；索引过期时读取受影响文件。不要因本规则自动安装 CLI、初始化索引或修改 MCP 配置。

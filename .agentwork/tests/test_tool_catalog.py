@@ -188,6 +188,133 @@ class ToolCatalogTest(unittest.TestCase):
             {PROHIBITED_BROWSER_TEXT[-1]},
         )
 
+    def test_codegraph_is_opt_in_and_preserves_project_configuration(self) -> None:
+        bootstrap = [
+            sys.executable, str(REPO_ROOT / 'install-bootstrap.py'),
+            '-p', str(self.project),
+        ]
+        result = subprocess.run(bootstrap, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        targets = (
+            '.shared/mcp/codegraph.md',
+            '.agents/skills/codegraph/SKILL.md',
+            '.claude/rules/codegraph.md',
+            '.cursor/rules/codegraph.mdc',
+            '.pi/skills/codegraph/SKILL.md',
+        )
+        for relative in targets:
+            self.assertFalse((self.project / relative).exists(), relative)
+
+        protected = {
+            'AGENTS.md': (self.project / 'AGENTS.md').read_bytes(),
+            '.claude/CLAUDE.md': (self.project / '.claude/CLAUDE.md').read_bytes(),
+            '.codex/config.toml': b'# project-owned config\n',
+            '.mcp.json': b'{"mcpServers": {}}\n',
+            '.pi/settings.json': b'{"projectOwned": true}\n',
+            'opencode.json': b'{}\n',
+            '.claude/rules/project.md': b'# Project rule\n',
+            '.cursor/rules/project.mdc': b'---\nalwaysApply: true\n---\nKeep.\n',
+            '.agents/skills/project-owned/SKILL.md': (
+                b'---\nname: project-owned\ndescription: Keep.\n---\n'
+            ),
+        }
+        for relative, content in protected.items():
+            path = self.project / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(content)
+        staged_before = self.staged_hash()
+
+        self.run_tools('install', 'codegraph')
+        first_install = self.project_snapshot()
+        self.run_tools('install', 'codegraph')
+        self.assertEqual(self.project_snapshot(), first_install)
+        for relative in targets:
+            self.assertTrue((self.project / relative).is_file(), relative)
+        for platform in ('.agents', '.pi'):
+            skill = self.project / platform / 'skills/codegraph/SKILL.md'
+            self.assertTrue(
+                (skill.parent / '../../../.shared/mcp/codegraph.md').resolve().is_file()
+            )
+            self.assertTrue(skill.read_text().startswith('---\nname: codegraph\n'))
+        cursor = (self.project / '.cursor/rules/codegraph.mdc').read_text()
+        self.assertTrue(cursor.startswith('---\n'))
+        self.assertIn('alwaysApply: true\n', cursor.split('---', 2)[1])
+        claude = (self.project / '.claude/rules/codegraph.md').read_text()
+        self.assertNotIn('paths:', claude)
+        self.assertFalse((self.project / '.codegraph').exists())
+
+        # 核心刷新不能分发或退役可选工具入口。
+        result = subprocess.run(bootstrap, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        for relative in targets:
+            self.assertTrue((self.project / relative).is_file(), relative)
+        self.run_tools('uninstall', 'codegraph')
+        for relative in targets:
+            self.assertFalse((self.project / relative).exists(), relative)
+        for relative, content in protected.items():
+            self.assertEqual((self.project / relative).read_bytes(), content, relative)
+        self.assertEqual(self.staged_hash(), staged_before)
+
+    def test_codegraph_upgrade_adds_entries_to_existing_receipt(self) -> None:
+        source = Path(self.temp.name) / 'legacy-source'
+        source.mkdir()
+        shutil.copy2(INSTALLER, source / 'install-tool.py')
+        legacy_root = source / '.agentwork/tools/codegraph'
+        shutil.copytree(TOOLS_ROOT / 'codegraph', legacy_root)
+        manifest = json.loads((legacy_root / 'tool.json').read_text())
+        manifest['entries'] = [
+            entry for entry in manifest['entries']
+            if entry['surface'] in ('shared', 'pi')
+        ]
+        (legacy_root / 'tool.json').write_text(json.dumps(manifest))
+        (legacy_root / 'shared/mcp/codegraph.md').write_text('Legacy reference.\n')
+        registry = {
+            'schema_version': 1,
+            'tools': [{'name': 'codegraph', 'dir': 'codegraph', 'kind': manifest['kind']}],
+        }
+        (source / '.agentwork/tools/registry.json').write_text(json.dumps(registry))
+        result = subprocess.run(
+            [sys.executable, str(source / 'install-tool.py'), 'install',
+             'codegraph', '-p', str(self.project)],
+            text=True, capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        self.assertFalse((self.project / '.agents/skills/codegraph').exists())
+        self.assertTrue((self.project / '.agentwork/tool-receipts/codegraph.json').is_file())
+
+        self.run_tools('install', 'codegraph')
+        current = json.loads((TOOLS_ROOT / 'codegraph/tool.json').read_text())
+        for entry in current['entries']:
+            self.assertEqual(
+                tree_snapshot(self.project / entry['to']),
+                tree_snapshot(TOOLS_ROOT / 'codegraph' / entry['from']),
+            )
+        receipt = json.loads(
+            (self.project / '.agentwork/tool-receipts/codegraph.json').read_text()
+        )
+        self.assertIn('.agents/skills/codegraph/SKILL.md', receipt['files'])
+        self.assertIn('.claude/rules/codegraph.md', receipt['files'])
+        self.assertIn('.cursor/rules/codegraph.mdc', receipt['files'])
+        self.run_tools('uninstall', 'codegraph')
+        for entry in current['entries']:
+            self.assertFalse((self.project / entry['to']).exists())
+
+    def test_codegraph_rule_conflict_is_atomic(self) -> None:
+        rule = self.project / '.claude/rules/codegraph.md'
+        rule.parent.mkdir(parents=True)
+        rule.write_text('Project-owned CodeGraph policy.\n')
+        before = self.project_snapshot()
+        staged_before = self.staged_hash()
+        result = subprocess.run(
+            [sys.executable, str(INSTALLER), 'install', 'codegraph',
+             '-p', str(self.project)],
+            text=True, capture_output=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('ownership conflict', result.stderr)
+        self.assertEqual(self.project_snapshot(), before)
+        self.assertEqual(self.staged_hash(), staged_before)
+
 
 class BrowserWrapperTest(unittest.TestCase):
     def setUp(self) -> None:
