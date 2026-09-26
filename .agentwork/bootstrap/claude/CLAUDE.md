@@ -33,6 +33,7 @@
 - 可选工具默认不预装，按项目约定单独引入
 - Git index（staged 区）是用户的提交和 review 边界；未经明确要求，不改变 staged 区
 - 优先写项目级配置，避免污染全局配置
+- 新建、修改或审查用户界面时，先读 `.shared/constraints/frontend-design.md`；需要选择设计基底或借鉴参考时，再读 `.shared/patterns/design-reference.md`；纯需求讨论和非 UI 任务不加载。
 - 文档任务按需使用 anydoc（详见 `.shared/skills/anydoc/SKILL.md`）：默认提供能力规则，运行时依赖在项目级延迟安装，扫描 PDF 的 hosted OCR 需单独授权。
 - 调研任务按需使用 research（详见 `.shared/skills/research/SKILL.md`）：默认提供能力规则，它是唯一研究入口并自行选择最窄 provider；Exa、Octocode 等 remote provider 仍需单独安装，默认不预装、不写凭据、不改平台 MCP 配置。
 

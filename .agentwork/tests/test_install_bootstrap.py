@@ -242,6 +242,51 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
         self.assertNotEqual(self.run_installer(check=False).returncode, 0)
         self.assertEqual(tree_snapshot(self.project), before)
 
+    def test_frontend_guidelines_are_core_with_conditional_entrypoints(self) -> None:
+        self.run_installer()
+        relatives = (
+            '.shared/constraints/frontend-design.md',
+            '.shared/patterns/design-reference.md',
+        )
+        records = {entry['path'] for entry in self.receipt()['files']}
+        for relative in relatives:
+            with self.subTest(relative=relative):
+                self.assertIn(relative, records)
+                self.assertEqual(
+                    (self.project / relative).read_bytes(),
+                    (REPO_ROOT / relative).read_bytes(),
+                )
+
+        spec = json.loads((BOOTSTRAP / 'spec.json').read_text())
+        rules = [
+            rule for rule in spec['common']['basic_items']
+            if relatives[0] in rule
+        ]
+        self.assertEqual(len(rules), 1)
+        self.assertIn('纯需求讨论和非 UI 任务不加载', rules[0])
+        for relative in relatives:
+            self.assertIn(relative, rules[0])
+            self.assertNotIn(relative, '\n'.join(spec['common']['startup_items']))
+        for entry in ('AGENTS.md', '.claude/CLAUDE.md', '.cursor/rules/agentwork-bootstrap.mdc'):
+            with self.subTest(entry=entry):
+                self.assertIn(rules[0], (self.project / entry).read_text())
+        index = (self.project / '.shared/INDEX.md').read_text()
+        self.assertIn('纯需求讨论和非 UI 任务不加载', index)
+        for relative in relatives:
+            self.assertIn(relative, index)
+        for directory in (
+            '.shared/skills', '.agents/skills', '.codex/skills',
+            '.claude/skills', '.opencode/skills', '.pi/skills',
+        ):
+            self.assertFalse((self.project / directory / 'design').exists())
+        for relative in (
+            '.shared/commands/design.md', '.claude/commands/design.md',
+            '.opencode/commands/design.md', '.pi/prompts/design.md',
+            '.cursor/rules/design.mdc',
+        ):
+            with self.subTest(relative=relative):
+                self.assertFalse((self.project / relative).exists())
+
     def test_source_only_shared_scripts_are_not_distributed(self) -> None:
         """verify.sh 检查的对象不随 bootstrap 分发，故它自身也不得分发。"""
         self.run_installer()

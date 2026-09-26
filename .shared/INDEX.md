@@ -7,6 +7,7 @@
 - `.shared/constraints/coding-style.md`
 - `.shared/constraints/destructive-operations.md`
 - `.shared/constraints/placeholder-naming.md`
+- 新建、修改或审查用户界面时读取 `.shared/constraints/frontend-design.md`；需要选择设计基底或借鉴参考时再读 `.shared/patterns/design-reference.md`；纯需求讨论和非 UI 任务不加载。
 
 ## 1) 核心工作流
 - Case 命令：`.shared/commands/case.md`
