@@ -39,9 +39,9 @@ Cursor 项目规则，来自 agentwork bootstrap 单一源模板。
 
 - Cursor 没有 agentwork 的斜杠命令入口；按阶段直接读取对应共享命令文件正文并据此执行
 - 需求不清晰、边界模糊：先读 `.shared/commands/brain.md`
-- 已有方向、需要拆执行步骤：读 `.shared/commands/plan.md`
+- 已有方向、需要整理成可执行规格：读 `.shared/commands/spec.md`
 - 开始做当前批次工作：读 `.shared/commands/exec.md`
-- 一轮工作完成后：先读 `.shared/commands/review.md`，再决定是否按 `.shared/commands/commit.md` 提交
+- 一轮工作完成后：先读 `.shared/commands/audit.md`，再决定是否按 `.shared/commands/commit.md` 提交
 - 需要跨会话或跨工具接力任务状态：读 `.shared/commands/case.md`
 
 ## 代码导航默认策略

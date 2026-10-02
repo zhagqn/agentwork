@@ -1,6 +1,6 @@
 # Subagent Workflow
 
-> 目的：定义使用 subagent 时的委派契约、输出格式和验收责任。本文是可选执行 pattern，不是 `/exec` 或 `/review` 的必做流程；触发读取规则见 `.shared/commands/exec.md`、`.shared/commands/review.md` 与 `.shared/patterns/case-workflow.md`。
+> 目的：定义使用 subagent 时的委派契约、输出格式和验收责任。本文是可选执行 pattern，不是 `/exec` 或 `/audit` 的必做流程；触发读取规则见 `.shared/commands/exec.md`、`.shared/commands/audit.md` 与 `.shared/patterns/case-workflow.md`。
 
 ## 基本边界
 

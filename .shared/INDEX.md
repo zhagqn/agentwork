@@ -12,15 +12,15 @@
 ## 1) 核心工作流
 - Case 命令：`.shared/commands/case.md`
 - Brain 命令：`.shared/commands/brain.md`
-- Plan 命令：`.shared/commands/plan.md`
+- Spec 命令：`.shared/commands/spec.md`
 - Exec 命令：`.shared/commands/exec.md`
-- Review 命令：`.shared/commands/review.md`
+- Audit 命令：`.shared/commands/audit.md`
 - Commit 流程：`.shared/commands/commit.md`
 - Case 工作流：`.shared/patterns/case-workflow.md`
 - Subagent 协作：`.shared/patterns/subagent-workflow.md`
 - Case 模板：`.shared/templates/case.md`
 - Case 目录说明：`.shared/case/README.md`
-- Brain / Plan / Review 模板：`.shared/templates/brain.md`、`.shared/templates/plan.md`、`.shared/templates/review.md`
+- Brain / Spec / Audit 模板：`.shared/templates/brain.md`、`.shared/templates/spec.md`、`.shared/templates/audit.md`
 - Project 管理：`.shared/patterns/project-management.md`
 - Project 索引：`.shared/project/index.md`
 - 平台适配：`.shared/patterns/platform-adapter.md`
@@ -30,16 +30,16 @@
 
 ## 2) 命令栈
 - `/brain`：设计收敛，输出 `.tmp/agentwork/brain/*.md`
-- `/plan`：计划落地，输出 `.tmp/agentwork/plan/*.md`
+- `/spec`：编号决策 + 任务切片的可执行规格，输出 `.tmp/agentwork/spec/*.md`
 - `/exec`：任务执行
-- `/review`：工件 + 工作双层审查
-- `/case plan`：把已确认 brain / plan 工件写入 Case
-- `/case exec` / `/case review`：围绕当前 Case 执行和审查
+- `/audit`：工件 + 工作双层审查
+- `/case spec`：把已确认 brain / spec 工件写入 Case
+- `/case exec` / `/case audit`：围绕当前 Case 执行和审查
 
 ## 3) Temporary Artifacts
 - `.tmp/agentwork/brain/*.md`
-- `.tmp/agentwork/plan/*.md`
-- `.tmp/agentwork/review/*.md`
+- `.tmp/agentwork/spec/*.md`
+- `.tmp/agentwork/audit/*.md`
 - 上述是核心 workflow 的临时工件；可选工具可使用各自 `.tmp/<domain>/`，默认不纳入提交
 
 ## 4) Optional Tools

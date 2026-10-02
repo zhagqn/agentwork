@@ -15,6 +15,7 @@
 ### Build / Test
 - 原地刷新核心工作流：`python3 install-bootstrap.py -p .`
 - 命令内建 harness 自检：`python3 .shared/scripts/agentwork-check.py self-test`
+- 本机最新 `.tmp/agentwork/spec` 工件不加入 source repo 全局门禁；spec 检查在编写时显式运行
 - 真实 provider E2E 只作为人工 smoke / 兼容性调查，不作为默认回归或合并 gate
 - 核心 workflow 检查优先沉淀到 `.shared/scripts/`；历史集成诊断只保留专题语境
 - `.shared/scripts/verify.sh` 是 source-only 聚合门禁，不分发到目标项目；历史副本只在旧 bootstrap 收据摘要匹配时退役，用户改写保留。目标项目使用 `agentwork-check.py self-test` 与显式工件检查。
@@ -42,12 +43,13 @@
 - bootstrap 与 optional tool 安装器不新增或改写目标项目许可文件；agentwork 根 `LICENSE` 是 source repo 的许可事实源
 - bootstrap 在写入前拒绝与 tool 收据重叠的认领，即使目标缺失、内容相同或 bootstrap 已有收据；不可解析的 tool 收据也阻断。旧 optional research 须先由仍支持它的旧源码正常卸载，再 bootstrap，迁移与用户改动恢复步骤见根 README。
 - 退役平台入口只在内容可识别为 agentwork 生成物时自动删除；同路径的项目自定义文件和符号链接必须保留并报告
-- 曾由 core bootstrap receipt 管理的退役入口以 receipt 为优先所有权证据：receipt 存在时只有路径哈希匹配才可删除，路径未记录或哈希变化必须持续保留；仅在整个历史 receipt 不存在时使用生成标记兜底
+- 直接复制的受管文件遇到用户改写、无法确认归属、路径含符号链接、父路径被普通文件占用或非普通文件时保留并报告，其余文件照常刷新；`.shared`、`.agentwork` 被占用导致受管块或收据无法落盘时仍停止；optional tool 收据重叠与受管块损坏仍在写入前停止
+- 曾由 core bootstrap receipt 管理的退役入口以 receipt 为优先所有权证据：receipt 存在时只有路径哈希匹配才可删除，路径未记录或哈希变化必须持续保留；历史入口仅在整个 receipt 不存在时使用生成标记兜底。plan/review 改名退役项采用更严格规则：即使无 receipt 也保留，不使用生成标记兜底
 - source repo 根目录适配层产物属于正式版本基线：bootstrap 生成的 `AGENTS.md`、`.claude/`、`.opencode/commands/*`、`.cursor/`、`.codex/skills/*` 与 `.pi/prompts/*` 应与 `.agentwork/bootstrap/*` 保持一致；必要时通过命令自检或安装态人工 smoke 做诊断，可选工具安装态允许额外存在，不视为 bootstrap 漂移
 - 已退役的 Codex 默认子代理只按所有权证据清理：已知未改写注册块可移除；文件优先核对旧收据摘要，仍被其他配置引用或已改写的文件保留并报告。新安装不创建 `.codex/config.toml` 或 `.codex/agents`。
-- Pi 核心适配精确安装 `/brain`、`/plan`、`/exec`、`/review`、`/case` 与 `/commit` 六个项目 prompt；`/case` 映射共享 Case，Pi 内置 `/session` 和用户目录 JSONL 不作为 agentwork 跨平台状态
+- Pi 核心适配精确安装 `/brain`、`/spec`、`/exec`、`/audit`、`/case` 与 `/commit` 六个项目 prompt；`/case` 映射共享 Case，Pi 内置 `/session` 和用户目录 JSONL 不作为 agentwork 跨平台状态
 - Pi 结构兼容基线为 `v0.84.4`：项目 prompt 需从仓库根 cwd 启动并通过 project trust 才能发现；trust 与 headless `--approve` 都不是 sandbox 或工具级审批
-- 核心 bootstrap 不安装 Pi runtime、settings、package、extension、plan-mode、subagent 或 optional tool 运行时依赖；anydoc 与 research 只提供默认 skill 规则，anydoc 的 npm 包由 agent 在项目中按需安装。默认能力一律不安装 MCP server、CLI 或二进制，不创建或修改 `.env`，不修改平台 MCP 私有配置，不向远程服务发送私有资料或凭据。Browser、CodeGraph 可由各自 manifest 显式安装 `.pi/skills/**`，但不创建 `.pi/settings.json`、安装外部 CLI 或假设 MCP 已连接；官方 plan-mode 示例占用 `/plan` 时属于用户安装的外部命令冲突，应回退共享命令或调整其一
+- 核心 bootstrap 不安装 Pi runtime、settings、package、extension、plan-mode、subagent 或 optional tool 运行时依赖；anydoc 与 research 只提供默认 skill 规则，anydoc 的 npm 包由 agent 在项目中按需安装。默认能力一律不安装 MCP server、CLI 或二进制，不创建或修改 `.env`，不修改平台 MCP 私有配置，不向远程服务发送私有资料或凭据。Browser、CodeGraph 可由各自 manifest 显式安装 `.pi/skills/**`，但不创建 `.pi/settings.json`、安装外部 CLI 或假设 MCP 已连接；官方 plan-mode 示例注册的 `/plan` 与 agentwork `/spec` 不重名，可并存
 - `pi-mcp` 是 Pi-only optional tool：tool installer 只分发项目 skill 与 setup/check 脚本；用户显式运行 setup 后，Pi 才以 project scope 安装固定顶层版本的 MCP extension 并修改目标项目 `.pi/settings.json`。MCP server、凭据和用户配置不由 agentwork 管理；卸载 runtime registration 与卸载 tool files 是两个显式步骤
 - optional tool 可通过 `tool.json.env_keys` 声明项目级凭据名；安装器只在 Git ignored 的根 `.env` 中追加缺失的空占位，不覆盖、执行或回显值，卸载时保留用户原有或已填写的 assignment
 - `research` 是 provider-neutral 单一研究入口，已随核心 bootstrap 默认分发（不在 registry，`install-tool.py install research` 报 `Unknown tool`）；它可主动选择最窄 provider，也可在本地或直接官方路径已足够时选择不调用远程 provider。默认分发不等于契约 stable：行为 routing contract 只有通过 `.agentwork/evals/research/` 的固定评测 gate 后才可标记为 stable
@@ -65,4 +67,4 @@
 
 ## 更新记录
 - 创建: 2026-04-15
-- 最近更新: 2026-09-15
+- 最近更新: 2026-10-02

@@ -8,8 +8,8 @@ CASE_DIR=".shared/case"
 usage() {
     cat >&2 << 'EOF'
 用法:
-  .shared/scripts/case-review.sh            # 审查最新 Case
-  .shared/scripts/case-review.sh <case-ref> # 审查指定 Case id 或文件路径
+  .shared/scripts/case-audit.sh            # 审查最新 Case
+  .shared/scripts/case-audit.sh <case-ref> # 审查指定 Case id 或文件路径
 EOF
 }
 
@@ -172,7 +172,7 @@ main() {
     local root
     root="$(git_root)"
 
-    echo "Case Review（脚本辅助）"
+    echo "Case Audit（脚本辅助）"
     echo ""
     echo "Case: $case_file"
 
@@ -342,7 +342,7 @@ report('“当前批次工作集”中记录但当前工作区未体现（可能
 PY
 
     echo "下一步建议："
-    echo "- 在对话中执行：/review  # 让助手先做双层 review，再整理 Case 文档"
+    echo "- 在对话中执行：/audit  # 让助手先做双层审查，再整理 Case 文档"
 }
 
 main "$@"

@@ -1,7 +1,7 @@
 # agentwork
 
 agentwork is a repository-native workflow layer for coding agents. It turns
-ambiguous work into an explicit `brain`, `plan`, `exec`, and `review` delivery
+ambiguous work into an explicit `brain`, `spec`, `exec`, and `audit` delivery
 flow, with repository-backed Case snapshots that can move across Codex, Claude
 Code, OpenCode, Cursor, and Pi.
 
@@ -13,10 +13,11 @@ repository instead of relying on one provider's private conversation state.
 ## What agentwork provides
 
 - **An explicit delivery flow.** [`brain`](.shared/commands/brain.md) clarifies
-  the problem, [`plan`](.shared/commands/plan.md) creates a verifiable work
-  breakdown, [`exec`](.shared/commands/exec.md) advances a bounded batch, and
-  [`review`](.shared/commands/review.md) checks both the work and its workflow
-  artifacts.
+  the problem, [`spec`](.shared/commands/spec.md) turns the confirmed design
+  into numbered decisions and verifiable task slices,
+  [`exec`](.shared/commands/exec.md) advances a bounded batch, and
+  [`audit`](.shared/commands/audit.md) checks both the work and its workflow
+  artifacts, with separate spec-compliance and quality verdicts.
 - **Recoverable, opt-in task state.** Cases are repository files with
   explicit load and update rules; old task context is never loaded merely
   because it exists. See the
@@ -122,16 +123,16 @@ workflow:
 
 ```text
 brain   Clarify the goal, constraints, alternatives, and success criteria.
-plan    Turn the confirmed design into bounded, verifiable tasks.
+spec    Turn the confirmed design into decisions and verifiable task slices.
 case    Create, load, or sync an explicit repository-backed task snapshot.
-exec    Execute a small batch from the plan after explicit authorization.
-review  Check both the resulting work and the workflow artifacts.
-commit  Commit only the reviewed Git boundary selected by the user.
+exec    Execute a small batch from the spec after explicit authorization.
+audit   Check both the resulting work and the workflow artifacts.
+commit  Commit only the audited Git boundary selected by the user.
 ```
 
 Use the platform's native syntax. Codex discovers these as project skills such
-as `$brain`, `$plan`, `$exec`, and `$review`; Claude Code and OpenCode expose
-slash commands. Pi exposes `/brain`, `/plan`, `/exec`, `/review`, `/commit`,
+as `$brain`, `$spec`, `$exec`, and `$audit`; Claude Code and OpenCode expose
+slash commands. Pi exposes `/brain`, `/spec`, `/exec`, `/audit`, `/commit`,
 and `/case` as project prompt templates. Cursor uses its project rule and
 can follow the same shared command files directly.
 
@@ -157,10 +158,12 @@ then inspect the resulting diff after the command finishes.
 The bootstrap records its directly copied files in
 `.agentwork/bootstrap-install-state.json`. On later runs, it refreshes a file
 only when ownership can be established from the current source, an agentwork
-generated marker, or the previous receipt. Project and Case indexes,
-`.gitignore`, and Codex configuration use bounded managed blocks so content
-outside those blocks remains project-owned. Partial, reversed, duplicated, or
-conflicting managed state stops the install before target writes begin.
+generated marker, or the previous receipt. Files whose ownership cannot be
+established, including edited copies, paths behind symlinks, and non-regular
+files, are kept and reported while the remaining files refresh. Project and
+Case indexes, `.gitignore`, and Codex configuration use bounded managed blocks
+so content outside those blocks remains project-owned. Partial, reversed, or
+duplicated managed blocks stop the install before target writes begin.
 
 The installer keeps `.tmp/` protection as the final ignore rule, moving its
 managed block when necessary. This takes precedence over earlier exceptions
@@ -276,8 +279,8 @@ investigations. They are not hidden requirements for the core workflow.
   than implied by deterministic bootstrap tests.
 - Optional tool packs may reference external projects or require separately
   installed CLIs, credentials, or MCP configuration.
-- Bootstrap updates preserve project-owned files where ownership is ambiguous
-  and stop on conflicts that cannot be resolved conservatively.
+- Bootstrap updates keep and report project-owned files where ownership is
+  ambiguous, and stop only on damaged managed blocks or overlapping tool claims.
 - Plans and Cases are coordination artifacts, not automatic permission to
   modify code, external systems, Git history, or staged changes.
 

@@ -15,9 +15,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 BOOTSTRAP = REPO_ROOT / '.agentwork/bootstrap'
 EXPECTED_PI_COMMANDS = (
     'brain',
-    'plan',
+    'spec',
     'exec',
-    'review',
+    'audit',
     'case',
     'commit',
 )

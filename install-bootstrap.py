@@ -68,6 +68,23 @@ RETIRED_BOOTSTRAP_PATHS = (
     Path('.shared/scripts/session-review.sh'),
     Path('.shared/templates/session.md'),
 )
+# 本轮改名只接受收据摘要，不以生成标记推断用户是否改写过文件。
+RECEIPT_ONLY_RETIRED_PATHS = (
+    Path('.claude/commands/plan.md'),
+    Path('.claude/commands/review.md'),
+    Path('.codex/skills/plan/SKILL.md'),
+    Path('.codex/skills/review/SKILL.md'),
+    Path('.opencode/commands/plan.md'),
+    Path('.opencode/commands/review.md'),
+    Path('.pi/prompts/plan.md'),
+    Path('.pi/prompts/review.md'),
+    Path('.shared/commands/plan.md'),
+    Path('.shared/commands/review.md'),
+    Path('.shared/scripts/case-review.sh'),
+    Path('.shared/templates/plan.md'),
+    Path('.shared/templates/review.md'),
+)
+RETIRED_BOOTSTRAP_PATHS += RECEIPT_ONLY_RETIRED_PATHS
 RETIRED_TOOL_SIGNATURES = {
     Path('.agent/skills/browser/SKILL.md'): ('# browser', '.shared/skills/browser/SKILL.md'),
     Path('.agent/workflows/android.md'): ('# /android', '.shared/commands/android.md'),
@@ -129,7 +146,9 @@ class BootstrapPlan:
     writes: tuple[tuple[Path, Path, str, str], ...]
     retired_removed: tuple[Path, ...]
     retired_preserved: tuple[Path, ...]
+    retired_keep_reasons: dict[Path, str]
     retired_managed: tuple[PreparedFile, ...]
+    kept_writes: tuple[tuple[str, str], ...]
     managed_indexes: tuple[PreparedFile, ...]
     codex_config: PreparedFile | None
     gitignore: PreparedFile
@@ -205,6 +224,16 @@ def prune_empty_parents(path: Path, project_root: Path) -> None:
         current = current.parent
 
 
+def matches_receipt_digest(path: Path, rel: Path, previous: dict[str, str]) -> bool:
+    digest = previous.get(rel.as_posix())
+    return (
+        digest is not None
+        and path.is_file()
+        and not path.is_symlink()
+        and sha256_bytes(path.read_bytes()) == digest
+    )
+
+
 def is_agentwork_owned_retired_adapter(
     rel: Path,
     path: Path,
@@ -219,9 +248,10 @@ def is_agentwork_owned_retired_adapter(
     except (OSError, UnicodeError):
         return False
     if rel in RETIRED_BOOTSTRAP_PATHS:
-        prior_digest = previous.get(rel.as_posix())
-        if prior_digest is not None:
-            return sha256_bytes(content) == prior_digest
+        if rel.as_posix() in previous:
+            return matches_receipt_digest(path, rel, previous)
+        if rel in RECEIPT_ONLY_RETIRED_PATHS:
+            return False
         if rel == RETIRED_CODEX_AGENT:
             return not previous_receipt_exists and sha256_bytes(content) == RETIRED_CODEX_AGENT_SHA256
         return not previous_receipt_exists and AGENTWORK_BOOTSTRAP_MARKER in text
@@ -229,27 +259,52 @@ def is_agentwork_owned_retired_adapter(
     return bool(signatures) and all(signature in text for signature in signatures)
 
 
+def retired_keep_reason(
+    rel: Path,
+    path: Path,
+    target: Path,
+    previous: dict[str, str],
+    previous_receipt_exists: bool,
+) -> str:
+    """说明退役入口为何保留，让用户区分“内容被改写”和“无法确认归属”。"""
+    if symlink_in_path(path, target) is not None:
+        return 'path contains symlink'
+    receipt_only = rel in RECEIPT_ONLY_RETIRED_PATHS or (
+        rel.parts[:1] == ('.shared',) and Path(*rel.parts[1:]) in SOURCE_ONLY_SHARED_RELPATHS
+    )
+    if rel in RETIRED_BOOTSTRAP_PATHS or receipt_only:
+        if rel.as_posix() in previous:
+            return 'content differs from bootstrap receipt'
+        if previous_receipt_exists:
+            return 'not recorded in bootstrap receipt'
+        if receipt_only:
+            return 'no bootstrap receipt; ownership cannot be confirmed'
+    return 'not recognized as agentwork-managed'
+
+
 def classify_retired_adapters(
     target: Path,
     previous: dict[str, str],
     previous_receipt_exists: bool,
-) -> tuple[tuple[Path, ...], tuple[Path, ...]]:
+) -> tuple[tuple[Path, ...], tuple[Path, ...], dict[Path, str]]:
     removed = []
     preserved = []
+    reasons: dict[Path, str] = {}
     for rel in RETIRED_ADAPTER_PATHS:
         path = target / rel
         if not path.is_file() and not path.is_symlink():
             continue
-        if not is_agentwork_owned_retired_adapter(
+        if symlink_in_path(path, target) is not None or not is_agentwork_owned_retired_adapter(
             rel,
             path,
             previous,
             previous_receipt_exists,
         ):
             preserved.append(rel)
+            reasons[rel] = retired_keep_reason(rel, path, target, previous, previous_receipt_exists)
             continue
         removed.append(rel)
-    return tuple(removed), tuple(preserved)
+    return tuple(removed), tuple(preserved), reasons
 
 
 def prepare_retired_session_readme(
@@ -536,7 +591,6 @@ def load_receipt(target: Path) -> dict[str, str]:
         normalized = Path(raw_rel).as_posix()
         if normalized != raw_rel or normalized in result:
             raise SystemExit(f'duplicate or non-canonical bootstrap receipt path at entry {index}: {path}')
-        reject_symlink_path(target / normalized, target, 'bootstrap receipt entry')
         result[normalized] = digest
     return result
 
@@ -551,9 +605,10 @@ def build_receipt(
     target: Path,
     writes,
     source_contents: dict[Path, bytes] | None = None,
+    retained: dict[str, str] | None = None,
 ) -> bytes:
-    entries = []
-    seen: set[str] = set()
+    entries = [{'path': rel, 'type': 'file', 'sha256': digest} for rel, digest in (retained or {}).items()]
+    seen: set[str] = set(retained or {})
     for src, dst, kind, _ in writes:
         if kind != 'file':
             raise SystemExit(f'unsupported bootstrap receipt entry type: {kind}')
@@ -642,19 +697,58 @@ def collect_tool_claimed_paths(target: Path) -> dict[str, str]:
     return claimed
 
 
+def write_keep_reason(
+    target: Path,
+    src: Path,
+    dst: Path,
+    previous: dict[str, str],
+    source_contents: dict[Path, bytes] | None,
+) -> str | None:
+    """返回保留目标文件的原因；可以安全刷新时返回 None。"""
+    symlink = symlink_in_path(dst, target)
+    if symlink is not None:
+        return f'path contains symlink: {target_rel(target, symlink)}'
+    for parent in reversed(dst.relative_to(target).parents[:-1]):
+        if (target / parent).exists() and not (target / parent).is_dir():
+            return f'parent path is not a directory: {parent.as_posix()}'
+    if src.resolve() == dst.resolve() or not dst.exists():
+        return None
+    if not dst.is_file():
+        return 'target is not a regular file'
+    try:
+        source = read_source_bytes(src, source_contents)
+        existing = dst.read_bytes()
+    except OSError as exc:
+        return f'cannot read source or target: {exc}'
+    if existing == source:
+        return None
+    prior_digest = previous.get(target_rel(target, dst))
+    if prior_digest is not None:
+        if sha256_bytes(existing) == prior_digest:
+            return None
+        return 'content changed since the last successful bootstrap install'
+    if has_matching_generated_marker(source, existing):
+        return None
+    return 'existing content is not recognized as agentwork-managed'
+
+
 def preflight_writes(
     target: Path,
     writes,
     previous: dict[str, str],
     source_contents: dict[Path, bytes] | None = None,
-) -> None:
+) -> tuple[tuple, tuple[tuple[str, str], ...]]:
+    """拆分可写入与需保留的文件；仅 optional tool 收据重叠在写入前中止。"""
     conflicts: list[tuple[str, str]] = []
+    accepted = []
+    kept: list[tuple[str, str]] = []
     tool_claimed = collect_tool_claimed_paths(target)
-    for src, dst, kind, _ in writes:
-        if kind != 'file':
-            conflicts.append((target_rel(target, dst), f'unsupported managed type: {kind}'))
-            continue
+    for write in writes:
+        src, dst, kind, _ = write
         rel = target_rel(target, dst)
+        if kind != 'file':
+            conflicts.append((rel, f'unsupported managed type: {kind}'))
+            continue
         owner = tool_claimed.get(rel)
         if owner is not None:
             conflicts.append((
@@ -665,43 +759,20 @@ def preflight_writes(
                 'see README.md for migration and modified-file recovery',
             ))
             continue
-        symlink = symlink_in_path(dst, target)
-        if symlink is not None:
-            conflicts.append((rel, f'path contains symlink: {target_rel(target, symlink)}'))
-            continue
-        if src.resolve() == dst.resolve():
-            continue
-        if not dst.exists():
-            continue
-        if not dst.is_file():
-            conflicts.append((rel, 'target is not a regular file'))
-            continue
-        try:
-            source = read_source_bytes(src, source_contents)
-            existing = dst.read_bytes()
-        except OSError as exc:
-            conflicts.append((rel, f'cannot read source or target: {exc}'))
-            continue
-        if existing == source:
-            continue
-        prior_digest = previous.get(rel)
-        if prior_digest is not None:
-            if sha256_bytes(existing) == prior_digest:
-                continue
-            conflicts.append((rel, 'content changed since the last successful bootstrap install'))
-            continue
-        if has_matching_generated_marker(source, existing):
-            continue
-        conflicts.append((rel, 'existing content is not recognized as agentwork-managed'))
+        reason = write_keep_reason(target, src, dst, previous, source_contents)
+        if reason is None:
+            accepted.append(write)
+        else:
+            kept.append((rel, reason))
     if conflicts:
         details = '\n'.join(f'- {rel}: {reason}' for rel, reason in sorted(conflicts))
         raise SystemExit(f'bootstrap ownership conflicts:\n{details}')
+    return tuple(accepted), tuple(kept)
 
 
 def prepare_codex_config(target: Path) -> PreparedFile | None:
     config = target / '.codex' / 'config.toml'
-    reject_symlink_path(config, target, 'Codex config')
-    if not config.exists():
+    if symlink_in_path(config, target) is not None or not config.exists():
         return None
     if not config.is_file():
         raise SystemExit(f'cannot manage Codex config path: {config}')
@@ -967,15 +1038,15 @@ def prepare_bootstrap_plan(
 ) -> BootstrapPlan:
     if target.exists() and not target.is_dir():
         raise SystemExit(f'project root must be a directory: {target}')
-    writes = tuple(collect_writes(target))
     previous_receipt = load_receipt(target)
     previous_receipt_exists = receipt_path(target).exists()
-    preflight_writes(target, writes, previous_receipt, source_contents)
-    next_receipt = build_receipt(target, writes, source_contents)
+    writes, kept_writes = preflight_writes(target, tuple(collect_writes(target)), previous_receipt, source_contents)
+    retained = {rel: previous_receipt[rel] for rel, _ in kept_writes if rel in previous_receipt}
+    next_receipt = build_receipt(target, writes, source_contents, retained)
     codex_config = prepare_codex_config(target)
     managed_indexes = prepare_managed_indexes(target)
     gitignore, gitignore_status, gitignore_changed = prepare_gitignore(target)
-    retired_removed, retired_preserved = classify_retired_adapters(
+    retired_removed, retired_preserved, retired_keep_reasons = classify_retired_adapters(
         target,
         previous_receipt,
         previous_receipt_exists,
@@ -1008,12 +1079,11 @@ def prepare_bootstrap_plan(
             path = target / rel
             if not path.exists() and not path.is_symlink():
                 continue
-            digest = previous_receipt.get(rel.as_posix())
-            if (symlink_in_path(path, target) is None and path.is_file()
-                    and digest is not None and sha256_bytes(path.read_bytes()) == digest):
+            if symlink_in_path(path, target) is None and matches_receipt_digest(path, rel, previous_receipt):
                 retired_removed += (rel,)
             else:
                 retired_preserved += (rel,)
+                retired_keep_reasons[rel] = retired_keep_reason(rel, path, target, previous_receipt, previous_receipt_exists)
     retired_readme, remove_retired_readme, preserve_retired_readme = prepare_retired_session_readme(target)
     if remove_retired_readme:
         retired_removed += (RETIRED_SESSION_README_REL,)
@@ -1039,7 +1109,9 @@ def prepare_bootstrap_plan(
         writes=writes,
         retired_removed=retired_removed,
         retired_preserved=retired_preserved,
+        retired_keep_reasons=retired_keep_reasons,
         retired_managed=retired_managed,
+        kept_writes=kept_writes,
         managed_indexes=managed_indexes,
         codex_config=codex_config,
         gitignore=gitignore,
@@ -1060,7 +1132,8 @@ def apply_bootstrap_plan(plan: BootstrapPlan) -> None:
     else:
         print('- no agentwork-managed retired adapter files found')
     for rel in plan.retired_preserved:
-        print(f'- [keep] {rel} (not recognized as agentwork-managed)')
+        reason = plan.retired_keep_reasons.get(rel, 'not recognized as agentwork-managed')
+        print(f'- [keep] {rel} ({reason})')
     for item in plan.retired_managed:
         write_prepared_file(item)
         print(f'- [remove-block] {target_rel(target, item.path)}')
@@ -1073,6 +1146,8 @@ def apply_bootstrap_plan(plan: BootstrapPlan) -> None:
             continue
         copy_file(src, dst)
         print(f'- [{kind}] {label}: {target_rel(target, dst)}')
+    for rel, reason in plan.kept_writes:
+        print(f'- [keep] {rel} ({reason})')
     print()
 
     print('== Updating managed data layer ==')

@@ -34,7 +34,6 @@
 ## 能力分工（推荐）
 
 - `.shared/commands/*`：跨平台共享的工作流语义、工件格式、回退路径
-- Codex Goal：Codex 线程内的目标持续性、预算跟踪、完成审计
 - 平台原生 loop：定时轮询外部状态或周期性重复 prompt
 
 ## 平台能力优先级（建议）
@@ -46,22 +45,22 @@
 
 - 是否启用某个平台的 goal / loop / hook / plugin，属于平台层决策，不应由 `.shared/commands/exec.md` 自动替用户做选择
 - `.shared/*` 只定义共享语义、工件契约与回退路径；不承诺不同平台会以同样方式持续运行
-- 若同一任务在不同平台采用不同 runtime 机制，允许结果路径不同，但应尽量回收到一致的 Case / plan / review 工件
+- 若同一任务在不同平台采用不同 runtime 机制，允许结果路径不同，但应尽量回收到一致的 Case / spec / audit 工件
 
 ## 平台映射（建议）
 
 | 平台 | 入口文件 | 平台差异（需官方确认） | 推荐优先能力 | 回退方式 |
 | --- | --- | --- | --- | --- |
-| Codex CLI | `AGENTS.md`、`.codex/skills/*` | AGENTS 分层合并、审批与沙箱参数、生效优先级 | 使用当前运行时可用的原生工具能力，不预设自定义子代理 | 直接执行 `.shared/commands/*` 文本流程，必要时把结论回收到 Case / plan / review |
-| Claude Code | `.claude/CLAUDE.md`、`.claude/commands/*`、`.claude/skills/*` | slash commands 与 skills 触发/优先级规则 | 自动迭代优先平台原生 loop；定时轮询优先官方 loop | 以 `.shared/commands/*` 为主入口，需跨平台共享语义时写入 Case / plan / review |
-| OpenCode | `AGENTS.md`、`.opencode/commands/*` | 项目规则首个匹配、`AGENTS.md` 普通文件引用不会自动展开、commands/agents/skills 发现与权限默认值 | 使用原生 command 薄 wrapper 注入共享定义；平台 agents/skills 仅按任务需要启用 | 直接读取 `.shared/commands/*` 手动执行，继续以 Case / plan / review 工件接力 |
+| Codex CLI | `AGENTS.md`、`.codex/skills/*` | AGENTS 分层合并、审批与沙箱参数、生效优先级 | 使用当前运行时可用的原生工具能力，不预设自定义子代理 | 直接执行 `.shared/commands/*` 文本流程，必要时把结论回收到 Case / spec / audit |
+| Claude Code | `.claude/CLAUDE.md`、`.claude/commands/*`、`.claude/skills/*` | slash commands 与 skills 触发/优先级规则 | 自动迭代优先平台原生 loop；定时轮询优先官方 loop | 以 `.shared/commands/*` 为主入口，需跨平台共享语义时写入 Case / spec / audit |
+| OpenCode | `AGENTS.md`、`.opencode/commands/*` | 项目规则首个匹配、`AGENTS.md` 普通文件引用不会自动展开、commands/agents/skills 发现与权限默认值 | 使用原生 command 薄 wrapper 注入共享定义；平台 agents/skills 仅按任务需要启用 | 直接读取 `.shared/commands/*` 手动执行，继续以 Case / spec / audit 工件接力 |
 | Cursor | `.cursor/rules/*` | rules 的触发范围、上下文注入时机和工具权限需按项目验证 | 优先使用 Cursor 原生编辑、检索与诊断能力 | 退回 `AGENTS.md` + `.shared/commands/*`，需要接力时写入 Case |
-| Pi | `AGENTS.md`、`.pi/prompts/{brain,plan,exec,review,case,commit}.md` | `AGENTS.md` 可从祖先目录加载，项目 prompt 只从启动 cwd 的受信任 `.pi/prompts/` 发现；trust 与 sandbox 分离 | 使用项目 prompt 薄 wrapper；Pi 原生 session 只用于当前平台对话 | 从仓库根启动；命令缺失或冲突时直接执行 `.shared/commands/*`，跨平台接力仍写入 Case / plan / review |
+| Pi | `AGENTS.md`、`.pi/prompts/{brain,spec,exec,audit,case,commit}.md` | `AGENTS.md` 可从祖先目录加载，项目 prompt 只从启动 cwd 的受信任 `.pi/prompts/` 发现；trust 与 sandbox 分离 | 使用项目 prompt 薄 wrapper；Pi 原生 session 只用于当前平台对话 | 从仓库根启动；命令缺失或冲突时直接执行 `.shared/commands/*`，跨平台接力仍写入 Case / spec / audit |
 
 ## OpenCode 适配边界
 
 - OpenCode 原生读取项目根 `AGENTS.md`；项目级 `AGENTS.md` 优先于兼容回退的 `CLAUDE.md`。它不会自动展开 `AGENTS.md` 中的普通文件引用，因此 bootstrap command 使用 `@file` 注入对应共享命令和占位符规则。
-- `.opencode/commands/{brain,plan,exec,review,case,commit}.md` 是生成式薄入口：只转发 `$ARGUMENTS` 并引用 `.shared/*`，不复制共享工作流正文，也不固定 agent、model 或 subtask。
+- `.opencode/commands/{brain,spec,exec,audit,case,commit}.md` 是生成式薄入口：只转发 `$ARGUMENTS` 并引用 `.shared/*`，不复制共享工作流正文，也不固定 agent、model 或 subtask。
 - OpenCode 默认多数权限为 `allow`；项目需要机械审批时应显式配置 `permission`。`--auto` 会自动批准非显式 `deny` 的询问，不能把文本中的“高风险操作前确认”描述成 runtime 强制拦截。
 - `opencode.json*`、`.opencode/agents/*`、`.opencode/skills/*`、plugins、MCP、Provider 与认证属于项目或用户的运行时配置，不由核心 bootstrap 默认创建。
 - OpenCode 项目级 skills 发现兼容 `.claude/skills/*` 与 `.agents/skills/*`；skill 类可选工具（如 browser）随工具安装落地 `.claude/skills/` 后即可被发现，无需重复包装到 `.opencode/skills/`。
@@ -71,12 +70,12 @@
 ## Pi 适配边界
 
 - 当前兼容基线是 Pi `v0.84.4` 的 [prompt template](https://github.com/earendil-works/pi/blob/v0.84.4/packages/coding-agent/docs/prompt-templates.md)、[project trust / security](https://github.com/earendil-works/pi/blob/v0.84.4/packages/coding-agent/docs/security.md) 与 [CLI usage](https://github.com/earendil-works/pi/blob/v0.84.4/packages/coding-agent/docs/usage.md) 契约。平台升级后需重新验证，不能把该基线自动外推到所有未来版本。
-- `.pi/prompts/{brain,plan,exec,review,case,commit}.md` 是生成式薄入口，只转发 Pi 展开的 `$ARGUMENTS` 并要求读取对应 `.shared/*`；共享文件仍是工作流语义唯一事实源。
+- `.pi/prompts/{brain,spec,exec,audit,case,commit}.md` 是生成式薄入口，只转发 Pi 展开的 `$ARGUMENTS` 并要求读取对应 `.shared/*`；共享文件仍是工作流语义唯一事实源。
 - Pi 会沿启动 cwd 的祖先目录加载 `AGENTS.md`，但项目 `.pi/prompts/` 从启动 cwd 发现且只有在项目被信任后加载。因此应从仓库根启动；从子目录启动可能仍得到根规则，却没有 agentwork 项目命令。
 - Project trust 只控制项目资源加载，不是 sandbox。Pi 内建工具与 extension 继承启动 Pi 的本机用户权限；agentwork 的高风险确认仍是文本契约，真正隔离需由操作系统、容器或虚拟化边界提供。
 - 非交互 `-p`、JSON 与 RPC 模式不会显示 trust 提示。`--approve` / `-a` 只为本次运行信任项目资源，不是工具调用批准；调用者必须先独立判断项目是否可信。
-- Pi 内置 `/session` 展示 Pi 自身对话 session 信息；agentwork 在 Pi 上使用 `/case` 映射共享 `.shared/commands/case.md`。Pi 的用户目录 JSONL 状态不替代仓库内显式 Case / plan / review 工件。
-- Pi 核心不内置 plan mode 或 subagent。官方 [plan-mode 示例](https://github.com/earendil-works/pi/tree/v0.84.4/packages/coding-agent/examples/extensions/plan-mode) 会注册 `/plan`，若用户另行安装可能与 agentwork `/plan` prompt 冲突；不承诺优先级，冲突时禁用或重命名其中一方，并直接回退到 `.shared/commands/plan.md`。
+- Pi 内置 `/session` 展示 Pi 自身对话 session 信息；agentwork 在 Pi 上使用 `/case` 映射共享 `.shared/commands/case.md`。Pi 的用户目录 JSONL 状态不替代仓库内显式 Case / spec / audit 工件。
+- Pi 核心不内置 plan mode 或 subagent。官方 [plan-mode 示例](https://github.com/earendil-works/pi/tree/v0.84.4/packages/coding-agent/examples/extensions/plan-mode) 会注册 `/plan`；agentwork 使用 `/spec`，与其不重名，两者可并存，但不承诺 Pi 扩展行为与 agentwork spec 工件一致。
 - 核心 bootstrap 不安装 Pi runtime、package、extension、官方 [subagent 示例](https://github.com/earendil-works/pi/tree/v0.84.4/packages/coding-agent/examples/extensions/subagent) 或 optional tool。Browser、Research、CodeGraph 可通过各自 manifest 显式安装 `.pi/skills/**` 薄入口，但不会生成 `.pi/settings.json`、安装外部 CLI 或假设 MCP 已接线；其他 Pi 扩展能力仍需独立设计、安装与验证。
 
 ## Codex custom agent 边界

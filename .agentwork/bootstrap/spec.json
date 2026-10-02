@@ -35,9 +35,9 @@
     "workflow_title": "## 工作流起步建议",
     "workflow_items": [
       "需求不清晰、边界模糊：先 `/brain`",
-      "已有方向、需要拆执行步骤：先 `/plan`",
+      "已有方向、需要整理成可执行规格：先 `/spec`",
       "开始做当前批次工作：用 `/exec`",
-      "一轮工作完成后：先 `/review`，再决定是否 `/commit`"
+      "一轮工作完成后：先 `/audit`，再决定是否 `/commit`"
     ],
     "complex_title": "## 复杂任务",
     "complex_items": [
@@ -107,9 +107,9 @@
       "workflow_override": [
         "Cursor 没有 agentwork 的斜杠命令入口；按阶段直接读取对应共享命令文件正文并据此执行",
         "需求不清晰、边界模糊：先读 `.shared/commands/brain.md`",
-        "已有方向、需要拆执行步骤：读 `.shared/commands/plan.md`",
+        "已有方向、需要整理成可执行规格：读 `.shared/commands/spec.md`",
         "开始做当前批次工作：读 `.shared/commands/exec.md`",
-        "一轮工作完成后：先读 `.shared/commands/review.md`，再决定是否按 `.shared/commands/commit.md` 提交",
+        "一轮工作完成后：先读 `.shared/commands/audit.md`，再决定是否按 `.shared/commands/commit.md` 提交",
         "需要跨会话或跨工具接力任务状态：读 `.shared/commands/case.md`"
       ]
     },
@@ -162,32 +162,32 @@
       ]
     },
     {
-      "name": "plan",
-      "title": "/plan [plan-source]",
-      "target": ".shared/commands/plan.md",
-      "description": "设计已确认、需要把它拆成可执行且可验证的任务时使用。先锁定本轮范围与非目标，再产出无占位的轻量计划；计划本身不构成修改源码的许可。",
+      "name": "spec",
+      "title": "/spec [spec-source]",
+      "target": ".shared/commands/spec.md",
+      "description": "设计已确认、需要整理成可执行规格时使用。把已确认结论写成编号决策，锁定范围与验证接缝，再拆成带覆盖、依赖、完成条件与验证的任务切片；spec 本身不构成修改源码的许可。",
       "codex_interaction": [
         "复核输入来源时，若仍缺少关键已确认结论、范围边界或验收标准，且 `request_user_input` 可用，优先使用该工具做最小必要确认。",
-        "不要重复询问已经确认的内容；若 `request_user_input` 不可用，改用普通文本提问，并在确认完成前停留在 plan 阶段。"
+        "不要重复询问已经确认的内容；若 `request_user_input` 不可用，改用普通文本提问，并在确认完成前停留在 spec 阶段。"
       ]
     },
     {
       "name": "exec",
       "title": "/exec [exec-source]",
       "target": ".shared/commands/exec.md",
-      "description": "已有明确计划、要推进当前批次实际改动时使用。默认小步推进 1-3 个任务后停下等下一轮；遇到阻塞就停，不靠猜测继续。"
+      "description": "已有可执行 spec、要推进当前批次实际改动时使用。只从依赖已完成的任务中小步推进 1-3 个，以完成条件和本轮验证判定完成后停下；遇到阻塞就停，不靠猜测继续。"
     },
     {
-      "name": "review",
-      "title": "/review [review-source]",
-      "target": ".shared/commands/review.md",
-      "description": "一轮工作完成、风险发生变化或准备提交前使用。同时审查工作产物与工作流工件，以当前文件、diff 和实际验证结果为事实依据。"
+      "name": "audit",
+      "title": "/audit [audit-source]",
+      "target": ".shared/commands/audit.md",
+      "description": "一轮工作完成、风险发生变化或准备提交前使用。同时审查工作产物与工作流工件，规格符合与质量规范分开给结论，以当前文件、diff 和实际验证结果为事实依据。"
     },
     {
       "name": "case",
       "title": "/case [subcommand] [args]",
       "target": ".shared/commands/case.md",
-      "description": "任务需要跨会话或跨工具接力时使用。管理仓库内的显式任务快照：新建、加载、把已确认计划写入快照、按快照推进或审查；旧快照只在显式加载时读取。"
+      "description": "任务需要跨会话或跨工具接力时使用。管理仓库内的显式任务快照：新建、加载、把已确认 spec 写入快照、按快照推进或审查；旧快照只在显式加载时读取。"
     },
     {
       "name": "commit",

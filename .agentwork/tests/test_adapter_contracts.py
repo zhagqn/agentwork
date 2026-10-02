@@ -11,7 +11,7 @@ from test_pi_adapter import BOOTSTRAP, REPO_ROOT, load_renderer
 
 
 # Independent of spec.json so removing a command cannot shrink the expected set.
-EXPECTED_COMMANDS = {'brain', 'plan', 'exec', 'review', 'case', 'commit'}
+EXPECTED_COMMANDS = {'brain', 'spec', 'exec', 'audit', 'case', 'commit'}
 EXPECTED_CAPABILITIES = {'anydoc', 'research'}
 
 
@@ -51,8 +51,8 @@ class AdapterContractTest(unittest.TestCase):
             self.assertNotIn('@.shared/', text)
         self.assertNotIn('## 当前核心子命令', text)
         if platform == 'codex':
-            self.assertEqual('## Codex 交互适配' in text, name in {'brain', 'plan'})
-            if name in {'brain', 'plan'}:
+            self.assertEqual('## Codex 交互适配' in text, name in {'brain', 'spec'})
+            if name in {'brain', 'spec'}:
                 self.assertIn('`request_user_input`', text)
 
     def test_command_wrappers_have_fixed_sets_and_thin_bodies(self) -> None:

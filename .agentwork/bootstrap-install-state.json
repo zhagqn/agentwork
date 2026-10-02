@@ -2,7 +2,12 @@
   "files": [
     {
       "path": ".claude/CLAUDE.md",
-      "sha256": "2950369afb9ed3fbfe1dafb02013982116f45a923437358f1642b76dc150c3ea",
+      "sha256": "354ac510cbde8f38969e9e9bb1b9ed1a0bacd3551b4e3fcd58d219ffb0c89b7e",
+      "type": "file"
+    },
+    {
+      "path": ".claude/commands/audit.md",
+      "sha256": "b28f31fa9d376139911de84c7e4c56e3ffe1c11e5a6e18939ed2f7a06f8e91f4",
       "type": "file"
     },
     {
@@ -12,7 +17,7 @@
     },
     {
       "path": ".claude/commands/case.md",
-      "sha256": "63d0c6b07aac21cdfc6b4ea54a55cd0e0f1352ee3ee2676730f2485d884d4080",
+      "sha256": "d9a15cf8ca5d76690a1405ad90e1d8d46f16b07bea76018b8e5ea63df5213fd0",
       "type": "file"
     },
     {
@@ -22,17 +27,12 @@
     },
     {
       "path": ".claude/commands/exec.md",
-      "sha256": "01fde76adf2b424493e27f26144158022dd8d13defec671e644592d0bd0a6bda",
+      "sha256": "3465c18d5121c18a33eb78f06c85babec7f8c6ece207dcd4f2190b4c998d27b3",
       "type": "file"
     },
     {
-      "path": ".claude/commands/plan.md",
-      "sha256": "1e0e79f106f46749686d6cff65ca4b9ec86889c18204765ac4a97fe6b07a4d4f",
-      "type": "file"
-    },
-    {
-      "path": ".claude/commands/review.md",
-      "sha256": "4381d6c566f1863952d13970baf5f661725c98bb0706010791aaea89b1467160",
+      "path": ".claude/commands/spec.md",
+      "sha256": "9d179c0cc85501474010b6e4bdd44fee40513c88c912efcb5f44c4dfb99d65d7",
       "type": "file"
     },
     {
@@ -51,13 +51,18 @@
       "type": "file"
     },
     {
+      "path": ".codex/skills/audit/SKILL.md",
+      "sha256": "9dd0177bc512f44747a24d00c94dfbaed77d719622229c9c44bd6510d6c45395",
+      "type": "file"
+    },
+    {
       "path": ".codex/skills/brain/SKILL.md",
       "sha256": "f89a10da4e19a55a69b2976de118428c9ebad3f705c7509c6e622ae53eb0f0e9",
       "type": "file"
     },
     {
       "path": ".codex/skills/case/SKILL.md",
-      "sha256": "43dbfd9d8d4d714664805c8bf55b58c7f38979a3ff803c1c2a68cfc87c634ae9",
+      "sha256": "713af9647c7a2a7ac07313ffdb5e05d1fae4664ad126cee440537edc8ff532b6",
       "type": "file"
     },
     {
@@ -67,12 +72,7 @@
     },
     {
       "path": ".codex/skills/exec/SKILL.md",
-      "sha256": "a1a176121ab80dbccc466df3dd4ed95ce61b3f4d8958fda7427320af22e870bd",
-      "type": "file"
-    },
-    {
-      "path": ".codex/skills/plan/SKILL.md",
-      "sha256": "b1d3e6489da5a94894857f9a44c901057b50062407ff19e1549486dd6d920958",
+      "sha256": "c2f89dd4501ba551c951ba15b0c8fddd37140360be0845c1864ae4f75aaa2ce3",
       "type": "file"
     },
     {
@@ -86,13 +86,13 @@
       "type": "file"
     },
     {
-      "path": ".codex/skills/review/SKILL.md",
-      "sha256": "93a31565e034f5d9ae391a921c09ad118997b68a2bf72851a61ecd5e0c6be150",
+      "path": ".codex/skills/spec/SKILL.md",
+      "sha256": "418e9122138f535c49716ecaa91f7304cb57f9c65d511358a3f44578303a2de2",
       "type": "file"
     },
     {
       "path": ".cursor/rules/agentwork-bootstrap.mdc",
-      "sha256": "a402c117a98602ef08b4f5b82ba2abbc50df00fa65a54f9b0addc49d0bc0f6bf",
+      "sha256": "8fb94c8062140de23a9109f0b12070b37abf7b811bd9d9543245b0ae8eeee77e",
       "type": "file"
     },
     {
@@ -111,13 +111,18 @@
       "type": "file"
     },
     {
+      "path": ".opencode/commands/audit.md",
+      "sha256": "bd4894ef8b5c95722f2bc4da1024e45ff787f6e350b3361aebe19878d6deee86",
+      "type": "file"
+    },
+    {
       "path": ".opencode/commands/brain.md",
       "sha256": "75be7ee5335d1c25587f7e8a3ece3b6f80a06b21fa57aa9a7ca4b7ec05e22e5e",
       "type": "file"
     },
     {
       "path": ".opencode/commands/case.md",
-      "sha256": "57f30528b5a53e7c1f5f1fca33aa62b77f415e1e384f84bcd8b218a561324b96",
+      "sha256": "9173b5b651b09ebe8c12926a613c8e7f90522ae13b90a6ac8fb2ebe3cc9603c6",
       "type": "file"
     },
     {
@@ -127,17 +132,17 @@
     },
     {
       "path": ".opencode/commands/exec.md",
-      "sha256": "f383b10cd9ad73def6a48710df5c58e1b90d2a5c5c771043124c3bf8a93e70cb",
+      "sha256": "011bbcaf80390f9a94a69a006fc05e42f4753ae9849fe5bbae2ddd71875a2470",
       "type": "file"
     },
     {
-      "path": ".opencode/commands/plan.md",
-      "sha256": "fbdcfc3eec11032157af72ef037c980bb2c4fcfda300e9dde4e2ec97f160b06d",
+      "path": ".opencode/commands/spec.md",
+      "sha256": "ac7978f5d00e10765bf7f1654d18b553d0012af176829b11e6cffe10a11ac5ba",
       "type": "file"
     },
     {
-      "path": ".opencode/commands/review.md",
-      "sha256": "27e0f6c4430b750649184ab6331a9f547c828648e697a2f8fcc9db1dad8fc967",
+      "path": ".pi/prompts/audit.md",
+      "sha256": "123670abeb704e1acff3d9c1c06bf8c939d6c4b7fd990f7c07ef6bdaec2df823",
       "type": "file"
     },
     {
@@ -147,7 +152,7 @@
     },
     {
       "path": ".pi/prompts/case.md",
-      "sha256": "86ab87cbff2e4a28e6a56a9d1ed1c9a3ff55840fa020202248e3c2eba32a1b98",
+      "sha256": "e0c9bc887cc35c585675e12a3f58a0e7f3bc16ffa534318c2c69fe85f091c2a2",
       "type": "file"
     },
     {
@@ -157,17 +162,12 @@
     },
     {
       "path": ".pi/prompts/exec.md",
-      "sha256": "9255e7692ac7423b265764f05d5ae5ce61b17135dfc5f5642f108a3776a15693",
+      "sha256": "ce5a09410f31a2b94de5559636ba2bcd115f09708cc669763ff326463ecf630b",
       "type": "file"
     },
     {
-      "path": ".pi/prompts/plan.md",
-      "sha256": "7703d0f3337d5e2fe5ed8fd67d731c4f5a6194275aa504f8ea3acfb2865892e2",
-      "type": "file"
-    },
-    {
-      "path": ".pi/prompts/review.md",
-      "sha256": "de8eaca235f7529d0dcbf528c703acb5224470e87fe8bac1cf55dc7c1333cf8b",
+      "path": ".pi/prompts/spec.md",
+      "sha256": "2a0ac94d6f114c774179ac8d4478a21746d8ecd5a75364d2cf18803bb91629e6",
       "type": "file"
     },
     {
@@ -182,17 +182,22 @@
     },
     {
       "path": ".shared/INDEX.md",
-      "sha256": "46749dad66bb442f0e96141a83590cef2a47a93518f21c4f60c4c965aa18fa19",
+      "sha256": "a3d0e4a26b046649679227b75c8310278d3f421b9eab2d2de4712c0847beab8b",
+      "type": "file"
+    },
+    {
+      "path": ".shared/commands/audit.md",
+      "sha256": "0ad456bf1e0a04265d40636698381d7af66d4d78d477c1d9c5e93d8c9c83f3ba",
       "type": "file"
     },
     {
       "path": ".shared/commands/brain.md",
-      "sha256": "f5a5257d7d295447778c8e0378729b29566dbb9e01758c047abcc3f4b5e57ff9",
+      "sha256": "273542f2936516578ee0c763d7175862cb81cc2e28552f554e1cd629fcd36ebd",
       "type": "file"
     },
     {
       "path": ".shared/commands/case.md",
-      "sha256": "3654495a4f71f81868ef25b6f4d7dc3c59abbd2b4fc383e78b8654a2adaaf780",
+      "sha256": "310cf1013eb6d23563a3b3fb3a7ee7a4d928f5187fc3d339a4d48ab37c2044f0",
       "type": "file"
     },
     {
@@ -202,17 +207,12 @@
     },
     {
       "path": ".shared/commands/exec.md",
-      "sha256": "a511b22ee94d2943287acfe94d85b41b919c3539df2dee21fd8c15f29bfc9d92",
+      "sha256": "8116639a8440bb7e5b8cb31aa9108e18eb72fe29b88649a3344f1cecd5766705",
       "type": "file"
     },
     {
-      "path": ".shared/commands/plan.md",
-      "sha256": "ef75c48d852b1ebed1da1fa7066388823b1537a3a35dab8aab99abec893f2f6e",
-      "type": "file"
-    },
-    {
-      "path": ".shared/commands/review.md",
-      "sha256": "bc5c1d9c85bd902e33a5037bc05579747903f4802d8b7f80f6a6afcd39abd718",
+      "path": ".shared/commands/spec.md",
+      "sha256": "267282880d0c772689b7ef4563946bf937f410b59f95ea243ae4c0a29dd54ba6",
       "type": "file"
     },
     {
@@ -232,12 +232,12 @@
     },
     {
       "path": ".shared/constraints/placeholder-naming.md",
-      "sha256": "db0d31906065a09ea9c53288dd4281ea166e129b57c8cd1548f0299b25d5dd86",
+      "sha256": "d633c93b9d2592f0a72bdda68e1d7b59a909a22b3c3f24c18ed82de093285bd0",
       "type": "file"
     },
     {
       "path": ".shared/patterns/case-workflow.md",
-      "sha256": "db76a7940126646417a59b44a70d19d5b7f5aa2885d1d1647025f0053545cf9b",
+      "sha256": "2837a603be2cf9d96f71136817a01469ecd53862ee9052e825d89572c8b11eb3",
       "type": "file"
     },
     {
@@ -247,12 +247,12 @@
     },
     {
       "path": ".shared/patterns/platform-adapter.md",
-      "sha256": "d4ac850b0eec1507b278b5a1e276dc9ea0a7192053a3d7f2d05c7718b7a6192a",
+      "sha256": "fed41593a3a5325a62255de5f58c35860a9857afac3a50c86bab1939133b462b",
       "type": "file"
     },
     {
       "path": ".shared/patterns/project-management.md",
-      "sha256": "9d1605c9cc0d1d91ba8543982ddfc94807441ddb367598c94baf784ea6a0bf3e",
+      "sha256": "be9ad0825f432d363f4e3c100e64f99af121e3574e7e3aa9dbdf88377387580f",
       "type": "file"
     },
     {
@@ -262,22 +262,22 @@
     },
     {
       "path": ".shared/patterns/subagent-workflow.md",
-      "sha256": "e75452acb277e38f248f2444ff2d319ed3181459db3dd177df63371345d8e468",
+      "sha256": "85cec8fb2c4a023f6457561e672111be1fb931b38a601761c5bbbcf1ee43d5f8",
       "type": "file"
     },
     {
       "path": ".shared/scripts/README.md",
-      "sha256": "092a217781246f597e2b620183fe625576ffe6c126ec2bf2a49c256336419920",
+      "sha256": "b44b484ecb6113aa2176f5039a856595650c73c82c48dcbe054eab1bf52a20e3",
       "type": "file"
     },
     {
       "path": ".shared/scripts/agentwork-check.py",
-      "sha256": "3d3a4551fd34828cc548a8b69d22f4e082919c9267b1e1d09f6b5c363c5b0811",
+      "sha256": "dc0ad369007d79eb39fbccbae02cf60156f3170bcef82192eb49548f3b94a426",
       "type": "file"
     },
     {
-      "path": ".shared/scripts/case-review.sh",
-      "sha256": "2bd0ff9b5c0fae9a696dbb1724d96d15f7ed5c6bc85e5e48609054b7d82b71bf",
+      "path": ".shared/scripts/case-audit.sh",
+      "sha256": "bac208d19cafdeb319e6980bde856f56f94610296f91bbfb085e710e520fc077",
       "type": "file"
     },
     {
@@ -292,22 +292,22 @@
     },
     {
       "path": ".shared/skills/research/SKILL.md",
-      "sha256": "8a55944ddbfa8f14b14e8100840ccacb59157929795287e3fa1c0830251d6884",
+      "sha256": "233a3b76f422ff5740209ef2fbea7364cd643aebfbb67b71b4a95baf813a44e8",
+      "type": "file"
+    },
+    {
+      "path": ".shared/templates/audit.md",
+      "sha256": "2b8cf9e699308ad896ae12e61907332b2bf2e806ee7d2c6876e98127c75bbfb2",
       "type": "file"
     },
     {
       "path": ".shared/templates/brain.md",
-      "sha256": "08debe322b3f90e3045d779a5af4790b563187619c14362b9b482a75ce2eaed5",
+      "sha256": "6e09da0aa2b1fa50f21a27a5737da7fdc841bf4ad7038ed27ccc69bc9b663b04",
       "type": "file"
     },
     {
       "path": ".shared/templates/case.md",
-      "sha256": "00b1d87a4cc323d4e018f4bc88d794fecbd7919eb4cefcc5635b6412a606d5bd",
-      "type": "file"
-    },
-    {
-      "path": ".shared/templates/plan.md",
-      "sha256": "87442abba1fae8009b9a16713f7b7200f355a77d3c7a2ed39c90f21f0a0beb44",
+      "sha256": "c1ec993a475e4a1ca76db9aa6b29ea418a70083e6f6920fe739bfd37b18ae1c6",
       "type": "file"
     },
     {
@@ -316,13 +316,13 @@
       "type": "file"
     },
     {
-      "path": ".shared/templates/review.md",
-      "sha256": "d894369265edc8e090a6266aa8da4c6b42356ab9b4abc8bd4a63e936b671a47d",
+      "path": ".shared/templates/spec.md",
+      "sha256": "5097c2e2da22fca74ce6793a8ae55b502c1797edb4365f24bd71722a8bc83153",
       "type": "file"
     },
     {
       "path": "AGENTS.md",
-      "sha256": "68ab277167df9654453474e355cdbdcec03238606c2e68ff9b3ad10887c4e598",
+      "sha256": "361e2f5ed528644fcaefc4e4456db92ff07dbdcd67b96044e3513d6ceb963fe9",
       "type": "file"
     }
   ],
