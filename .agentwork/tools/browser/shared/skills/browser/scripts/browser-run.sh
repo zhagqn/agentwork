@@ -353,7 +353,9 @@ import urllib.request
 
 port = sys.argv[1]
 url = f"http://127.0.0.1:{port}/json/version"
-with urllib.request.urlopen(url, timeout=1.2) as resp:
+# 回环地址不应经过系统 / 环境代理；否则开启系统代理时探测会被代理断开并静默回退。
+opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+with opener.open(url, timeout=1.2) as resp:
     data = json.load(resp)
 print(data["webSocketDebuggerUrl"])
 PY
