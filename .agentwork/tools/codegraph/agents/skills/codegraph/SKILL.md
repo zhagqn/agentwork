@@ -5,7 +5,12 @@ description: 在已有 CodeGraph 索引的项目中，理解或定位代码、�
 
 # CodeGraph
 
-先读取项目内 [CodeGraph 使用规则](../../../.shared/mcp/codegraph.md)，遵循其中的「Agent 优先调用约定」。
+Codex、OpenCode 与 Pi 共用的项目技能入口；Pi 同样从 `.agents/skills/` 发现本技能。
 
-- 项目存在 `.codegraph/` 且当前会话有 CodeGraph MCP 或本机 CLI 可用时，优先使用 `codegraph_explore` 或 `codegraph explore` 获取相关源码、调用路径和影响范围。
-- 没有索引、工具不可用或索引过期时按共享规则回退；不要自动安装、初始化或接线 MCP。
+先完整读取项目内 [CodeGraph 使用规则](../../../.shared/mcp/codegraph.md)，遵循其中的「Agent 优先调用约定」。若项目存在 `.shared/patterns/semantic-navigation.md`，同时遵循其中的通用语义导航约束。
+
+- 需要项目内的 `.codegraph/` 索引，以及 PATH 上的 `codegraph` CLI 或已连接的 CodeGraph MCP；不假设 MCP 已连接。
+- 满足条件时，理解、定位或修改代码前优先使用 `codegraph_explore` 或 `codegraph explore "<symbol names or question>"` 获取相关源码、调用路径和影响范围，再读取必要文件。
+- 没有索引、工具不可用或索引过期时按共享规则回退本地读取或搜索；不要把回退结果描述成 CodeGraph 输出。
+- 不自动安装、初始化或接线 MCP，也不生成或修改 `.pi/settings.json` 等平台配置。
+- `codegraph init`、`install`、`upgrade`、`uninit`、`uninstall` 会改变项目或机器状态，执行前说明影响并获得用户明确授权。

@@ -200,8 +200,9 @@ class ToolCatalogTest(unittest.TestCase):
             '.agents/skills/codegraph/SKILL.md',
             '.claude/rules/codegraph.md',
             '.cursor/rules/codegraph.mdc',
-            '.pi/skills/codegraph/SKILL.md',
         )
+        # Pi 与 Codex、OpenCode 共用 .agents/skills 入口，不再单独安装。
+        pi_skill = self.project / '.pi/skills/codegraph'
         for relative in targets:
             self.assertFalse((self.project / relative).exists(), relative)
 
@@ -230,12 +231,12 @@ class ToolCatalogTest(unittest.TestCase):
         self.assertEqual(self.project_snapshot(), first_install)
         for relative in targets:
             self.assertTrue((self.project / relative).is_file(), relative)
-        for platform in ('.agents', '.pi'):
-            skill = self.project / platform / 'skills/codegraph/SKILL.md'
-            self.assertTrue(
-                (skill.parent / '../../../.shared/mcp/codegraph.md').resolve().is_file()
-            )
-            self.assertTrue(skill.read_text().startswith('---\nname: codegraph\n'))
+        self.assertFalse(pi_skill.exists())
+        skill = self.project / '.agents/skills/codegraph/SKILL.md'
+        self.assertTrue(
+            (skill.parent / '../../../.shared/mcp/codegraph.md').resolve().is_file()
+        )
+        self.assertTrue(skill.read_text().startswith('---\nname: codegraph\n'))
         cursor = (self.project / '.cursor/rules/codegraph.mdc').read_text()
         self.assertTrue(cursor.startswith('---\n'))
         self.assertIn('alwaysApply: true\n', cursor.split('---', 2)[1])
@@ -255,7 +256,8 @@ class ToolCatalogTest(unittest.TestCase):
             self.assertEqual((self.project / relative).read_bytes(), content, relative)
         self.assertEqual(self.staged_hash(), staged_before)
 
-    def test_codegraph_upgrade_adds_entries_to_existing_receipt(self) -> None:
+    def test_codegraph_upgrade_moves_pi_entry_to_shared_agents_skill(self) -> None:
+        """旧收据含 .pi/skills/codegraph：未改写则退役，改写则保留并移出收据。"""
         source = Path(self.temp.name) / 'legacy-source'
         source.mkdir()
         shutil.copy2(INSTALLER, source / 'install-tool.py')
@@ -263,41 +265,68 @@ class ToolCatalogTest(unittest.TestCase):
         shutil.copytree(TOOLS_ROOT / 'codegraph', legacy_root)
         manifest = json.loads((legacy_root / 'tool.json').read_text())
         manifest['entries'] = [
-            entry for entry in manifest['entries']
-            if entry['surface'] in ('shared', 'pi')
-        ]
+            entry for entry in manifest['entries'] if entry['surface'] == 'shared'
+        ] + [{'surface': 'pi', 'from': 'pi/skills/codegraph', 'to': '.pi/skills/codegraph'}]
         (legacy_root / 'tool.json').write_text(json.dumps(manifest))
         (legacy_root / 'shared/mcp/codegraph.md').write_text('Legacy reference.\n')
+        legacy_skill = legacy_root / 'pi/skills/codegraph/SKILL.md'
+        legacy_skill.parent.mkdir(parents=True)
+        legacy_skill.write_text('---\nname: codegraph\ndescription: legacy Pi entry\n---\n')
         registry = {
             'schema_version': 1,
             'tools': [{'name': 'codegraph', 'dir': 'codegraph', 'kind': manifest['kind']}],
         }
         (source / '.agentwork/tools/registry.json').write_text(json.dumps(registry))
-        result = subprocess.run(
-            [sys.executable, str(source / 'install-tool.py'), 'install',
-             'codegraph', '-p', str(self.project)],
-            text=True, capture_output=True,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
-        self.assertFalse((self.project / '.agents/skills/codegraph').exists())
-        self.assertTrue((self.project / '.agentwork/tool-receipts/codegraph.json').is_file())
-
-        self.run_tools('install', 'codegraph')
         current = json.loads((TOOLS_ROOT / 'codegraph/tool.json').read_text())
-        for entry in current['entries']:
-            self.assertEqual(
-                tree_snapshot(self.project / entry['to']),
-                tree_snapshot(TOOLS_ROOT / 'codegraph' / entry['from']),
-            )
-        receipt = json.loads(
-            (self.project / '.agentwork/tool-receipts/codegraph.json').read_text()
-        )
-        self.assertIn('.agents/skills/codegraph/SKILL.md', receipt['files'])
-        self.assertIn('.claude/rules/codegraph.md', receipt['files'])
-        self.assertIn('.cursor/rules/codegraph.mdc', receipt['files'])
-        self.run_tools('uninstall', 'codegraph')
-        for entry in current['entries']:
-            self.assertFalse((self.project / entry['to']).exists())
+        self.assertNotIn('pi', {entry['surface'] for entry in current['entries']})
+        pi_rel = '.pi/skills/codegraph/SKILL.md'
+
+        for modified in (False, True):
+            with self.subTest(modified=modified):
+                self.project = Path(self.temp.name) / f'upgrade-{int(modified)}'
+                subprocess.run(['git', 'init', '-q', str(self.project)], check=True)
+                neighbor = self.project / '.pi/skills/project-owned/SKILL.md'
+                neighbor.parent.mkdir(parents=True)
+                neighbor.write_text('---\nname: project-owned\ndescription: keep\n---\n')
+                result = subprocess.run(
+                    [sys.executable, str(source / 'install-tool.py'), 'install',
+                     'codegraph', '-p', str(self.project)],
+                    text=True, capture_output=True,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+                pi_skill = self.project / pi_rel
+                self.assertTrue(pi_skill.is_file())
+                self.assertFalse((self.project / '.agents/skills/codegraph').exists())
+                if modified:
+                    pi_skill.write_text('---\nname: codegraph\ndescription: custom\n---\n')
+
+                upgraded = self.run_tools('install', 'codegraph')
+                for entry in current['entries']:
+                    self.assertEqual(
+                        tree_snapshot(self.project / entry['to']),
+                        tree_snapshot(TOOLS_ROOT / 'codegraph' / entry['from']),
+                    )
+                receipt = json.loads(
+                    (self.project / '.agentwork/tool-receipts/codegraph.json').read_text()
+                )
+                self.assertNotIn(pi_rel, receipt['files'])
+                self.assertNotIn('.pi/skills/codegraph', receipt['files'])
+                self.assertIn('.agents/skills/codegraph/SKILL.md', receipt['files'])
+                self.assertIn('.claude/rules/codegraph.md', receipt['files'])
+                self.assertIn('.cursor/rules/codegraph.mdc', receipt['files'])
+                self.assertTrue(neighbor.is_file())
+                if modified:
+                    self.assertIn(f'[keep-modified] {pi_rel}', upgraded.stdout)
+                    self.assertIn('description: custom', pi_skill.read_text())
+                else:
+                    self.assertIn(f'[retire-file] {pi_rel}', upgraded.stdout)
+                    self.assertFalse(pi_skill.parent.exists())
+
+                self.run_tools('uninstall', 'codegraph')
+                for entry in current['entries']:
+                    self.assertFalse((self.project / entry['to']).exists())
+                self.assertEqual(pi_skill.exists(), modified)
+                self.assertTrue(neighbor.is_file())
 
     def test_codegraph_rule_conflict_is_atomic(self) -> None:
         rule = self.project / '.claude/rules/codegraph.md'

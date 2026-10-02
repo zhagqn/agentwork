@@ -567,25 +567,35 @@ def prepare_owned_changes(
                 fail(f'{name}: invalid tool receipt: {receipt}')
             previous = data['files']
         owned: dict[str, Path] = {}
+        retired: list[ToolEntry] = []
+        released: set[str] = set()
         for relative, digest in previous.items():
             rel = safe_relative_path(name, 'receipt file', relative)
             dst = safe_target_path(project_root, name, rel)
-            # 退役路径只阻断 install：卸载必须仍能按旧收据清理，否则用户无路可退。
+            if not isinstance(digest, str) or (digest != 'directory' and re.fullmatch(r'[0-9a-f]{64}', digest) is None):
+                fail(f'{name}: invalid receipt digest: {relative}')
+            matches = dst.is_dir() if digest == 'directory' else dst.is_file() and hashlib.sha256(dst.read_bytes()).hexdigest() == digest
+            # 源端已退役的路径：install 时摘要匹配才删除，被改写则保留并移出收据，
+            # 之后归项目所有；uninstall 仍按旧收据清理，避免用户无路可退。
             if action == 'install' and not any(
                 dst == entry.dst or (entry.src.is_dir() and dst.is_relative_to(entry.dst))
                 for entry in entries
             ):
-                fail(f'{name}: receipt path outside current manifest; reconcile manually: {relative}')
-            if not isinstance(digest, str) or (digest != 'directory' and re.fullmatch(r'[0-9a-f]{64}', digest) is None):
-                fail(f'{name}: invalid receipt digest: {relative}')
-            matches = dst.is_dir() if digest == 'directory' else dst.is_file() and hashlib.sha256(dst.read_bytes()).hexdigest() == digest
+                released.add(relative)
+                if digest == 'directory':
+                    if matches and not any(dst.iterdir()):
+                        retired.append(ToolEntry('retire', dst, dst))
+                elif matches:
+                    retired.append(ToolEntry('retire', dst, dst))
+                elif dst.exists():
+                    retired.append(ToolEntry('keep-modified', dst, dst))
+                continue
             if dst.exists() and not matches:
                 fail(f'{name}: ownership conflict (modified managed file): {relative}')
             owned[relative] = dst
 
         changes: list[ToolEntry] = []
-        # 源已移除的文件暂不在升级时删除，保留记录供后续卸载核对。
-        updated = dict(previous)
+        updated = {key: value for key, value in previous.items() if key not in released}
         if action == 'install':
             for entry in entries:
                 sources = sorted(entry.src.rglob('*')) if entry.src.is_dir() and any(entry.src.iterdir()) else [entry.src]
@@ -608,6 +618,9 @@ def prepare_owned_changes(
                         fail(f'{name}: ownership conflict (unmanaged file): {relative}')
                     changes.append(ToolEntry(entry.surface, src, dst))
                     updated[relative] = 'directory' if src.is_dir() else hashlib.sha256(src.read_bytes()).hexdigest()
+            # 深层路径先退役，空目录才能随后被删除。
+            retired.sort(key=lambda item: len(item.dst.parts), reverse=True)
+            changes = retired + changes
             receipts[receipt] = (json.dumps({'version': 1, 'files': updated}, indent=2, sort_keys=True) + '\n').encode()
         else:
             changes = [ToolEntry('receipt', dst, dst) for dst in owned.values()
@@ -709,8 +722,21 @@ def apply_tool_changes(
     for tool_name, entries in grouped:
         print(f'== Tool: {tool_name} ==')
         for entry in entries:
+            relative = target_rel(project_root, entry.dst)
+            if entry.surface == 'keep-modified':
+                print(f'- [keep-modified] {relative} (retired from manifest; left as project file)')
+                continue
+            if entry.surface == 'retire':
+                removed_kind = 'dir' if entry.dst.is_dir() else 'file'
+                if removed_kind == 'dir':
+                    entry.dst.rmdir()
+                else:
+                    remove_entry(entry.dst)
+                prune_empty_parents(entry.dst.parent, project_root)
+                print(f'- [retire-{removed_kind}] {relative}')
+                continue
             copied_kind = copy_entry(entry.src, entry.dst)
-            print(f'- [{copied_kind}:{entry.surface}] {target_rel(project_root, entry.dst)}')
+            print(f'- [{copied_kind}:{entry.surface}] {relative}')
     apply_env_plan(project_root, env_plan)
 
 

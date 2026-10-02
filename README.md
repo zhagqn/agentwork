@@ -207,7 +207,10 @@ Receipts also record empty directories created by the installer.
 Existing files without a matching receipt, or with local edits, stop the
 operation before writes; older installations without receipts are not
 automatically adopted. Reinstalling preserves additional project files inside
-tool directories. Uninstall removes only unchanged receipted files and empty
+tool directories. When a tool pack removes an installation entry from its
+manifest, reinstalling removes unchanged receipted files outside the remaining
+entries; edited copies stay as project files and leave the receipt. Uninstall
+removes only unchanged receipted files and empty
 directories. Keep receipts with the project when moving its installed tools.
 
 The optional [browser tool pack](.agentwork/tools/browser/README.md) integrates
@@ -243,7 +246,7 @@ belongs in `.shared/`.
 | Claude Code | `CLAUDE.md`, project commands, optional skills | Thin commands delegate to the shared workflow; runtime loops and permissions remain platform concerns. |
 | OpenCode | `AGENTS.md`, generated project commands | Commands inject shared definitions; provider, model, plugin, MCP, and permission configuration remain project-owned. |
 | Cursor | Project rule plus `AGENTS.md` fallback | Uses native editing and diagnostics while shared command files provide the portable workflow contract. |
-| Pi | `AGENTS.md`, six project prompts under `.pi/prompts/`, default anydoc and research skills | Static adapter contract is based on Pi `v0.84.4`; start from the repository root and trust the project. The core bootstrap does not install Pi, extensions, subagents, or optional tool runtimes. Browser and CodeGraph add explicit project skills through optional tool packs; `pi-mcp` separately provides project-scoped MCP extension setup. |
+| Pi | `AGENTS.md`, six project prompts under `.pi/prompts/`, default anydoc and research skills | Static adapter contract is based on Pi `v0.84.4`; start from the repository root and trust the project. The core bootstrap does not install Pi, extensions, subagents, or optional tool runtimes. Browser adds an explicit `.pi/skills/` entry through its optional tool pack, and Pi discovers the CodeGraph skill from the `.agents/skills/` entry shared with Codex and OpenCode; `pi-mcp` separately provides project-scoped MCP extension setup. |
 
 Platform discovery, permissions, sandbox behavior, and runtime orchestration can
 change independently. The

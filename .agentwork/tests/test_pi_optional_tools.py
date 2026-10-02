@@ -21,6 +21,14 @@ PI_SKILL_REFERENCES = {
     'codegraph': '../../../.shared/mcp/codegraph.md',
 }
 PI_SKILL_FILES = {**PI_SKILL_REFERENCES, 'pi-mcp': 'SKILL.md'}
+
+
+def pi_skill_paths(name: str) -> tuple[str, str, str]:
+    """返回 Pi 可发现入口的 (surface, from, to)。"""
+    # codegraph 与 Codex、OpenCode 共用 .agents/skills，Pi 原生发现该目录。
+    if name == 'codegraph':
+        return 'agents', 'agents/skills/codegraph', '.agents/skills/codegraph'
+    return 'pi', f'pi/skills/{name}', f'.pi/skills/{name}'
 PI_PATH = shutil.which(os.environ.get('AGENTWORK_PI_EXECUTABLE', 'pi'))
 if PI_PATH is not None:
     PI_PATH = str(Path(PI_PATH).resolve())
@@ -151,7 +159,7 @@ class PiOptionalToolSurfaceTest(unittest.TestCase):
         entries = [
             entry
             for entry in load_manifest(name)['entries']
-            if entry['surface'] == 'pi'
+            if entry['surface'] == pi_skill_paths(name)[0]
         ]
         self.assertEqual(len(entries), 1, name)
         return entries[0]
@@ -183,8 +191,9 @@ class PiOptionalToolSurfaceTest(unittest.TestCase):
             skill = source / 'SKILL.md'
             with self.subTest(name=name):
                 self.assertEqual(registry_tools[name]['kind'], manifest['kind'])
-                self.assertEqual(entry['from'], f'pi/skills/{name}')
-                self.assertEqual(entry['to'], f'.pi/skills/{name}')
+                _, expected_from, expected_to = pi_skill_paths(name)
+                self.assertEqual(entry['from'], expected_from)
+                self.assertEqual(entry['to'], expected_to)
                 self.assertTrue(skill.is_file())
                 content = skill.read_text(encoding='utf-8')
                 self.assertIn(f'name: {name}', content)
@@ -223,7 +232,7 @@ class PiOptionalToolSurfaceTest(unittest.TestCase):
         self.run_installer('install', *PI_OPTIONAL_TOOLS)
         self.assert_manifest_exact()
         for name in PI_OPTIONAL_TOOLS:
-            skill_dir = self.project / f'.pi/skills/{name}'
+            skill_dir = self.project / self.pi_entry(name)['to']
             with self.subTest(name=name, reference='installed'):
                 self.assertTrue(
                     (skill_dir / PI_SKILL_FILES[name]).resolve().is_file()
@@ -298,7 +307,8 @@ class PiOptionalToolSurfaceTest(unittest.TestCase):
                     Path(source_info['path']).resolve(),
                     (
                         self.project
-                        / f'.pi/skills/{tool_name}/SKILL.md'
+                        / self.pi_entry(tool_name)['to']
+                        / 'SKILL.md'
                     ).resolve(),
                 )
 

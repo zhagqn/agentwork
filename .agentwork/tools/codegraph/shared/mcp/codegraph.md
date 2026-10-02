@@ -50,14 +50,13 @@ codegraph explore "<symbol names or question>"
 
 | 平台 | 随工具安装的入口 | 触发方式 |
 | --- | --- | --- |
-| Codex / OpenCode | `.agents/skills/codegraph/SKILL.md` | 通过技能描述匹配代码任务，加载后执行本约定 |
+| Codex / OpenCode / Pi | `.agents/skills/codegraph/SKILL.md` | 三者共用一份技能；通过技能描述匹配代码任务，加载后执行本约定；Pi 需先信任项目 |
 | Claude Code | `.claude/rules/codegraph.md` | 无 paths 限制的项目规则；满足工具与索引条件后触发 |
 | Cursor | `.cursor/rules/codegraph.mdc` | alwaysApply 项目规则；满足工具与索引条件后触发 |
-| Pi | `.pi/skills/codegraph/SKILL.md` | 通过技能描述匹配代码任务，加载后执行本约定 |
 
 这些入口提供模型可读取的优先调用指令，不是强制拦截器；技能选择、项目信任和资源重载由平台运行时决定。安装后在目标项目重新加载技能或开启新会话，并通过实际工具调用确认生效。没有自动查询、索引维护或 MCP 连接保证。
 
-依据：CodeGraph `v1.6.0` 官方 [Agent 指令](https://github.com/colbymchenry/codegraph/blob/v1.6.0/src/installer/instructions-template.ts) 与 [MCP 指令](https://github.com/colbymchenry/codegraph/blob/v1.6.0/src/mcp/server-instructions.ts)；平台发现机制见 [Codex skills](https://developers.openai.com/codex/skills/)、[OpenCode skills](https://opencode.ai/docs/skills/)、[Claude rules](https://code.claude.com/docs/en/memory)、[Cursor rules](https://cursor.com/docs/context/rules)。
+依据：CodeGraph `v1.6.0` 官方 [Agent 指令](https://github.com/colbymchenry/codegraph/blob/v1.6.0/src/installer/instructions-template.ts) 与 [MCP 指令](https://github.com/colbymchenry/codegraph/blob/v1.6.0/src/mcp/server-instructions.ts)；平台发现机制见 [Codex skills](https://developers.openai.com/codex/skills/)、[OpenCode skills](https://opencode.ai/docs/skills/)、[Pi skills](https://github.com/earendil-works/pi/blob/v0.84.4/packages/coding-agent/docs/skills.md)、[Claude rules](https://code.claude.com/docs/en/memory)、[Cursor rules](https://cursor.com/docs/context/rules)。
 
 ## 遥测
 

@@ -4,7 +4,7 @@
     "mcp",
     "skill"
   ],
-  "description": "Project-local CodeGraph-first navigation entries for Codex, Claude Code, OpenCode, Cursor, and Pi; no CLI, index, or MCP configuration is installed.",
+  "description": "Project-local CodeGraph-first navigation entries for Codex, Claude Code, OpenCode, Cursor, and Pi; Codex, OpenCode, and Pi share one .agents/skills entry. No CLI, index, or MCP configuration is installed.",
   "entries": [
     {
       "surface": "shared",
@@ -12,7 +12,7 @@
       "to": ".shared/mcp/codegraph.md"
     },
     {
-      "surface": "codex",
+      "surface": "agents",
       "from": "agents/skills/codegraph",
       "to": ".agents/skills/codegraph"
     },
@@ -25,11 +25,6 @@
       "surface": "cursor",
       "from": "cursor/rules/codegraph.mdc",
       "to": ".cursor/rules/codegraph.mdc"
-    },
-    {
-      "surface": "pi",
-      "from": "pi/skills/codegraph",
-      "to": ".pi/skills/codegraph"
     }
   ]
 }

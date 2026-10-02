@@ -241,33 +241,85 @@ class InstallToolEnvTest(unittest.TestCase):
         registry.write_text(json.dumps(original) + '\n')
         self.assertEqual(self.run_installer('list').returncode, 0)
 
-    def test_retired_receipt_path_blocks_install_but_allows_uninstall(self) -> None:
-        """源端移除文件后，旧收据路径不得同时堵死 install 与 uninstall。"""
+    def test_retired_receipt_path_is_removed_or_released_on_install(self) -> None:
+        """源端退役文件：摘要匹配时删除，被改写时保留并移出收据，卸载不再触碰它。"""
         self.add_tool('twin')
-        manifest_path = self.source / '.agentwork/tools/twin/tool.json'
-        manifest = json.loads(manifest_path.read_text())
-        manifest['entries'].append(
-            {'surface': 'shared', 'from': 'shared/extra.txt', 'to': '.shared/twin-extra.txt'}
-        )
-        (self.source / '.agentwork/tools/twin/shared/extra.txt').write_text('extra\n')
-        manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
         self.write_registry()
-        self.run_installer('install', 'twin')
-        self.assertTrue((self.project / '.shared/twin-extra.txt').is_file())
+        manifest_path = self.source / '.agentwork/tools/twin/tool.json'
+        base = json.loads(manifest_path.read_text())
+        legacy = {
+            **base,
+            'entries': [
+                *base['entries'],
+                {'surface': 'shared', 'from': 'shared/extra.txt', 'to': '.shared/twin-extra/extra.txt'},
+            ],
+        }
+        extra_source = self.source / '.agentwork/tools/twin/shared/extra.txt'
+        retired_rel = '.shared/twin-extra/extra.txt'
+        receipt_path = '.agentwork/tool-receipts/twin.json'
+        for modified in (False, True):
+            with self.subTest(modified=modified):
+                self.project = Path(self.temp.name) / f'retire-{int(modified)}'
+                subprocess.run(['git', 'init', '-q', str(self.project)], check=True)
+                extra_source.write_text('extra\n')
+                manifest_path.write_text(json.dumps(legacy, indent=2) + '\n')
+                self.run_installer('install', 'twin')
+                extra = self.project / retired_rel
+                self.assertTrue(extra.is_file())
+                if modified:
+                    extra.write_text('local edit\n')
 
-        # 源端退役 extra.txt：它成为 manifest 之外的旧收据路径。
-        manifest['entries'] = [e for e in manifest['entries'] if e['to'] != '.shared/twin-extra.txt']
-        manifest_path.write_text(json.dumps(manifest, indent=2) + '\n')
-        (self.source / '.agentwork/tools/twin/shared/extra.txt').unlink()
+                # 源端退役 extra.txt：它成为 manifest 之外的旧收据路径。
+                manifest_path.write_text(json.dumps(base, indent=2) + '\n')
+                extra_source.unlink()
+                result = self.run_installer('install', 'twin')
+                receipt = json.loads((self.project / receipt_path).read_text())
+                self.assertNotIn(retired_rel, receipt['files'])
+                if modified:
+                    self.assertEqual(extra.read_text(), 'local edit\n')
+                    self.assertIn(f'[keep-modified] {retired_rel}', result.stdout)
+                else:
+                    self.assertFalse(extra.parent.exists())
+                    self.assertIn(f'[retire-file] {retired_rel}', result.stdout)
+                settled = self.project_snapshot()
+                self.run_installer('install', 'twin')
+                self.assertEqual(self.project_snapshot(), settled)
 
-        blocked = self.run_installer('install', 'twin', check=False)
-        self.assertNotEqual(blocked.returncode, 0)
-        self.assertIn('receipt path outside current manifest', blocked.stderr + blocked.stdout)
+                self.run_installer('uninstall', 'twin')
+                self.assertFalse((self.project / '.shared/twin.txt').exists())
+                self.assertFalse((self.project / receipt_path).exists())
+                self.assertEqual(extra.exists(), modified)
 
-        self.run_installer('uninstall', 'twin')
-        for relative in ('.shared/twin.txt', '.shared/twin-extra.txt'):
-            self.assertFalse((self.project / relative).exists(), relative)
-        self.assertFalse((self.project / '.agentwork/tool-receipts/twin.json').exists())
+    def test_retirement_rolls_back_with_transaction(self) -> None:
+        """退役删除与安装写入同属一个事务，失败时恢复被删文件。"""
+        self.project = self.project.resolve()
+        manifest_path = self.source / '.agentwork/tools/plain/tool.json'
+        base = json.loads(manifest_path.read_text())
+        extra_source = self.source / '.agentwork/tools/plain/shared/extra.txt'
+        extra_source.write_text('extra\n')
+        legacy_entry = {'surface': 'shared', 'from': 'shared/extra.txt', 'to': '.shared/extra/extra.txt'}
+        manifest_path.write_text(json.dumps({**base, 'entries': [*base['entries'], legacy_entry]}))
+        self.run_installer('install', 'plain')
+        manifest_path.write_text(json.dumps(base))
+        extra_source.unlink()
+
+        module = self.load_installer()
+        _, tools = module.load_tools()
+        entries = module.build_tool_entries(self.project, 'plain', tools['plain'], set())
+        grouped, receipts = module.prepare_owned_changes(self.project, 'install', [('plain', entries)])
+        self.assertIn('retire', {entry.surface for _, items in grouped for entry in items})
+        env_plan = module.prepare_install_env(self.project, [])
+        paths = module.transaction_paths(grouped, env_plan) + tuple(receipts)
+        before = self.project_snapshot()
+
+        def operation() -> None:
+            module.apply_tool_changes(self.project, 'install', grouped, env_plan)
+            module.apply_receipts(receipts, self.project)
+            module.fail('after retirement')
+
+        with self.assertRaisesRegex(SystemExit, 'rolled back'):
+            module.run_transaction(self.project, paths, operation)
+        self.assertEqual(self.project_snapshot(), before)
 
     def test_systemexit_after_second_write_rolls_back(self) -> None:
         """fail() 在事务内抛 SystemExit 时也必须回滚，而不是留下半写状态。"""
