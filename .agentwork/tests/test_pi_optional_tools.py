@@ -15,12 +15,12 @@ INSTALLER = REPO_ROOT / 'install-tool.py'
 TOOLS_ROOT = REPO_ROOT / '.agentwork/tools'
 REGISTRY = TOOLS_ROOT / 'registry.json'
 # research 已提升为 bootstrap 默认能力，不再属于可选工具。
-PI_OPTIONAL_TOOLS = ('browser', 'codegraph', 'pi-mcp')
+PI_OPTIONAL_TOOLS = ('browser', 'codegraph')
 PI_SKILL_REFERENCES = {
     'browser': '../../../.shared/skills/browser/SKILL.md',
     'codegraph': '../../../.shared/mcp/codegraph.md',
 }
-PI_SKILL_FILES = {**PI_SKILL_REFERENCES, 'pi-mcp': 'SKILL.md'}
+PI_SKILL_FILES = PI_SKILL_REFERENCES
 
 
 def pi_skill_paths(name: str) -> tuple[str, str, str]:
@@ -75,33 +75,6 @@ def tree_snapshot(path: Path) -> dict[str, tuple[str, bytes | str | None]]:
 
 
 class PiOptionalToolSurfaceTest(unittest.TestCase):
-    def test_pi_mcp_scripts_use_installed_project_and_report_only_evidence(self) -> None:
-        self.run_installer('install', 'pi-mcp')
-        bin_dir = self.root / 'bin'
-        bin_dir.mkdir()
-        fake_pi = bin_dir / 'pi'
-        fake_pi.write_text('#!/bin/sh\npwd\nprintf "%s\\n" "$@"\n', encoding='utf-8')
-        fake_pi.chmod(0o755)
-        env = {**os.environ, 'PATH': f'{bin_dir}:{os.environ["PATH"]}'}
-        scripts = self.project / '.shared/scripts'
-        setup = subprocess.run(
-            ['bash', str(scripts / 'pi-mcp-setup.sh')], cwd=self.root,
-            env=env, text=True, capture_output=True, check=True,
-        )
-        lines = setup.stdout.splitlines()
-        self.assertEqual(Path(lines[0]).resolve(), self.project.resolve())
-        self.assertEqual(lines[1:], [
-            'install', '-l', '--approve',
-            'npm:pi-mcp-extension@1.5.0',
-        ])
-        (self.project / '.pi/npm').mkdir()
-        check = subprocess.run(
-            ['bash', str(scripts / 'pi-mcp-check.sh')], cwd=self.root,
-            env=env, text=True, capture_output=True, check=True,
-        )
-        self.assertIn('project extension files: absent', check.stdout)
-        self.assertIn('global servers may still apply', check.stdout)
-
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory(
             prefix='agentwork-pi-optional-tools-'

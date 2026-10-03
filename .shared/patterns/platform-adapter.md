@@ -76,7 +76,7 @@
 - 非交互 `-p`、JSON 与 RPC 模式不会显示 trust 提示。`--approve` / `-a` 只为本次运行信任项目资源，不是工具调用批准；调用者必须先独立判断项目是否可信。
 - Pi 内置 `/session` 展示 Pi 自身对话 session 信息；agentwork 在 Pi 上使用 `/case` 映射共享 `.shared/commands/case.md`。Pi 的用户目录 JSONL 状态不替代仓库内显式 Case / spec / audit 工件。
 - Pi 核心不内置 plan mode 或 subagent。官方 [plan-mode 示例](https://github.com/earendil-works/pi/tree/v0.84.4/packages/coding-agent/examples/extensions/plan-mode) 会注册 `/plan`；agentwork 使用 `/spec`，与其不重名，两者可并存，但不承诺 Pi 扩展行为与 agentwork spec 工件一致。
-- 核心 bootstrap 不安装 Pi runtime、package、extension、官方 [subagent 示例](https://github.com/earendil-works/pi/tree/v0.84.4/packages/coding-agent/examples/extensions/subagent) 或 optional tool。Browser 可通过 manifest 显式安装 `.pi/skills/**` 薄入口；CodeGraph 安装与 Codex、OpenCode 共用的 `.agents/skills/codegraph/`，由 Pi 原生的 `.agents/skills/` 发现加载。两者都不会生成 `.pi/settings.json`、安装外部 CLI 或假设 MCP 已接线；其他 Pi 扩展能力仍需独立设计、安装与验证。
+- 核心 bootstrap 不安装 Pi runtime、package、extension、官方 [subagent 示例](https://github.com/earendil-works/pi/tree/v0.84.4/packages/coding-agent/examples/extensions/subagent) 或 optional tool。Browser 可通过 manifest 显式安装 `.pi/skills/**` 薄入口；CodeGraph 安装与 Codex、OpenCode 共用的 `.agents/skills/codegraph/`，由 Pi 原生的 `.agents/skills/` 发现加载，并写入项目 `.pi/mcp.json`。两者都不会生成 `.pi/settings.json` 或安装外部 CLI；其他 Pi 扩展能力仍需独立设计、安装与验证。
 
 ## Codex custom agent 边界
 

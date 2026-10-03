@@ -246,7 +246,7 @@ belongs in `.shared/`.
 | Claude Code | `CLAUDE.md`, project commands, optional skills | Thin commands delegate to the shared workflow; runtime loops and permissions remain platform concerns. |
 | OpenCode | `AGENTS.md`, generated project commands | Commands inject shared definitions; provider, model, plugin, MCP, and permission configuration remain project-owned. |
 | Cursor | Project rule plus `AGENTS.md` fallback | Uses native editing and diagnostics while shared command files provide the portable workflow contract. |
-| Pi | `AGENTS.md`, six project prompts under `.pi/prompts/`, default anydoc and research skills | Static adapter contract is based on Pi `v0.84.4`; start from the repository root and trust the project. The core bootstrap does not install Pi, extensions, subagents, or optional tool runtimes. Browser adds an explicit `.pi/skills/` entry through its optional tool pack, and Pi discovers the CodeGraph skill from the `.agents/skills/` entry shared with Codex and OpenCode; `pi-mcp` separately provides project-scoped MCP extension setup. |
+| Pi | `AGENTS.md`, six project prompts under `.pi/prompts/`, default anydoc and research skills | Static adapter contract is based on Pi `v0.84.4`; start from the repository root and trust the project. The core bootstrap does not install Pi, extensions, subagents, or optional tool runtimes. Browser adds an explicit `.pi/skills/` entry through its optional tool pack, and Pi discovers the CodeGraph skill from the `.agents/skills/` entry shared with Codex and OpenCode. CodeGraph also writes the project `.pi/mcp.json`. |
 
 Platform discovery, permissions, sandbox behavior, and runtime orchestration can
 change independently. The
