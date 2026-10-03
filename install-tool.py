@@ -591,6 +591,10 @@ def prepare_owned_changes(
                     retired.append(ToolEntry('keep-modified', dst, dst))
                 continue
             if dst.exists() and not matches:
+                # 平台 MCP 配置常被项目追加内容：改写后归项目所有，保留不删。
+                if any(entry.surface == 'mcp' and entry.dst == dst for entry in entries):
+                    released.add(relative)
+                    continue
                 fail(f'{name}: ownership conflict (modified managed file): {relative}')
             owned[relative] = dst
 
@@ -614,7 +618,21 @@ def prepare_owned_changes(
                     relative = dst.relative_to(project_root).as_posix()
                     if src.is_dir() and dst.is_dir():
                         continue
+                    # OpenCode 同时读取 .json/.jsonc：项目已有任一形式即视为自有配置。
+                    if entry.surface == 'mcp' and not dst.exists() and dst.suffix in {'.json', '.jsonc'}:
+                        sibling = dst.with_suffix('.jsonc' if dst.suffix == '.json' else '.json')
+                        if dst.name.startswith('opencode.') and sibling.exists():
+                            updated.pop(relative, None)
+                            changes.append(ToolEntry('keep-existing', src, sibling))
+                            continue
                     if dst.exists() and relative not in owned:
+                        if entry.surface == 'mcp':
+                            # 内容一致则接管；否则视为项目自有配置，保留并报告。
+                            if dst.is_file() and dst.read_bytes() == src.read_bytes():
+                                updated[relative] = hashlib.sha256(src.read_bytes()).hexdigest()
+                            else:
+                                changes.append(ToolEntry('keep-existing', src, dst))
+                            continue
                         fail(f'{name}: ownership conflict (unmanaged file): {relative}')
                     changes.append(ToolEntry(entry.surface, src, dst))
                     updated[relative] = 'directory' if src.is_dir() else hashlib.sha256(src.read_bytes()).hexdigest()
@@ -725,6 +743,9 @@ def apply_tool_changes(
             relative = target_rel(project_root, entry.dst)
             if entry.surface == 'keep-modified':
                 print(f'- [keep-modified] {relative} (retired from manifest; left as project file)')
+                continue
+            if entry.surface == 'keep-existing':
+                print(f'- [keep-existing] {relative} (project-owned; add the MCP server entry manually if needed)')
                 continue
             if entry.surface == 'retire':
                 removed_kind = 'dir' if entry.dst.is_dir() else 'file'

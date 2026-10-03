@@ -12,5 +12,5 @@ Codex、OpenCode 与 Pi 共用的项目技能入口；Pi 同样从 `.agents/skil
 - 需要项目内的 `.codegraph/` 索引，以及 PATH 上的 `codegraph` CLI 或已连接的 CodeGraph MCP；不假设 MCP 已连接。
 - 满足条件时，理解、定位或修改代码前优先使用 `codegraph_explore` 或 `codegraph explore "<symbol names or question>"` 获取相关源码、调用路径和影响范围，再读取必要文件。
 - 没有索引、工具不可用或索引过期时按共享规则回退本地读取或搜索；不要把回退结果描述成 CodeGraph 输出。
-- 不自动安装、初始化或接线 MCP，也不生成或修改 `.pi/settings.json` 等平台配置。
+- 项目级 MCP 配置由工具安装写入；技能本身不安装 CLI、不初始化索引，也不生成或修改 `.pi/settings.json` 等平台配置。
 - `codegraph init`、`install`、`upgrade`、`uninit`、`uninstall` 会改变项目或机器状态，执行前说明影响并获得用户明确授权。

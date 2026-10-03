@@ -256,6 +256,50 @@ class ToolCatalogTest(unittest.TestCase):
             self.assertEqual((self.project / relative).read_bytes(), content, relative)
         self.assertEqual(self.staged_hash(), staged_before)
 
+    def test_codegraph_installs_project_mcp_configs_by_default(self) -> None:
+        """默认写入五个平台的项目级 MCP 配置；项目已有或改写过的配置保留不动。"""
+        configs = ('.mcp.json', '.codex/config.toml', 'opencode.jsonc', '.cursor/mcp.json', '.pi/mcp.json')
+        self.run_tools('install', 'codegraph')
+        for relative in configs:
+            path = self.project / relative
+            self.assertTrue(path.is_file(), relative)
+            self.assertIn('serve', path.read_text(), relative)
+        first_install = self.project_snapshot()
+        self.run_tools('install', 'codegraph')
+        self.assertEqual(self.project_snapshot(), first_install)
+
+        # 安装后被项目改写的配置：重装不报冲突、不覆盖，卸载也保留。
+        edited = self.project / '.mcp.json'
+        edited.write_text('{"mcpServers": {"other": {}}}\n')
+        result = self.run_tools('install', 'codegraph')
+        self.assertIn('[keep-existing] .mcp.json', result.stdout)
+        self.assertEqual(edited.read_text(), '{"mcpServers": {"other": {}}}\n')
+        self.run_tools('uninstall', 'codegraph')
+        self.assertEqual(edited.read_text(), '{"mcpServers": {"other": {}}}\n')
+        for relative in configs[1:]:
+            self.assertFalse((self.project / relative).exists(), relative)
+
+        # 项目已有 opencode.json 时不再并列创建 opencode.jsonc，旧收据条目随之移除。
+        edited.unlink()
+        self.run_tools('install', 'codegraph')
+        (self.project / 'opencode.jsonc').unlink()
+        (self.project / 'opencode.json').write_text('{}\n')
+        result = self.run_tools('install', 'codegraph')
+        self.assertIn('[keep-existing] opencode.json', result.stdout)
+        self.assertFalse((self.project / 'opencode.jsonc').exists())
+        self.assertEqual((self.project / 'opencode.json').read_text(), '{}\n')
+        receipt = json.loads((self.project / '.agentwork/tool-receipts/codegraph.json').read_text())
+        self.assertNotIn('opencode.jsonc', receipt['files'])
+
+        # 预先存在且与模板一致的配置直接纳入收据，卸载时随之删除。
+        self.run_tools('uninstall', 'codegraph')
+        shutil.copy2(TOOLS_ROOT / 'codegraph/mcp/claude/.mcp.json', edited)
+        self.run_tools('install', 'codegraph')
+        receipt = json.loads((self.project / '.agentwork/tool-receipts/codegraph.json').read_text())
+        self.assertIn('.mcp.json', receipt['files'])
+        self.run_tools('uninstall', 'codegraph')
+        self.assertFalse(edited.exists())
+
     def test_codegraph_upgrade_moves_pi_entry_to_shared_agents_skill(self) -> None:
         """旧收据含 .pi/skills/codegraph：未改写则退役，改写则保留并移出收据。"""
         source = Path(self.temp.name) / 'legacy-source'
