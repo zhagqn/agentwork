@@ -96,6 +96,16 @@ enabled_tools = [
 claude mcp add --scope local octocode -- python3 .shared/scripts/octocode-mcp.py
 ```
 
+### Pi
+
+从项目根执行，写入项目 `.pi/mcp.json`：
+
+```bash
+pi mcp add -l octocode --exposure direct -- python3 .shared/scripts/octocode-mcp.py
+```
+
+信任项目后用 `pi mcp list` 确认只列出 7 个白名单工具。
+
 ### Cursor / OpenCode / other clients
 
 将 MCP transport 配置为 STDIO：

@@ -134,6 +134,7 @@ class ResearchRoutingContractTest(unittest.TestCase):
                 self.assertIn('.codex/config.toml', reference)
                 self.assertNotIn(f'codex mcp add {provider}', reference)
                 self.assertIn(f'claude mcp add --scope local {provider}', reference)
+                self.assertIn(f'pi mcp add -l {provider}', reference)
 
     def test_providers_were_not_promoted_alongside_research(self) -> None:
         """research 提升为默认能力时，provider 必须仍只在 registry。"""

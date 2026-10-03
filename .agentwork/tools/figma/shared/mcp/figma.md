@@ -110,6 +110,27 @@ claude mcp add --transport http figma-remote https://mcp.figma.com/mcp
 }
 ```
 
+## Pi
+
+从项目根执行，写入项目 `.pi/mcp.json`：
+
+### Preferred: Desktop MCP
+
+```bash
+pi mcp add -l figma --exposure direct --url http://127.0.0.1:3845/mcp
+```
+
+### Remote fallback
+
+```bash
+pi mcp add -l figma-remote --exposure direct --oauth-client-name "Claude Code" --url https://mcp.figma.com/mcp
+pi mcp login figma-remote
+```
+
+> Figma remote 只接受已知客户端注册，因此用 `--oauth-client-name` 指定客户端名。
+
+信任项目后用 `pi mcp list` 确认连接状态。
+
 ## 关于 desktop check 脚本
 
 - `.shared/scripts/figma-desktop-mcp-check.sh` 用于默认 desktop MCP 的本地 URL 连通性检查

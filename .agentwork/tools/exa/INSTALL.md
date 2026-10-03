@@ -41,6 +41,6 @@ python3 install-tool.py -u exa -p <path>
 ## After install
 
 - 需要 Node.js `>=20.0.0` 和可用的 `npx`
-- 按 `.shared/mcp/exa.md` 手动接入当前客户端；Codex 使用项目 `.codex/config.toml`，Claude 使用 local scope
+- 按 `.shared/mcp/exa.md` 手动接入当前客户端；Codex 使用项目 `.codex/config.toml`，Claude 使用 local scope，Pi 使用 `pi mcp add -l`
 - 默认只暴露 `web_search_exa` 与 `web_fetch_exa`
 - 不自动合并任何平台 MCP 私有配置

@@ -61,6 +61,16 @@ enabled_tools = ["web_search_exa", "web_fetch_exa"]
 claude mcp add --scope local exa -- python3 .shared/scripts/exa-mcp.py
 ```
 
+### Pi
+
+从项目根执行，写入项目 `.pi/mcp.json`：
+
+```bash
+pi mcp add -l exa --exposure direct -- python3 .shared/scripts/exa-mcp.py
+```
+
+信任项目后用 `pi mcp list` 确认只列出 `web_search_exa` 与 `web_fetch_exa`。
+
 ### Cursor / OpenCode / other clients
 
 将 MCP transport 配置为 STDIO：
