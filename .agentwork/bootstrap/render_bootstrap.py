@@ -152,6 +152,27 @@ def render_opencode_command(title: str, description: str, target: str) -> str:
     )
 
 
+def render_dsh_skill(name: str, title: str, description: str, target: str) -> str:
+    return (
+        f"---\nname: {name}\n"
+        f"description: {json.dumps(description, ensure_ascii=False)}\n---\n\n"
+        f"{AUTO}\n# {title}\n\n"
+        "项目级技能入口，完整流程以共享定义为准。\n\n"
+        "## 路径与执行\n\n"
+        f"- 根据 dsh 加载本技能时提供的资源目录（`.dsh/skills/{name}/`），"
+        "向上三级定位本入口所在项目根；不要用当前 shell 工作目录代替。\n"
+        "- 读取项目根的 `AGENTS.md` 并完成其中的启动必读。"
+        "共享规则中的项目相对路径均从该根解析；shell 操作以该根为工作目录，保留路径中的空格。\n"
+        f"- 确认主定义 `{target}` 存在并完整读取；缺失时停止并报告。\n"
+        "- 保留当前用户消息的原始参数、子命令、引号和带空格路径，交给共享定义解释。"
+        "加载技能或描述 slash 命令不构成额外执行或提交许可。\n"
+        "- 需要用户补充时使用当前会话实际可用的交互能力；缺少专用交互工具时，"
+        "按共享定义回退为文本提问。\n"
+        "- 使用标准模式，保持 dsh 原生计划模式关闭；当前模式禁止写入时停止并报告，"
+        "不自行调整用户配置。\n"
+    )
+
+
 def validate_shared_command_target(target: object, *, label: str) -> str:
     if not isinstance(target, str):
         raise SystemExit(f'invalid {label} target: {target!r}')
@@ -405,7 +426,7 @@ def validated_default_capabilities() -> tuple[dict, ...]:
     seen: set[str] = set()
     for capability in raw:
         if not isinstance(capability, dict) or set(capability) != {
-            'name', 'canonical', 'mirror_to', 'cursor_rule'
+            'name', 'description', 'canonical', 'mirror_to', 'cursor_rule'
         }:
             raise SystemExit('invalid bootstrap default capability specification')
         name = capability['name']
@@ -414,6 +435,12 @@ def validated_default_capabilities() -> tuple[dict, ...]:
         if name in seen:
             raise SystemExit(f'duplicate bootstrap default capability: {name}')
         seen.add(name)
+        description = capability['description']
+        if (
+            not isinstance(description, str) or not description.strip()
+            or '\n' in description or '\r' in description
+        ):
+            raise SystemExit(f'{name}: invalid default capability description')
         safe_spec_relpath(capability['canonical'], f'{name} canonical')
         mirrors = capability['mirror_to']
         if not isinstance(mirrors, list) or not mirrors:
@@ -463,6 +490,15 @@ def prepare_rendered_bootstrap() -> tuple[RenderedFile, ...]:
         skill = source.read_text(encoding='utf-8')
         for mirror in mirrors:
             add_rendered_file(outputs, mirror, skill)
+        # dsh 使用共享正文的薄入口，不改变既有平台的正文镜像。
+        add_rendered_file(
+            outputs,
+            BOOTSTRAP / 'dsh' / 'skills' / capability['name'] / 'SKILL.md',
+            render_dsh_skill(
+                capability['name'], capability['name'],
+                capability['description'], capability['canonical'],
+            ),
+        )
         rule = capability['cursor_rule']
         add_rendered_file(
             outputs,
@@ -490,6 +526,11 @@ def prepare_rendered_bootstrap() -> tuple[RenderedFile, ...]:
             outputs,
             BOOTSTRAP / 'opencode' / 'commands' / f'{name}.md',
             render_opencode_command(title, description, target),
+        )
+        add_rendered_file(
+            outputs,
+            BOOTSTRAP / 'dsh' / 'skills' / name / 'SKILL.md',
+            render_dsh_skill(name, title, description, target),
         )
     for wrapper in pi_wrappers:
         add_rendered_file(

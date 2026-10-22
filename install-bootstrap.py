@@ -117,12 +117,14 @@ DEFAULT_SKILL_ENTRIES = (
     (BOOTSTRAP / 'codex' / 'skills' / 'anydoc' / 'SKILL.md', Path('.codex/skills/anydoc/SKILL.md'), 'Codex default skill'),
     (BOOTSTRAP / 'claude' / 'skills' / 'anydoc' / 'SKILL.md', Path('.claude/skills/anydoc/SKILL.md'), 'Claude default skill'),
     (BOOTSTRAP / 'pi' / 'skills' / 'anydoc' / 'SKILL.md', Path('.pi/skills/anydoc/SKILL.md'), 'Pi default skill'),
+    (BOOTSTRAP / 'dsh' / 'skills' / 'anydoc' / 'SKILL.md', Path('.dsh/skills/anydoc/SKILL.md'), 'dsh default skill'),
     (BOOTSTRAP / 'cursor' / 'rules' / 'anydoc.mdc', Path('.cursor/rules/anydoc.mdc'), 'Cursor default rule'),
-    # research 的平台入口是手写薄指针，三个平台各有差异，不由渲染器派生。
+    # research 的平台入口是手写薄指针，各平台保留自身适配，不由渲染器派生。
     (BOOTSTRAP / 'codex' / 'skills' / 'research' / 'SKILL.md', Path('.codex/skills/research/SKILL.md'), 'Codex default skill'),
     (BOOTSTRAP / 'codex' / 'skills' / 'research' / 'agents' / 'openai.yaml', Path('.codex/skills/research/agents/openai.yaml'), 'Codex default skill asset'),
     (BOOTSTRAP / 'claude' / 'skills' / 'research' / 'SKILL.md', Path('.claude/skills/research/SKILL.md'), 'Claude default skill'),
     (BOOTSTRAP / 'pi' / 'skills' / 'research' / 'SKILL.md', Path('.pi/skills/research/SKILL.md'), 'Pi default skill'),
+    (BOOTSTRAP / 'dsh' / 'skills' / 'research' / 'SKILL.md', Path('.dsh/skills/research/SKILL.md'), 'dsh default skill'),
     (BOOTSTRAP / 'cursor' / 'rules' / 'research.mdc', Path('.cursor/rules/research.mdc'), 'Cursor default rule'),
 )
 
@@ -455,6 +457,9 @@ def collect_writes(target: Path):
     for wrapper in wrappers:
         src = BOOTSTRAP / 'codex' / 'skills' / wrapper['name'] / 'SKILL.md'
         writes.append((src, target / '.codex' / 'skills' / wrapper['name'] / src.name, 'file', 'Codex skill wrapper'))
+    for wrapper in wrappers:
+        src = BOOTSTRAP / 'dsh' / 'skills' / wrapper['name'] / 'SKILL.md'
+        writes.append((src, target / '.dsh' / 'skills' / wrapper['name'] / src.name, 'file', 'dsh skill wrapper'))
     for wrapper in wrappers:
         src = BOOTSTRAP / 'opencode' / 'commands' / f"{wrapper['name']}.md"
         writes.append((src, target / '.opencode' / 'commands' / src.name, 'file', 'OpenCode command wrapper'))

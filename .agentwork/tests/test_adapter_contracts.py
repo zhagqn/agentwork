@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 
+from test_dsh_adapter import assert_dsh_skill
 from test_pi_adapter import BOOTSTRAP, REPO_ROOT, load_renderer
 
 
@@ -125,6 +126,20 @@ class AdapterContractTest(unittest.TestCase):
                 self.outputs['cursor/rules/agentwork-bootstrap.mdc'],
             )
             self.assertEqual({p.stem for p in (project / '.pi/prompts').glob('*.md')}, EXPECTED_COMMANDS)
+            dsh = project / '.dsh/skills'
+            self.assertEqual(
+                {path.relative_to(dsh).as_posix() for path in dsh.rglob('SKILL.md')},
+                {f'{name}/SKILL.md' for name in EXPECTED_COMMANDS | EXPECTED_CAPABILITIES},
+            )
+            for name in sorted(EXPECTED_COMMANDS | EXPECTED_CAPABILITIES):
+                with self.subTest(platform='dsh', skill=name):
+                    text = (dsh / name / 'SKILL.md').read_text(encoding='utf-8')
+                    assert_dsh_skill(self, text, name)
+                    target = (
+                        f'.shared/commands/{name}.md' if name in EXPECTED_COMMANDS
+                        else f'.shared/skills/{name}/SKILL.md'
+                    )
+                    self.assertTrue((project / target).is_file())
 
 
 if __name__ == '__main__':

@@ -23,6 +23,7 @@ RESEARCH_DEFAULT_ENTRIES = (
     'codex/skills/research/agents/openai.yaml',
     'claude/skills/research/SKILL.md',
     'pi/skills/research/SKILL.md',
+    'dsh/skills/research/SKILL.md',
     'cursor/rules/research.mdc',
 )
 PROVIDERS = ('exa', 'octocode')
@@ -69,7 +70,7 @@ class ResearchRoutingContractTest(unittest.TestCase):
         self.assertNotIn('research', registry_names)
         self.assertFalse((TOOLS_ROOT / 'research').exists())
 
-        # 唯一 canonical 正文 + 五个平台默认入口，均不落到 mcp/ 或 scripts/。
+        # 唯一 canonical 正文及各平台默认入口，均不落到 mcp/ 或 scripts/。
         canonical = REPO_ROOT / '.shared/skills/research/SKILL.md'
         self.assertTrue(canonical.is_file())
         for relative in RESEARCH_DEFAULT_ENTRIES:

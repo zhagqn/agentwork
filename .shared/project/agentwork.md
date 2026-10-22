@@ -28,6 +28,8 @@
 - `.agentwork/bootstrap/pi/prompts/`：Pi 项目 prompt 的 canonical 生成产物
 - `.pi/prompts/`：Pi 核心工作流薄 wrapper，由 bootstrap 生成并在 source repo 自承载
 - `.pi/skills/`：source repo 中默认或显式安装的 Pi skill 入口；anydoc 与 research 属于核心 bootstrap，其余 optional tool 仍需显式安装
+- `.agentwork/bootstrap/dsh/skills/`：dsh 八个核心薄入口的可分发源；六命令与 anydoc 由 renderer 生成，research 是手写共享指针
+- `.dsh/skills/`：source repo 自承载的八个 dsh `SKILL.md`，仅由 bootstrap 文件级事务同步，不接管用户其他技能或配置
 - Codex 自定义子代理由项目自行管理，bootstrap 不分发 agent 文件或注册配置
 - `.agentwork/tools/`：可选工具源（figma/browser/android/godot/...）
 - `.tmp/`：核心 workflow 和可选工具的临时工件；核心 workflow 默认使用 `.tmp/agentwork/*`
@@ -45,12 +47,15 @@
 - 退役平台入口只在内容可识别为 agentwork 生成物时自动删除；同路径的项目自定义文件和符号链接必须保留并报告
 - 直接复制的受管文件遇到用户改写、无法确认归属、路径含符号链接、父路径被普通文件占用或非普通文件时保留并报告，其余文件照常刷新；`.shared`、`.agentwork` 被占用导致受管块或收据无法落盘时仍停止；optional tool 收据重叠与受管块损坏仍在写入前停止
 - 曾由 core bootstrap receipt 管理的退役入口以 receipt 为优先所有权证据：receipt 存在时只有路径哈希匹配才可删除，路径未记录或哈希变化必须持续保留；历史入口仅在整个 receipt 不存在时使用生成标记兜底。plan/review 改名退役项采用更严格规则：即使无 receipt 也保留，不使用生成标记兜底
-- source repo 根目录适配层产物属于正式版本基线：bootstrap 生成的 `AGENTS.md`、`.claude/`、`.opencode/commands/*`、`.cursor/`、`.codex/skills/*` 与 `.pi/prompts/*` 应与 `.agentwork/bootstrap/*` 保持一致；必要时通过命令自检或安装态人工 smoke 做诊断，可选工具安装态允许额外存在，不视为 bootstrap 漂移
+- source repo 根目录适配层产物属于正式版本基线：bootstrap 分发的 `AGENTS.md`、`.claude/`、`.opencode/commands/*`、`.cursor/`、`.codex/skills/*`、`.pi/prompts/*` 与八个 `.dsh/skills/*/SKILL.md` 应与各自 `.agentwork/bootstrap/*` 源保持一致；必要时通过命令自检或安装态人工 smoke 做诊断，可选工具安装态允许额外存在，不视为 bootstrap 漂移
 - 已退役的 Codex 默认子代理只按所有权证据清理：已知未改写注册块可移除；文件优先核对旧收据摘要，仍被其他配置引用或已改写的文件保留并报告。新安装不创建 `.codex/config.toml` 或 `.codex/agents`。
 - Pi 核心适配精确安装 `/brain`、`/spec`、`/exec`、`/audit`、`/case` 与 `/commit` 六个项目 prompt；`/case` 映射共享 Case，Pi 内置 `/session` 和用户目录 JSONL 不作为 agentwork 跨平台状态
 - Pi 结构兼容基线为 `v0.84.4`：项目 prompt 需从仓库根 cwd 启动并通过 project trust 才能发现；trust 与 headless `--approve` 都不是 sandbox 或工具级审批
 - 核心 bootstrap 不安装 Pi runtime、settings、package、extension、plan-mode、subagent 或 optional tool 运行时依赖；anydoc 与 research 只提供默认 skill 规则，anydoc 的 npm 包由 agent 在项目中按需安装。默认能力一律不安装 MCP server、CLI 或二进制，不创建或修改 `.env`，不修改平台 MCP 私有配置，不向远程服务发送私有资料或凭据。Browser 可由 manifest 显式安装 `.pi/skills/**`，CodeGraph 安装 Pi 可发现的共用 `.agents/skills/codegraph/`，并默认写入 Claude Code / Codex / OpenCode / Cursor / Pi 的项目级 MCP 配置（已有同名配置则保留并报告），但不创建 `.pi/settings.json`、不安装外部 CLI；官方 plan-mode 示例注册的 `/plan` 与 agentwork `/spec` 不重名，可并存
 - Pi 项目级 MCP server 条目由对应工具（如 codegraph）写入 `.pi/mcp.json`，与其他平台的项目级 MCP 配置同等对待
+- dsh 核心精确提供 `/brain`、`/spec`、`/exec`、`/audit`、`/case`、`/commit`、`/anydoc`、`/research`，不新增 plan/review/session 别名；技能从资源目录定位项目根，保留原始参数并完整读取共享定义
+- dsh 机制基线为 `@deepseek-ai/dsh@0.2.1-rc.2`（tag commit `687f282e8625c6b8d11ff58211a90524be2e4317`）；官方 Desktop 以标准模式、原生计划模式关闭为验收基线，`0.2.1-rc.2` 标准模式已完成公开夹具核心流程受控验收（2026-10-22），含同夹具第二会话 Case 加载与真实提交请求/取消。权限提示、可选工具、PTC、SSH 与自动续跑不在已验证范围，升级后须重新验证
+- dsh bootstrap 不安装 runtime、可选工具或 MCP 接线，不改 home、Desktop profile、模型、凭据、日志上传及权限预设，也不自动启用原生 goal/loop/schedule/subagent
 - optional tool 可通过 `tool.json.env_keys` 声明项目级凭据名；安装器只在 Git ignored 的根 `.env` 中追加缺失的空占位，不覆盖、执行或回显值，卸载时保留用户原有或已填写的 assignment
 - `research` 是 provider-neutral 单一研究入口，已随核心 bootstrap 默认分发（不在 registry，`install-tool.py install research` 报 `Unknown tool`）；它可主动选择最窄 provider，也可在本地或直接官方路径已足够时选择不调用远程 provider。默认分发不等于契约 stable：行为 routing contract 只有通过 `.agentwork/evals/research/` 的固定评测 gate 后才可标记为 stable
 - Exa 是仅用于公开 Web 发现/批量 fetch 的受限 provisional optional provider；Octocode 仍为跨仓库证据研究的 experimental tool，快速 GitHub 查询继续优先 `gh`；Research 与 provider 的 stable 状态必须由现行评测 gate 支撑
@@ -59,6 +64,7 @@
 ## 关键入口
 - `.agentwork/bootstrap/`
 - `.pi/prompts/`
+- `.dsh/skills/`
 - `.opencode/commands/`
 - `.agentwork/tools/`
 - `.shared/`
@@ -67,4 +73,4 @@
 
 ## 更新记录
 - 创建: 2026-04-15
-- 最近更新: 2026-10-02
+- 最近更新: 2026-10-22

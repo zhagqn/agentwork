@@ -1,11 +1,11 @@
-# 平台适配层说明（Codex / Claude / OpenCode / Cursor / Pi）
+# 平台适配层说明（Codex / Claude / OpenCode / Cursor / Pi / dsh）
 
 > 目的：在保留 `.shared/` 统一规则的前提下，明确“平台能力边界 + 触发差异 + 回退策略”，确保跨平台协作的一致性。
 
 ## 适用范围
 
-- 目录：`AGENTS.md`、`.claude/*`、`.codex/*`、`.opencode/*`、`.cursor/*`、`.pi/*`、`.shared/*`
-- 对象：Codex CLI、Claude Code、OpenCode、Cursor、Pi（及同类代理平台）
+- 目录：`AGENTS.md`、`.claude/*`、`.codex/*`、`.opencode/*`、`.cursor/*`、`.pi/*`、`.dsh/skills/*`、`.shared/*`
+- 对象：Codex CLI、Claude Code、OpenCode、Cursor、Pi、DeepSeek Harness（dsh）
 
 ## 核心原则（最佳实践）
 
@@ -56,6 +56,7 @@
 | OpenCode | `AGENTS.md`、`.opencode/commands/*` | 项目规则首个匹配、`AGENTS.md` 普通文件引用不会自动展开、commands/agents/skills 发现与权限默认值 | 使用原生 command 薄 wrapper 注入共享定义；平台 agents/skills 仅按任务需要启用 | 直接读取 `.shared/commands/*` 手动执行，继续以 Case / spec / audit 工件接力 |
 | Cursor | `.cursor/rules/*` | rules 的触发范围、上下文注入时机和工具权限需按项目验证 | 优先使用 Cursor 原生编辑、检索与诊断能力 | 退回 `AGENTS.md` + `.shared/commands/*`，需要接力时写入 Case |
 | Pi | `AGENTS.md`、`.pi/prompts/{brain,spec,exec,audit,case,commit}.md` | `AGENTS.md` 可从祖先目录加载，项目 prompt 只从启动 cwd 的受信任 `.pi/prompts/` 发现；trust 与 sandbox 分离 | 使用项目 prompt 薄 wrapper；Pi 原生 session 只用于当前平台对话 | 从仓库根启动；命令缺失或冲突时直接执行 `.shared/commands/*`，跨平台接力仍写入 Case / spec / audit |
+| dsh | `AGENTS.md`、`.dsh/skills/{brain,spec,exec,audit,case,commit,anydoc,research}/SKILL.md` | 项目技能从 Session cwd 回溯最近 `.git` 标记；资源目录与项目根不同，Markdown 引用不自动展开 | 官方 Desktop 标准模式，保持原生计划模式关闭；通过技能读取共享定义 | 直接读取 `.shared/commands/*` 或 `.shared/skills/*`，继续使用共享工件；真实 Desktop 行为单独验收 |
 
 ## OpenCode 适配边界
 
@@ -77,6 +78,18 @@
 - Pi 内置 `/session` 展示 Pi 自身对话 session 信息；agentwork 在 Pi 上使用 `/case` 映射共享 `.shared/commands/case.md`。Pi 的用户目录 JSONL 状态不替代仓库内显式 Case / spec / audit 工件。
 - Pi 核心不内置 plan mode 或 subagent。官方 [plan-mode 示例](https://github.com/earendil-works/pi/tree/v0.84.4/packages/coding-agent/examples/extensions/plan-mode) 会注册 `/plan`；agentwork 使用 `/spec`，与其不重名，两者可并存，但不承诺 Pi 扩展行为与 agentwork spec 工件一致。
 - 核心 bootstrap 不安装 Pi runtime、package、extension、官方 [subagent 示例](https://github.com/earendil-works/pi/tree/v0.84.4/packages/coding-agent/examples/extensions/subagent) 或 optional tool。Browser 可通过 manifest 显式安装 `.pi/skills/**` 薄入口；CodeGraph 安装与 Codex、OpenCode 共用的 `.agents/skills/codegraph/`，由 Pi 原生的 `.agents/skills/` 发现加载，并写入项目 `.pi/mcp.json`。两者都不会生成 `.pi/settings.json` 或安装外部 CLI；其他 Pi 扩展能力仍需独立设计、安装与验证。
+
+## DeepSeek Harness 适配边界
+
+- 机制基线为 npm `@deepseek-ai/dsh@0.2.1-rc.2`，tag `dsh-v0.2.1-rc.2`、commit `687f282e8625c6b8d11ff58211a90524be2e4317`；依据官方 [skill filesystem 实现](https://github.com/deepseek-ai/deepseek-harness/blob/687f282e8625c6b8d11ff58211a90524be2e4317/packages/skill/skill-filesystem/src/index.ts)、[指令加载器](https://github.com/deepseek-ai/deepseek-harness/tree/687f282e8625c6b8d11ff58211a90524be2e4317/packages/context/agent-instructions) 与固定发布包。升级或 Desktop 内置版本不同时须重新验证。
+- 核心精确分发八个技能入口。项目 `.dsh/skills` 优先于 `.agents/skills`；其他平台的 `.codex/skills`、`.claude/commands`、`.pi/prompts` 不等于 dsh 默认技能根。用户其他技能和 Desktop 随包技能可以并存。只认领八个 `SKILL.md`，用户改写、同名自定义内容、符号链接按 bootstrap 现行策略保留并报告。
+- 从 Git 子目录发起时，发现逻辑回溯最近 `.git`；该标记可以是目录或 worktree 的文件。工作区及其祖先均无 `.git` 时，以选定项目根作为 Session cwd，不能假定从任意子目录都能找到根技能。shell 的 `cd` 不等于改变 Session cwd。
+- 加载 skill 的资源基底是 `.dsh/skills/<name>/`。薄入口要求从加载器给出的资源目录向上三级确定项目根，再完整读取共享定义；共享路径不能按 shell cwd 或技能目录直接解析。`AGENTS.md` 中的 Markdown 路径不会自动展开，实际任务仍须读取启动必读。
+- `/brain`、`/spec`、`/exec`、`/audit`、`/case`、`/commit` 对应现有共享流程；anydoc、research 对应现有共享技能。用户消息中的子命令、显式源路径、引号与带空格路径保持原样交给共享定义解释，不依赖其他平台的参数展开语法或交互工具名。
+- 官方 Desktop 首次使用以新会话、标准模式和正常项目写权限为基线，保持原生计划模式关闭；其禁止写文件的指引与 brain/spec 工件落盘冲突。agentwork 没有 `/plan`、`/review`、`/session` 别名，原生 `/plan` 不能代替 `/spec` 或额外授予执行许可。
+- 加载 skill、消息提及 slash 命令、原生计划批准与 UI 快照都不替代实际用户意图。spec 不授权源码改动，Case 保持显式加载，exec 只推进当前批次，commit 仍需真实提交请求和共享确认流程；这些文本契约不等于运行时机械拦截。
+- 核心不安装 dsh/Node/Python、MCP 或 optional tool，不改 home、profile、模型、凭据、日志上传或权限预设，也不启用 goal/loop/schedule/subagent。Desktop 可直接发现项目技能，无需全局安装 CLI；可选工具的 dsh 接线另行设计和验证。
+- 确定性回归、固定包机制探测和实际 Desktop/model 任务是三个独立验证层级。官方 Desktop `0.2.1-rc.2` 标准模式已完成核心流程受控验收（公开夹具，2026-10-22）：八入口、根规则、brain/spec、exec/audit、同夹具第二会话 Case 加载与真实提交请求/取消均有记录。权限提示、可选工具、PTC、SSH、第三方 TUI 与自动续跑不在已验证范围；文件存在、包能加载技能、Web 首页可访问仍不足以声明这些额外能力。
 
 ## Codex custom agent 边界
 

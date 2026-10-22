@@ -106,6 +106,46 @@
       "type": "file"
     },
     {
+      "path": ".dsh/skills/anydoc/SKILL.md",
+      "sha256": "3ea86045c0344a4c707e29ef253ffe527d44d662554baae42223a25ca370d309",
+      "type": "file"
+    },
+    {
+      "path": ".dsh/skills/audit/SKILL.md",
+      "sha256": "fe2cb79b1d769a6eed9845929d6fdb254cad45c2a35dcf625c703be8e0ffb8fd",
+      "type": "file"
+    },
+    {
+      "path": ".dsh/skills/brain/SKILL.md",
+      "sha256": "c28da498b359d65130f0a769b6d335b37aaafe6f37bc40acb8fa3f67550f4de3",
+      "type": "file"
+    },
+    {
+      "path": ".dsh/skills/case/SKILL.md",
+      "sha256": "20e5eba469f3a2745b32e8f486059fb3afecdf9c7038ec35947b7da3c91daebd",
+      "type": "file"
+    },
+    {
+      "path": ".dsh/skills/commit/SKILL.md",
+      "sha256": "5e350bb65b1721e8a81ce068e46ea31effe05c6b029e383cc54909129c617210",
+      "type": "file"
+    },
+    {
+      "path": ".dsh/skills/exec/SKILL.md",
+      "sha256": "288d951e0b35f3dfcbea2760f4122d4db7068578e5655c73a7f72226a492f8f5",
+      "type": "file"
+    },
+    {
+      "path": ".dsh/skills/research/SKILL.md",
+      "sha256": "798362928fc9a836c2501008108f529a34df7ebdeccb401d69bc99dbb81dbfc0",
+      "type": "file"
+    },
+    {
+      "path": ".dsh/skills/spec/SKILL.md",
+      "sha256": "ee8dee335b1271b9c701e3a903fdbc8c94bd8f9a5db3fba4dc640b9f8e138187",
+      "type": "file"
+    },
+    {
       "path": ".opencode/.gitignore",
       "sha256": "ab65cf6a2d0a180cbfd763d8ec3f31ace77801cb7b385c5f8ef369b9a9e1b203",
       "type": "file"
@@ -247,7 +287,7 @@
     },
     {
       "path": ".shared/patterns/platform-adapter.md",
-      "sha256": "6ca4012f5678ed24075d455f212cd9301f1ee5105081eb951383c96c7785ac95",
+      "sha256": "c4179834a75ec3159c71c2ddb5f8c0adb632163c254507d47ee48321066a3963",
       "type": "file"
     },
     {
@@ -322,7 +362,7 @@
     },
     {
       "path": "AGENTS.md",
-      "sha256": "361e2f5ed528644fcaefc4e4456db92ff07dbdcd67b96044e3513d6ceb963fe9",
+      "sha256": "74e90b02d4b33a59efa7632db1dcee103cfc7bacc4ed34db0b7d81a5cff6afb2",
       "type": "file"
     }
   ],

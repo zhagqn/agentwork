@@ -3,7 +3,7 @@
 agentwork is a repository-native workflow layer for coding agents. It turns
 ambiguous work into an explicit `brain`, `spec`, `exec`, and `audit` delivery
 flow, with repository-backed Case snapshots that can move across Codex, Claude
-Code, OpenCode, Cursor, and Pi.
+Code, OpenCode, Cursor, Pi, and DeepSeek Harness (dsh).
 
 Coding agents are good at producing changes, but sustained work also needs
 clear decision gates, recoverable task state, review boundaries, and a way to
@@ -23,8 +23,8 @@ repository instead of relying on one provider's private conversation state.
   because it exists. See the
   [Case workflow](.shared/patterns/case-workflow.md).
 - **One shared contract, thin platform adapters.** The durable workflow lives
-  in [`.shared/`](.shared/INDEX.md). Codex, Claude Code, OpenCode, Cursor, and
-  Pi receive small native entry points instead of separate copies of the core
+  in [`.shared/`](.shared/INDEX.md). Codex, Claude Code, OpenCode, Cursor,
+  Pi, and dsh receive small native entry points instead of separate copies of the core
   rules. See the
   [platform adapter model](.shared/patterns/platform-adapter.md).
 - **A conservative Codex integration.** The bootstrap installs project-level
@@ -35,7 +35,7 @@ repository instead of relying on one provider's private conversation state.
   workflow and are installed only when a project needs them. The registry
   in [`.agentwork/tools/`](.agentwork/tools/README.md) is the source of truth.
 - **Default capabilities.** anydoc and research are distributed as default
-  skills for Codex, Claude Code, Cursor, Pi, and the shared layer. Distribution
+  skills for Codex, Claude Code, Cursor, Pi, dsh, and the shared layer. Distribution
   does not install runtime dependencies: anydoc's npm package is installed in a
   project only when an agent needs to parse an office document, and research
   ships the routing contract alone. research is the single research entry point
@@ -90,8 +90,8 @@ repository's bootstrap and optional tool sources.
 
 - Python 3.11 or newer
 - Git
-- At least one supported coding agent: Codex, Claude Code, OpenCode, Cursor, or
-  Pi
+- At least one coding agent with an adapter: Codex, Claude Code, OpenCode,
+  Cursor, Pi, or dsh; see the platform validation boundaries below
 
 The core bootstrap has no package installation step. anydoc's runtime package
 is installed only when needed; other optional tool packs may have their own
@@ -143,6 +143,37 @@ a one-run project-resource trust override, not a sandbox or tool-command
 approval. Pi's built-in `/session` describes its native conversation session;
 use `/case` for agentwork's explicit repository-backed handoff and recovery
 workflow. Other platforms use the same shared Case entry.
+
+### DeepSeek Harness Desktop
+
+After bootstrap, open the **target project root** in the official Desktop and
+create a new session in standard mode. Keep dsh's native plan mode off: it
+prohibits file writes, while agentwork's `brain` and `spec` write artifacts.
+agentwork uses `/spec`; the native `/plan` is a separate runtime feature.
+
+The project provides `/brain`, `/spec`, `/exec`, `/audit`, `/case`, `/commit`,
+`/anydoc`, and `/research` through `.dsh/skills/`. Start with `/brain`, confirm
+the design, then use `/spec` and explicitly request `/exec`; review with
+`/audit`. `/case` loads old task state only when explicitly requested, and
+`/commit` still requires actual submission intent and scope confirmation.
+
+Desktop does not require a globally installed `dsh` CLI to discover these
+project skills. With no Git marker in the workspace or its ancestors, use the
+selected project root as the session working directory. In Git repositories,
+discovery can walk up from a subdirectory; a worktree's `.git` file also counts
+as a marker. Loaded skill resource paths are based on the skill directory;
+the entries explicitly locate the project root before reading `.shared/`.
+
+The mechanism baseline is `@deepseek-ai/dsh@0.2.1-rc.2`. Deterministic checks,
+published-package discovery, and real Desktop/model acceptance are separate
+validation levels. A controlled acceptance in the official Desktop
+`0.2.1-rc.2` standard mode (2026-10-22, public fixture) covered the eight
+entries, root-rule reads, brain/spec artifacts, exec/audit, a Case created in
+the fixture and loaded in a second session of the same workspace, a real
+commit request that received a scope confirmation and was then cancelled, and
+the anydoc/research rules. Permission prompts, optional tool wiring, PTC, SSH,
+and third-party TUIs remain outside that scope. Bootstrap leaves Desktop
+profiles, models, and credentials under user control.
 
 The core bootstrap deliberately does **not** install optional tool runtimes,
 configure MCP servers or providers, or import existing task state. It does
@@ -231,6 +262,7 @@ the project deliberately sets `BROWSER_CDP_PREFER=1`.
 | [`.claude/`](.claude), [`.opencode/`](.opencode), [`.cursor/`](.cursor) | Self-hosted thin platform adapters generated from the bootstrap source. |
 | `.pi/prompts/` | Self-hosted Pi project prompt templates generated from the bootstrap source. |
 | `.pi/skills/` | Pi skill entry points; anydoc is part of the core bootstrap, while other tool packs remain explicit. |
+| `.dsh/skills/` | Self-hosted dsh entries for six workflow stages plus anydoc and research; bootstrap manages only the eight `SKILL.md` files. |
 | [`docs/architecture/`](docs/architecture/README.md) | Example and generated output for the optional `arch` tool, not the architecture of an agentwork business service. |
 
 The source repository self-hosts the same bootstrap layout it distributes.
@@ -247,6 +279,7 @@ belongs in `.shared/`.
 | OpenCode | `AGENTS.md`, generated project commands | Commands inject shared definitions; provider, model, plugin, MCP, and permission configuration remain project-owned. |
 | Cursor | Project rule plus `AGENTS.md` fallback | Uses native editing and diagnostics while shared command files provide the portable workflow contract. |
 | Pi | `AGENTS.md`, six project prompts under `.pi/prompts/`, default anydoc and research skills | Static adapter contract is based on Pi `v0.84.4`; start from the repository root and trust the project. The core bootstrap does not install Pi, extensions, subagents, or optional tool runtimes. Browser adds an explicit `.pi/skills/` entry through its optional tool pack, and Pi discovers the CodeGraph skill from the `.agents/skills/` entry shared with Codex and OpenCode. CodeGraph also writes the project `.pi/mcp.json`. |
+| DeepSeek Harness (dsh) | `AGENTS.md`, eight project skills under `.dsh/skills/` | Mechanism baseline: `0.2.1-rc.2`. Use standard mode with native plan mode off. Core workflow acceptance is recorded for standard mode; permission prompts, optional tool wiring, PTC, and SSH are separate. |
 
 Platform discovery, permissions, sandbox behavior, and runtime orchestration can
 change independently. The
@@ -280,6 +313,10 @@ investigations. They are not hidden requirements for the core workflow.
 - Pi compatibility currently records the `v0.84.4` prompt and trust structure;
   live runtime discovery is tracked as a separate compatibility smoke rather
   than implied by deterministic bootstrap tests.
+- dsh's adapter targets the `0.2.1-rc.2` discovery contract and was accepted
+  in the official Desktop at that version. Revalidate when the Desktop or its
+  bundled runtime changes; optional tools, permission prompts, PTC, and SSH
+  remain outside the verified scope.
 - Optional tool packs may reference external projects or require separately
   installed CLIs, credentials, or MCP configuration.
 - Bootstrap updates keep and report project-owned files where ownership is

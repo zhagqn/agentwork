@@ -50,6 +50,10 @@
       "路径默认使用当前项目内的相对路径，不写用户目录或绝对工程路径示例"
     ]
   },
+  "dsh": {
+    "mechanism_baseline": "0.2.1-rc.2",
+    "tag_commit": "687f282e8625c6b8d11ff58211a90524be2e4317"
+  },
   "pi": {
     "compatibility_baseline": "0.84.4",
     "tag_commit": "b79e4cc834970cca69daebffab7df1da7d1e52c4",
@@ -89,7 +93,7 @@
       "intro": "本项目使用 `agentwork` 作为工作流基础层。",
       "note": "",
       "extra_complex": [
-        "如需确认跨平台（Codex / Claude / OpenCode / Cursor / Pi）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
+        "如需确认跨平台（Codex / Claude / OpenCode / Cursor / Pi / dsh）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
       ],
       "extra_basic": []
     },
@@ -118,7 +122,7 @@
       "intro": "本项目使用 `agentwork` 作为工作流基础层。",
       "note": "",
       "extra_complex": [
-        "如需确认跨平台（Codex / Claude / OpenCode / Cursor / Pi）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
+        "如需确认跨平台（Codex / Claude / OpenCode / Cursor / Pi / dsh）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
       ],
       "extra_basic": [
         "source repo 的安装入口：`install-bootstrap.py`、`install-tool.py`"
@@ -129,7 +133,7 @@
       "intro": "本项目使用 `agentwork` 作为工作流基础层。",
       "note": "",
       "extra_complex": [
-        "如需确认跨平台（Codex / Claude / OpenCode / Cursor / Pi）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
+        "如需确认跨平台（Codex / Claude / OpenCode / Cursor / Pi / dsh）能力边界、资料可信度与冲突回退流程，参考：`.shared/patterns/platform-adapter.md`"
       ],
       "extra_basic": []
     }
@@ -137,6 +141,7 @@
   "default_capabilities": [
     {
       "name": "anydoc",
+      "description": "按需将 Word、PowerPoint、Excel、OpenDocument、RTF、EPUB、CSV 和 PDF 转为 Markdown，供 agent 分析和归档。",
       "canonical": ".shared/skills/anydoc/SKILL.md",
       "mirror_to": [
         "codex/skills/anydoc/SKILL.md",

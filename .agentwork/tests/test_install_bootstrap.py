@@ -33,6 +33,7 @@ GITIGNORE_START = '# >>> AGENTWORK bootstrap: tmp artifacts >>>'
 GITIGNORE_END = '# <<< AGENTWORK bootstrap: tmp artifacts <<<'
 RECEIPT_REL = Path('.agentwork/bootstrap-install-state.json')
 PI_PROMPTS = ('audit', 'brain', 'case', 'commit', 'exec', 'spec')
+DSH_SKILLS = ('brain', 'spec', 'exec', 'audit', 'case', 'commit', 'anydoc', 'research')
 RETIRED_SESSION_FILES = (
     '.claude/commands/session.md',
     '.codex/skills/session/SKILL.md',
@@ -75,8 +76,12 @@ def tree_snapshot(path: Path) -> dict[str, tuple[str, bytes | str | None]]:
 
 class InstallBootstrapCodexAgentTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.temp = tempfile.TemporaryDirectory(prefix='agentwork-bootstrap-')
+        scratch = REPO_ROOT / '.tmp'
+        scratch.mkdir(exist_ok=True)
+        self.temp = tempfile.TemporaryDirectory(prefix='agentwork-bootstrap-', dir=scratch)
         self.addCleanup(self.temp.cleanup)
+        # 项目内的独立夹具不应继承父仓库的 HEAD/index 内容。
+        self.enterContext(patch.dict(os.environ, GIT_CEILING_DIRECTORIES=str(scratch)))
         self.project = Path(self.temp.name) / 'project'
         self.project.mkdir()
 
@@ -1104,6 +1109,110 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
         self.assertNotIn('.pi/prompts/aw-session.md', receipt_paths)
         self.assertNotIn('.pi/prompts/other.md', receipt_paths)
 
+    def test_dsh_install_claims_only_eight_files_and_preserves_siblings(self) -> None:
+        source = self.source_fixture('dsh-distribution-source')
+        for name in ('plan', 'review', 'session', 'other'):
+            stale = source / f'.agentwork/bootstrap/dsh/skills/{name}/SKILL.md'
+            stale.parent.mkdir(parents=True)
+            stale.write_text('# stale source entry\n', encoding='utf-8')
+        project = Path(self.temp.name) / 'dsh project with spaces'
+        siblings = (
+            '.dsh/settings.json', '.dsh/skills/project/SKILL.md',
+            '.dsh/skills/brain/project-notes.md',
+        )
+        for relative in siblings:
+            path = project / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b'project-owned content\n')
+        source_before = tree_snapshot(source)
+
+        def install() -> None:
+            result = subprocess.run(
+                [sys.executable, str(source / 'install-bootstrap.py'), '-p', str(project)],
+                cwd=source, text=True, capture_output=True, check=False, timeout=30,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        install()
+        receipt = {entry['path']: entry for entry in self.receipt(project)['files']}
+        expected = {f'.dsh/skills/{name}/SKILL.md' for name in DSH_SKILLS}
+        self.assertEqual({rel for rel in receipt if rel.startswith('.dsh/')}, expected)
+        self.assertEqual(
+            {p.parent.name for p in (project / '.dsh/skills').glob('*/SKILL.md')},
+            set(DSH_SKILLS) | {'project'},
+        )
+        for relative in expected:
+            content = (source / '.agentwork/bootstrap' / relative[1:]).read_bytes()
+            self.assertEqual((project / relative).read_bytes(), content)
+            self.assertEqual(receipt[relative]['sha256'], hashlib.sha256(content).hexdigest())
+        for relative in siblings:
+            self.assertEqual((project / relative).read_bytes(), b'project-owned content\n')
+        installed = tree_snapshot(project)
+        install()
+        self.assertEqual(tree_snapshot(project), installed)
+        self.assertEqual(tree_snapshot(source), source_before)
+
+    def test_dsh_tool_receipt_overlap_fails_before_any_writes(self) -> None:
+        for name in ('brain', 'anydoc', 'research'):
+            with self.subTest(skill=name):
+                project = Path(self.temp.name) / f'dsh-tool-overlap-{name}'
+                relative = f'.dsh/skills/{name}/SKILL.md'
+                path = project / relative
+                path.parent.mkdir(parents=True)
+                content = (BOOTSTRAP / 'dsh/skills' / name / 'SKILL.md').read_bytes()
+                path.write_bytes(content)
+                receipt = project / '.agentwork/tool-receipts/legacy-dsh.json'
+                receipt.parent.mkdir(parents=True)
+                receipt.write_text(json.dumps({
+                    'version': 1, 'files': {relative: hashlib.sha256(content).hexdigest()},
+                }), encoding='utf-8')
+                before = tree_snapshot(project)
+
+                result = self.run_installer(project=project, check=False)
+
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(f'- {relative}: still claimed by optional tool receipt "legacy-dsh"', result.stderr)
+                self.assertEqual(tree_snapshot(project), before)
+                self.assertFalse((project / RECEIPT_REL).exists())
+
+    def test_receipt_refreshes_unchanged_prior_dsh_skills(self) -> None:
+        self.run_installer()
+        receipt = self.receipt()
+        expected = {f'.dsh/skills/{name}/SKILL.md' for name in DSH_SKILLS}
+        for entry in receipt['files']:
+            if entry['path'] in expected:
+                prior = f"# prior {entry['path']}\n".encode('utf-8')
+                (self.project / entry['path']).write_bytes(prior)
+                entry['sha256'] = hashlib.sha256(prior).hexdigest()
+        (self.project / RECEIPT_REL).write_text(json.dumps(receipt), encoding='utf-8')
+
+        self.run_installer()
+
+        for relative in expected:
+            self.assertEqual(
+                (self.project / relative).read_bytes(),
+                (BOOTSTRAP / relative[1:]).read_bytes(),
+            )
+
+    def test_modified_dsh_skills_are_kept_with_siblings(self) -> None:
+        self.run_installer()
+        original_receipt = self.receipt()
+        for name in DSH_SKILLS:
+            skill = self.project / f'.dsh/skills/{name}/SKILL.md'
+            skill.write_bytes(skill.read_bytes() + b'\nproject edit\n')
+            (skill.parent / 'notes.md').write_bytes(b'keep project notes\n')
+        edited = tree_snapshot(self.project)
+
+        for _ in range(2):
+            result = self.run_installer()
+            for name in DSH_SKILLS:
+                self.assertIn(
+                    f'- [keep] .dsh/skills/{name}/SKILL.md (content changed since the last successful '
+                    'bootstrap install)', result.stdout,
+                )
+            self.assertEqual(tree_snapshot(self.project), edited)
+            self.assertEqual(self.receipt(), original_receipt)
+
     def test_receipt_allows_refresh_of_an_unchanged_prior_version(self) -> None:
         self.run_installer()
         target = self.project / '.shared/commands/brain.md'
@@ -1143,6 +1252,9 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
             '.opencode/commands/brain.md',
             '.pi/prompts/brain.md',
             '.codex/skills/brain/SKILL.md',
+            '.dsh/skills/brain/SKILL.md',
+            '.dsh/skills/anydoc/SKILL.md',
+            '.dsh/skills/research/SKILL.md',
             '.shared/commands/brain.md',
         )
         for index, rel in enumerate(paths):
@@ -1168,6 +1280,18 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
 
         self.assertIn('- [keep] .claude/CLAUDE.md (target is not a regular file)', result.stdout)
         self.assertEqual((conflict / 'project-file.md').read_text(encoding='utf-8'), 'keep\n')
+
+    def test_dsh_skill_directory_conflict_is_kept(self) -> None:
+        conflict = self.project / '.dsh/skills/brain/SKILL.md'
+        conflict.mkdir(parents=True)
+        (conflict / 'notes.md').write_bytes(b'keep project notes\n')
+        before = tree_snapshot(conflict)
+
+        result = self.run_installer()
+
+        self.assertIn('- [keep] .dsh/skills/brain/SKILL.md (target is not a regular file)', result.stdout)
+        self.assertEqual(tree_snapshot(conflict), before)
+        self.assertNotIn('.dsh/skills/brain/SKILL.md', {entry['path'] for entry in self.receipt()['files']})
 
     def test_pi_prompt_directory_conflict_is_kept(self) -> None:
         conflict = self.project / '.pi/prompts/brain.md'
@@ -1256,11 +1380,12 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
                 self.assertEqual(tree_snapshot(project), before)
 
     def test_platform_dir_occupied_by_file_is_kept_and_others_install(self) -> None:
-        for index, name in enumerate(('.pi', '.claude', '.codex')):
+        for index, name in enumerate(('.pi', '.claude', '.codex', '.dsh', '.dsh/skills', '.dsh/skills/brain')):
             with self.subTest(name=name):
                 project = Path(self.temp.name) / f'occupied-{index}'
                 project.mkdir()
                 occupied = project / name
+                occupied.parent.mkdir(parents=True, exist_ok=True)
                 occupied.write_text('project-owned file\n', encoding='utf-8')
 
                 result = self.run_installer(project=project)
@@ -1437,6 +1562,33 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
 
                 self.assertIn('- [keep] .pi/prompts/brain.md (path contains symlink', result.stdout)
                 self.assertEqual(tree_snapshot(canonical), canonical_before)
+
+    def test_dsh_symlink_boundaries_are_kept_without_external_writes(self) -> None:
+        boundaries = ('.dsh', '.dsh/skills', '.dsh/skills/brain', '.dsh/skills/brain/SKILL.md')
+        for index, relative in enumerate((*boundaries, 'canonical-source')):
+            with self.subTest(boundary=relative):
+                project = Path(self.temp.name) / f'dsh-symlink-{index}'
+                project.mkdir()
+                if relative == 'canonical-source':
+                    relative = '.dsh/skills/brain/SKILL.md'
+                    external = BOOTSTRAP / 'dsh/skills/brain/SKILL.md'
+                else:
+                    external = Path(self.temp.name) / f'dsh-external-{index}'
+                    if relative.endswith('SKILL.md'):
+                        external.write_bytes(b'external skill\n')
+                    else:
+                        external.mkdir()
+                link = project / relative
+                link.parent.mkdir(parents=True, exist_ok=True)
+                link.symlink_to(external, target_is_directory=external.is_dir())
+                external_before = tree_snapshot(external)
+
+                result = self.run_installer(project=project)
+
+                self.assertIn('- [keep] .dsh/skills/brain/SKILL.md (path contains symlink', result.stdout)
+                self.assertTrue(link.is_symlink())
+                self.assertEqual(tree_snapshot(external), external_before)
+                self.assertNotIn('.dsh/skills/brain/SKILL.md', {entry['path'] for entry in self.receipt(project)['files']})
 
     def test_hardlinked_managed_file_is_replaced_without_external_write(self) -> None:
         target = (self.project / '.pi/prompts/brain.md').resolve()
@@ -1615,6 +1767,68 @@ class InstallBootstrapCodexAgentTest(unittest.TestCase):
                         )
                 self.assertEqual(tree_snapshot(project), before)
                 self.assertFalse((project / '.pi').exists())
+
+    def test_dsh_copy_failure_or_interrupt_restores_existing_tree_and_receipt(self) -> None:
+        self.run_installer()
+        (self.project / '.dsh/skills/brain/notes.md').write_bytes(b'keep project notes\n')
+        for name in ('brain', 'anydoc', 'research'):
+            for failure in (OSError('injected dsh copy failure'), KeyboardInterrupt()):
+                with self.subTest(skill=name, failure=type(failure).__name__):
+                    module = self.load_installer()
+                    plan = self.prepared_plan(module)
+                    original = module.copy_file
+
+                    def fail_after_dsh_copy(src: Path, dst: Path) -> None:
+                        original(src, dst)
+                        if dst == plan.target / f'.dsh/skills/{name}/SKILL.md':
+                            dst.write_bytes(b'incomplete new skill\n')
+                            raise failure
+
+                    module.copy_file = fail_after_dsh_copy
+                    self.assert_plan_rollback(module, plan)
+
+    def test_dsh_source_self_host_failure_restores_generated_sources_and_new_targets(self) -> None:
+        for index, failure in enumerate((OSError('injected dsh self-host failure'), KeyboardInterrupt())):
+            with self.subTest(failure=type(failure).__name__):
+                source = self.source_fixture(f'dsh-source-rollback-{index}')
+                # Force the renderer to create a new source inside the combined transaction.
+                (source / '.agentwork/bootstrap/dsh/skills/brain/SKILL.md').unlink()
+                module = self.load_installer(source / 'install-bootstrap.py')
+                original = module.copy_file
+
+                def fail_after_dsh_copy(src: Path, dst: Path) -> None:
+                    original(src, dst)
+                    if dst == source / '.dsh/skills/brain/SKILL.md':
+                        raise failure
+
+                module.copy_file = fail_after_dsh_copy
+                before = tree_snapshot(source)
+                with redirect_stdout(io.StringIO()):
+                    with self.assertRaisesRegex(SystemExit, 'failed and rolled back'):
+                        module.run_source_self_host(source.resolve())
+                self.assertEqual(tree_snapshot(source), before)
+                self.assertFalse((source / '.dsh').exists())
+
+    def test_dsh_receipt_failure_restores_prior_install(self) -> None:
+        self.run_installer()
+        relative = '.dsh/skills/brain/SKILL.md'
+        prior = b'# prior managed dsh skill\n'
+        (self.project / relative).write_bytes(prior)
+        receipt = self.receipt()
+        for entry in receipt['files']:
+            if entry['path'] == relative:
+                entry['sha256'] = hashlib.sha256(prior).hexdigest()
+        (self.project / RECEIPT_REL).write_text(json.dumps(receipt), encoding='utf-8')
+        module = self.load_installer()
+        plan = self.prepared_plan(module)
+        original = module.write_receipt
+
+        def fail_after_receipt(target: Path, content: bytes) -> None:
+            original(target, content)
+            raise OSError('injected receipt failure after dsh upgrade')
+
+        module.write_receipt = fail_after_receipt
+        self.assert_plan_rollback(module, plan)
 
     def test_retired_adapter_is_restored_and_custom_adapter_is_preserved(self) -> None:
         owned = self.project / '.agent/workflows/brain.md'
