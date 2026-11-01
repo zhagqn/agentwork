@@ -2,7 +2,7 @@
 
 > 创建: 2026-10-22 12:00
 > 简述: 核心适配已提交至 b270bda，Desktop T5 补验与独立复核双通过；T1–T6 完成，本 Case 随 docs(case) 批次归档。
-> 规格来源: .tmp/agentwork/spec/20261022-1116-dsh-core-adapter.md
+> 规格来源: .tmp/agentwork/spec/20261022-1116-dsh-core-adapter.md（2026-11-01 已随 `.tmp/` 清理删除，决策与任务已内嵌本 Case）
 
 ## 任务列表（按优先级）
 
@@ -71,7 +71,7 @@
 - `.dsh/skills/`、`.agentwork/bootstrap-install-state.json`、`AGENTS.md`：已通过事务完成的 source 自承载基线，不手工长期维护根副本。
 - `.agentwork/tests/`：入口契约、真实安装、用户内容与符号链接保留、tool 重叠及失败/中断恢复回归。
 - `README.md`、`.agentwork/bootstrap/README.md`、`.shared/patterns/platform-adapter.md`、`.shared/project/agentwork.md`：使用方式、已验证范围与 Desktop 未覆盖边界。
-- T5 使用 `.tmp/agentwork/t5-fixture-20261022/` 公开夹具与独立证据；未把真实 source 工作树作为模型副作用对象。
+- T5 使用独立公开夹具（原 `.tmp/agentwork/t5-fixture-20261022/`，已清理）与独立证据；未把真实 source 工作树作为模型副作用对象。
 
 ### 执行批次 / 优先级
 
@@ -85,7 +85,7 @@
 
 - Case 同步后运行 `python3 .shared/scripts/agentwork-check.py case .shared/case/20261022-1200-dsh-core-adapter.md --strict-flow`；该检查只验证工件形态，不替代业务回归或正式 audit。
 - 实现变化后重跑受影响测试；需要完整 gate 时使用 `python3 -m unittest discover -s .agentwork/tests -p 'test_*.py'`、`python3 .shared/scripts/agentwork-check.py self-test`、`python3 .agentwork/bootstrap/render_bootstrap.py --check`。不自动选择旧 Case 或本机最新 spec。
-- T4 复现入口为 `node .tmp/agentwork/dsh-core-validation/probe.mjs`，只使用已缓存或项目级准备的同版本包，不进入默认 gate，不连接真实模型。
+- T4 复现入口为 `node .tmp/agentwork/dsh-core-validation/probe.mjs`，默认包路径指向的研究 npm 缓存已清理，复跑需显式传入项目级准备的同版本包路径，不进入默认 gate，不连接真实模型。
 - Desktop 按以下清单记录可观察读取、输出工件、checker 结果和取消的提交确认，区分直接观察与模型自述；失败时回退共享定义，不放宽权限或更改用户配置。
 
 #### Desktop 受控验收清单
@@ -113,26 +113,9 @@
 
 ## 关联工件（可选）
 
-- `.tmp/agentwork/spec/20261022-1116-dsh-core-adapter.md`：已冻结的规格来源；完整决策和任务已在本 Case 保留，跨 checkout 缺失来源文件不妨碍恢复。
-- `.tmp/research/dsh-20261022/report.md`、`probe-results.json`、`runtime-smoke-results.json`：实施前研究，不能替代本轮正式适配验收。
-- `.tmp/agentwork/dsh-core-install-tests.log`：T2 安装器最终回归日志。
-- `.tmp/agentwork/dsh-core-self-host.log`：T3 自承载事务记录。
-- `.tmp/agentwork/dsh-core-full-tests.log`、`dsh-core-checker-self-test.log`：T3 完整回归与 workflow 自检记录。
+- 2026-11-01 `.tmp/` 清理后仅保留以下证据；冻结 spec、T2/T3/T6 日志、T5 夹具与 relay 证据、复跑证据、dsh 源码摘录、12:55/13:50 审查导出、13:09/13:58 独立复核和提交核对目录均已删除，其决策、任务、验证数字与审查结论已内嵌本 Case。
+- `.tmp/research/dsh-20261022/report.md`、`probe-results.json`、`runtime-smoke-results.json`：实施前研究，不能替代本轮正式适配验收；研究用 npm 缓存已删除。
 - `.tmp/agentwork/dsh-core-validation/report.md`、`results.json`、`probe.mjs`、`probe.log`：T4 结论、版本/目录/摘要、复现脚本与最终原始输出。
-- `.tmp/agentwork/dsh-staged-before.patch`：T3/T4 暂存区对比基线，当时为空。
-- `.tmp/agentwork/t5-fixture-20261022/`、`.tmp/agentwork/dsh-core-t5-fixture-install.log`：T5 公开夹具与安装记录（73/73 收据）；夹具内 `.tmp/t5-evidence/` 含九项观察、brain/spec/audit 工件、Case 与 git 前后证据。
-- `.tmp/agentwork/dsh-t5-cross-session-load.md`：T5 Case 跨会话加载记录（夹具会话 → 当前会话）。
-- `.tmp/agentwork/audit/20261022-1255-dsh-core-adapter-final.md`：12:55 历史初审及当时的 Minor 处置；其完成结论已被本 Case 的 13:09 复核替代，保留原文供追溯。
-- `.tmp/agentwork/dsh-core-t6-gates.log`：文档更新后的全量 unittest、self-test 与 render 检查。
-- `.tmp/agentwork/t5-fixture-20261022/.tmp/t5-evidence/relay/`：T5 补验 A/B 证据（会话状态、Case 加载原始返回、提交请求/范围确认/取消时间线与 git 前后状态）。
-- `.tmp/agentwork/audit/20261022-1350-dsh-core-adapter-reaudit.md`：T6 复审双结论、Minor 处置与验证事实。
-- `.tmp/agentwork/dsh-core-t6-final-gates.log`、`.tmp/agentwork/dsh-core-t6-selfhost.log`：最终 gate 与自承载收据同步记录。
-- `.tmp/agentwork/dsh-t5-handoff.md`：标准模式步骤、逐项提示词与证据模板。
-- `.tmp/agentwork/dsh-core-validation-rerun/`、`.tmp/agentwork/dsh-core-t5-unittest.log`、`dsh-core-t5-full-tests.log`：本轮复跑证据。
-- `.tmp/agentwork/dsh-src/`：从 app.asar 提取的 dsh 快照源码摘录，用于核对 index 行为。
-- `.tmp/agentwork/dsh-audit-20261022/`：13:09 独立复核的完整回归、workflow 自检、夹具 checker、收据差异和 staged 对比证据。
-- `.tmp/agentwork/dsh-audit-20261022-135529/`：13:58 独立复核的新鲜回归、夹具 checker、source/夹具收据、读取返回比对、审查前后 Case 取证与 staged/worktree 边界记录；当前结论以最近审查记录为准。
-- `.tmp/agentwork/commit-dsh-20261022-141618/`：用户确认的两笔提交范围、收据局部补丁、提交日志与提交前后边界核对；默认不纳入 Git。
 
 ## 当前批次工作集（可选）
 
@@ -142,8 +125,8 @@
 
 - 提交: `b270bda7205fc738a6c0d4686e86c8346d55b5a9 feat(dsh): 增加核心工作流适配与 Desktop 验收支持` | 范围: `.agentwork/bootstrap/`, `install-bootstrap.py`, `.agentwork/tests/`, `.dsh/skills/`, `.agentwork/bootstrap-install-state.json`, `AGENTS.md`, `README.md`, `.shared/patterns/platform-adapter.md`, `.shared/project/agentwork.md` | 验证: T1–T3/T6 实现、测试和限定支持文档共 30 文件；八入口源/根副本/收据一致，文件级幂等、用户内容/符号链接保留、tool 重叠及失败/中断/收据回滚均有回归；T2 安装器 78 项、dsh 2 项、既有入口 3 项和 Pi 8 项专项通过；最终全量 193 项（190 通过、3 条件跳过）、self-test、生成与 diff 检查通过。提交包含 platform-adapter 收据更新，排除 frontend-design 的摘要变更。
 - 历史: `T4 本地机制验证（证据未纳入 Git）` | 范围: `.tmp/agentwork/dsh-core-validation/` | 验证: 官方 0.2.1-rc.2 对三个真实安装目标的 7 个正向场景均加载八技能、2 个反向检查符合预期；用户技能并存，项目与隔离 home 摘要未变。复现入口及无 Git/构造 worktree 标记限制见关联工件与关键取舍，不以此替代 Desktop 验收。
-- 历史: `T5 准备与补验（证据未纳入 Git）` | 范围: `.tmp/agentwork/t5-fixture-20261022/`, `.tmp/agentwork/dsh-core-validation-rerun/`, `.tmp/agentwork/dsh-t5-handoff.md` | 验证: 公开夹具八入口、两个用户技能样本及 73/73 收据就绪；初始 3 项测试通过，功能落地后 6 项通过。新会话 `session-5e265bca` 在同夹具显式加载 Case，真实请求 → 范围确认 → 真实取消，三次 Git 状态一致、staged 为空、无提交；原始 read 返回、消息及 checker 见 relay 证据。准备轮固定包复跑 7 正向/2 反向、隔离 home 未变；当时尚未运行 Desktop。
-- 历史: `13:58 独立复核（证据未纳入 Git）` | 范围: `.tmp/agentwork/dsh-audit-20261022-135529/`, `.tmp/agentwork/audit/20261022-1350-dsh-core-adapter-reaudit.md` | 验证: Case 返回与当前文件一致，source/夹具收据各 73/73，八入口匹配 canonical 源；新鲜 193 项回归、workflow 自检、生成检查、夹具 6 项与全部 checker、13:50 audit gate 均通过；冻结 spec 与当时 staged 基线未变。12:55 初审被 13:09 复核否决，13:50 补验复审和 13:58 独立复核双通过；原始记录与历史审查均保留，本轮未重跑 Desktop 或读取 profile/历史会话。
+- 历史: `T5 准备与补验（证据未纳入 Git）` | 范围: `T5 夹具、复跑与 handoff（已清理）` | 验证: 公开夹具八入口、两个用户技能样本及 73/73 收据就绪；初始 3 项测试通过，功能落地后 6 项通过。新会话 `session-5e265bca` 在同夹具显式加载 Case，真实请求 → 范围确认 → 真实取消，三次 Git 状态一致、staged 为空、无提交；原始 read 返回、消息及 checker 曾存于 relay 证据（已清理）。准备轮固定包复跑 7 正向/2 反向、隔离 home 未变；当时尚未运行 Desktop。
+- 历史: `13:58 独立复核（证据未纳入 Git）` | 范围: `13:58 复核目录与 13:50 复审导出（已清理）` | 验证: Case 返回与当前文件一致，source/夹具收据各 73/73，八入口匹配 canonical 源；新鲜 193 项回归、workflow 自检、生成检查、夹具 6 项与全部 checker、13:50 audit gate 均通过；冻结 spec 与当时 staged 基线未变。12:55 初审被 13:09 复核否决，13:50 补验复审和 13:58 独立复核双通过；原始记录与历史审查导出已于 2026-11-01 清理，本轮未重跑 Desktop 或读取 profile/历史会话。
 - 提交: `-` | 范围: `.shared/case/20261022-1200-dsh-core-adapter.md` | 验证: 当前 docs(case) 批次仅归档本 Case；保留 D1–D10、完整 T1–T6、有效证据与最近三次审查，回填实际实现锚点并清理已提交工作集；自身 hash 由 Git 历史追溯，不为回填自身再追加提交。
 
 ## 风险 / 阻塞
@@ -185,9 +168,9 @@
 - 问题：[规格] Important A1：T5 清单要求同一公开夹具工作区中新会话恢复，以及真实提交请求后的确认与取消；`observations.md:165`、`:188` 和 `dsh-t5-cross-session-load.md:18` 明确记录冷读/source 会话加载、没有真实用户请求或取消。T5 已勾选且 T6 依赖它完成，超出了证据能够支持的范围 | 处置: 转后续（T5 补齐真实交互与可核对会话记录；本轮已纠正 checkbox，缺失验证仍未闭环）。
 - 问题：[质量] Important A2：四份文档仍使用“已完成核心流程受控验收”或 accepted 的支持声明（如 `README.md:169`、`:315`、bootstrap README:49、platform-adapter:92、project/agentwork:57），未明确 T5 必验交互缺失；与原完成标准及项目诚实原则不符 | 处置: 转后续（T6 按实际覆盖范围修正文案，T5 完成前保留部分验收口径，再进行正式完成审查）。
 - 问题：[规格] Minor M1：既有 T5 为核对 preset 读取了用户 profile 元数据，超出 Case 的读取边界；事实已披露，本轮未重复该操作 | 处置: 转后续（后续只核对公开夹具、应用版本元数据及当前会话/界面状态，保留历史偏差，不把只读访问当作允许读取 profile 的新规则）。
-- 问题：[质量] Minor M2：platform-adapter 文案与自承载收据摘要不一致；差异见 `.tmp/agentwork/dsh-audit-20261022/receipt-mismatches.json`，另一个 frontend-design 差异属于用户独立修改，不归本任务 | 处置: 转后续（T6 文案收敛后同步受影响收据，并核对归属，不改动用户 staged 基线）。
+- 问题：[质量] Minor M2：platform-adapter 文案与自承载收据摘要不一致；差异记录（原 `receipt-mismatches.json`）已清理，另一个 frontend-design 差异属于用户独立修改，不归本任务 | 处置: 转后续（T6 文案收敛后同步受影响收据，并核对归属，不改动用户 staged 基线）。
 - 外部结论处置：12:55 初审对第二夹具会话按 Minor 转后续却仍认定 T5/T6 全部完成，并给出当前可完成 gate | 处置: 拒绝（原 Case 与 runbook 要求完整清单，演练和不同工作区的加载不能豁免该完成条件；结构 gate 的 PASS 不判定证据充分性）。
 - 风险/待办：未解决 Critical 为零、Important 两项；先补 T5 交互，再完成 T6 支持声明、摘要同步与复审。Case 结构通过不代表本轮审查 gate 通过；用户主动 staged 基线及无关 frontend-design 改动均保留。
 
 ### 历史审查摘要（2026-10-22 12:55）
-- 2026-10-22 12:55 初审曾以 193 项回归、夹具 6 项与 checker、73/73 收据及 audit gate 通过给出双通过，却将同夹具第二会话和真实提交交互缺失按 Minor 接受；该完成结论被 13:09 独立复核否决，后经 13:50 真实补验关闭。原文见 `.tmp/agentwork/audit/20261022-1255-dsh-core-adapter-final.md`；profile 只读偏差、anydoc 描述重复维护及版本升级后重验要求保留为当前边界。
+- 2026-10-22 12:55 初审曾以 193 项回归、夹具 6 项与 checker、73/73 收据及 audit gate 通过给出双通过，却将同夹具第二会话和真实提交交互缺失按 Minor 接受；该完成结论被 13:09 独立复核否决，后经 13:50 真实补验关闭。原文导出已清理；profile 只读偏差、anydoc 描述重复维护及版本升级后重验要求保留为当前边界。

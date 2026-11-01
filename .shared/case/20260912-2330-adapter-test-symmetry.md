@@ -62,8 +62,8 @@
 - 生成契约与 renderer：`.agentwork/bootstrap/spec.json`
 - 正式 Codex 离线发现回归：`.agentwork/tests/test_codex_discovery.py`
 - 正式 Pi 核心 prompt 离线发现：`.agentwork/tests/test_pi_discovery.py`；Pi 可选 skill 发现：`.agentwork/tests/test_pi_optional_tools.py`
-- Codex 路径调查：`.tmp/codex-path-probe/findings.md`；可复现脚本 `.tmp/codex-path-probe/probe.py`；8 场景原始结果 `.tmp/codex-path-probe/results.json`（临时证据，关键结论已保留在本 Case）
-- 官方 skill 发现契约：https://developers.openai.com/codex/skills （2026-09-15 已获取；本地快照 `.tmp/codex-skills-official.html`）
+- Codex 路径调查：原 `.tmp/codex-path-probe/` 的 findings、probe 与 8 场景结果（2026-11-01 已随 `.tmp/` 清理删除）；关键结论已保留在本 Case，正式回归见 `test_codex_discovery.py`。
+- 官方 skill 发现契约：https://developers.openai.com/codex/skills （2026-09-15 已获取；本地快照已清理）
 
 ## 当前批次工作集（可选）
 当前无工作集。

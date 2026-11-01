@@ -51,8 +51,7 @@
 - Case 是所有活动契约中的唯一任务快照，旧受管入口安全退役，普通旧数据不参与分发或迁移，生成及安装验证通过；提交须另经用户确认。
 
 ## 关联工件（可选）
-- 来源 Plan：`.tmp/agentwork/plan/20260904-1644-session-case-unified-migration.md`
-- 来源 Brain：`.tmp/agentwork/brain/20260904-1639-session-case-unified-migration.md`
+- 来源 Plan / Brain：`20260904-1644` / `20260904-1639-session-case-unified-migration.md`（2026-11-01 已随 `.tmp/` 清理删除），结论已内嵌本 Case。
 - 总体迭代及历史提交锚点：`.shared/case/20260807-1025-agentwork-iteration-consolidation.md`
 
 ## 当前批次工作集（可选）

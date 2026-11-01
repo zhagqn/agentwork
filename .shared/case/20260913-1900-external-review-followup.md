@@ -79,14 +79,9 @@
 - 四项 P1/P2 均以实现、回归及隔离迁移实测闭环；初步引入验收通过。真实平台发现与 research routing stable gate 不在此次验收范围。
 
 ## 关联工件（可选）
-- 外部审查报告：`.tmp/review-package/agentwork-review/agentwork-review.md`
-- 审查证据与复现脚本：`.tmp/review-package/agentwork-review/`
-- 本地原 review note：`.tmp/agentwork/review/20260913-1842-review-package.md`
-- 当前方向 plan-source：`.tmp/agentwork/plan/20260914-1227-research-anydoc-default-capability.md`
-- 已取代的 anydoc 单项 plan：`.tmp/agentwork/plan/20260914-1132-iteration-direction-adjustment.md`
+- 外部审查报告与证据包（原 `.tmp/review-package/`）、本地 review note 及两份 plan（`20260914-1227` 方向、已取代的 `20260914-1132`）（2026-11-01 已随 `.tmp/` 清理删除）；结论与处置已内嵌本 Case。
 - 兄弟 Case：`.shared/case/20260912-2330-adapter-test-symmetry.md`（本轮未加载）
-- 修复前复现：`.tmp/case-review-followup/probe.py`（旧行为证据，不用于验证修复后结果）。
-- 修复后历史工具迁移验证：`.tmp/case-review-followup/migration-check.py`，本轮夹具 `.tmp/migration-check-5ge5scep/`；依赖原 probe 提取的 6141a1f 父提交工具源码。
+- 修复前复现 `probe.py`、修复后迁移验证 `migration-check.py` 及夹具（原 `.tmp/case-review-followup/`、`.tmp/migration-check-5ge5scep/`）（2026-11-01 已随 `.tmp/` 清理删除）；复现依赖 6141a1f 父提交工具源码，需要时从 Git 历史重建。
 
 ## 当前批次工作集（可选）
 - 范围: `install-bootstrap.py`, `.agentwork/tests/test_install_bootstrap.py` | 主题: 收据交集预检、完整迁移验证与 source-only 退役

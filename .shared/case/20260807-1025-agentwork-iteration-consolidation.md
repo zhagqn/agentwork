@@ -67,9 +67,7 @@
 
 ## 关联工件（可选）
 - Case 单轨迁移专题已转入 `.shared/case/20260905-0930-session-case-unified-migration.md`；后续该专题以独立 Case 接续，本文件保留总体迭代与历史锚点。
-- `.tmp/agentwork/brain/20260904-1639-session-case-unified-migration.md`
-- `.tmp/agentwork/plan/20260904-1644-session-case-unified-migration.md`
-- `.tmp/agentwork/plan/20260828-1332-pi-core-workflow-adapter.md`
+- 原 brain/plan 工件（session-case 迁移、Pi 核心适配）（2026-11-01 已随 `.tmp/` 清理删除），结论以 Case 与 Git 历史为准。
 
 ## 当前批次工作集（可选）
 - 范围: `.shared/case/20260807-1025-agentwork-iteration-consolidation.md`, `.shared/case/20260905-0930-session-case-unified-migration.md` | 主题: 总体与专题快照保存、提交锚点回填

@@ -36,8 +36,7 @@
 - pi-mcp 文件可安装/卸载；runtime setup/remove 使用 project scope，不覆盖 MCP 配置；核心 bootstrap 无变化；真实 STDIO MCP 工具可被 Pi 发现和调用。
 
 ## 关联工件
-- `.tmp/agentwork/brain/20260916-0021-pi-mcp.md`
-- `.tmp/agentwork/plan/20260916-0030-pi-mcp.md`
+- 原 brain/plan 工件（2026-11-01 已随 `.tmp/` 清理删除）；pi-mcp 工具已在 0c1e828 退役，见 `.shared/case/20261003-1216-codegraph-mcp.md`。
 
 ## 当前批次工作集（可选）
 - 范围: `.agentwork/tools/pi-mcp/**` | 主题: Pi MCP optional tool
